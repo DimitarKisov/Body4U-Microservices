@@ -2,7 +2,7 @@
 {
     using Body4U.Identity.Data.Models;
 
-    public interface ITokenGeneratorService
+    public interface IJwtTokenGeneratorService
     {
         string GenerateToken(ApplicationUser user);
     }

@@ -8,11 +8,11 @@
     using System.Security.Claims;
     using System.Text;
 
-    public class TokenGeneratorService : ITokenGeneratorService
+    public class JwtTokenGeneratorService : IJwtTokenGeneratorService
     {
         private readonly IConfiguration configuration;
 
-        public TokenGeneratorService(IConfiguration configuration)
+        public JwtTokenGeneratorService(IConfiguration configuration)
             => this.configuration = configuration;
 
         public string GenerateToken(ApplicationUser user)

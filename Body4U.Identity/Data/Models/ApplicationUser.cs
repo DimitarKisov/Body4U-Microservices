@@ -6,7 +6,7 @@
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
 
-    using static Body4U.Common.Data.DataConstants.ApplicationUserConstants;
+    using static Body4U.Common.Constants.DataConstants.ApplicationUserConstants;
 
     public class ApplicationUser : IdentityUser
     {
