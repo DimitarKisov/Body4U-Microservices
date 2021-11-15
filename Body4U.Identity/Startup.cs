@@ -30,7 +30,7 @@ namespace Body4U.Identity
                 .AddUserStorage()
                 .AddTransient<IIdentityService, IdentityService>()
                 .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>()
-                .AddTransient<IEmailService, EmailService>();
+                .AddMessaging();
 
             this.SeedIdentityData(services);
         }

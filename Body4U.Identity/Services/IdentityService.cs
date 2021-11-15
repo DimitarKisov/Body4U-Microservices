@@ -66,7 +66,6 @@
                 if (result.Succeeded)
                 {
                     var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
-                    //TODO: Fire-ни евент като създадеш микросервиз за мейли
                     return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token });
                 }
 
@@ -92,12 +91,11 @@
                     return Result<string>.Failure(WrongUsernameOrPassword);
                 }
 
-                //TODO: Разкоментирай след като направиш сервиза за изпращане на мейли
-                //var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
-                //if (!emailConfirmed)
-                //{
-                //    return Result<string>.Failure(EmailNotConfirmed);
-                //}
+                var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
+                if (!emailConfirmed)
+                {
+                    return Result<string>.Failure(EmailNotConfirmed);
+                }
 
                 var userLocked = await this.userManager.IsLockedOutAsync(user);
                 if (userLocked)
@@ -143,8 +141,8 @@
                     return Result.Failure(string.Format(UserNotFound, request.UserId));
                 }
 
-                var tokenDecoded = HttpUtility.UrlDecode(request.Token);
-                var result = await this.userManager.ConfirmEmailAsync(user, tokenDecoded);
+                //var tokenDecoded = HttpUtility.UrlDecode(request.Token);
+                var result = await this.userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
                     return Result.Success;

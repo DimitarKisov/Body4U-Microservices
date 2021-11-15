@@ -1,9 +1,10 @@
 ﻿namespace Body4U.Identity.Controllers
 {
-    using Body4U.Common;
     using Body4U.Common.Controllers;
+    using Body4U.Common.Messages.Identity;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Services;
+    using MassTransit;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
@@ -12,14 +13,14 @@
     public class IdentityController : ApiController
     {
         private readonly IIdentityService identityService;
-        private readonly IEmailService emailService;
+        private readonly IBus publisher;
 
         public IdentityController(
             IIdentityService identityService,
-            IEmailService emailService)
+            IBus publisher)
         {
             this.identityService = identityService;
-            this.emailService = emailService;
+            this.publisher = publisher;
         }
 
         [HttpPost]
@@ -38,22 +39,41 @@
                 return this.BadRequest(result.Errors);
             }
 
-            //TODO: Изнеси в отделен миркосервиз, който да се занимава с изпращане на мейли, като fire-неш евент към него?
-            //var confirmationLink = Url.Action(nameof(VerifyEmail), "Identity",
-            //       new { UserId = result.Data.UserId, Token = result.Data.Token }, Request.Scheme, Request.Host.ToString());
+            var confirmationLink = Url.Action(nameof(VerifyEmail), "Identity",
+                   new { UserId = result.Data.UserId, Token = result.Data.Token }, Request.Scheme, Request.Host.ToString());
 
-            //var sendEmailResult = this.emailService.SendEmailAsync(result.Data.Email, EmailConfirmSubject, string.Format(EmailConfirmHtmlContent, confirmationLink));
-            //if (!sendEmailResult.Succeeded)
-            //{
-            //    return this.BadRequest(sendEmailResult.Errors);
-            //}
+            await this.publisher.Publish(new SendEmailConfirmationMessage()
+            {
+                To = result.Data.Email,
+                Subject = EmailConfirmSubject,
+                HtmlContent = string.Format(EmailConfirmHtmlContent, confirmationLink)
+            });
 
             return this.Ok();
         }
 
         [HttpPost]
+        [Route(nameof(Login))]
+        public async Task<ActionResult> Login(LoginUserRequestModel request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.identityService.Login(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok(result.Data);
+        }
+
+        [HttpPost]
         [Route(nameof(VerifyEmail))]
-        public async Task<ActionResult> VerifyEmail(VerifyEmailRequestModel request)
+        public async Task<ActionResult> VerifyEmail([FromQuery] VerifyEmailRequestModel request)
         {
             if (!ModelState.IsValid)
             {

@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Services
+﻿namespace Body4U.EmailSender.Services
 {
     using Body4U.Common;
 
