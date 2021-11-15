@@ -8,5 +8,9 @@
     public interface IIdentityService
     {
         Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request);
+
+        Task<Result<string>> Login(LoginUserRequestModel request);
+
+        Task<Result> VerifyEmail(VerifyEmailRequestModel request);
     }
 }

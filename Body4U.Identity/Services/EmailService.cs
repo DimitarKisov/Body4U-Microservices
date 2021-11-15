@@ -8,7 +8,7 @@
     using System.Net;
     using System.Net.Mail;
 
-    using static Body4U.Common.Constants.DataConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.Common;
 
     public class EmailService : IEmailService
     {

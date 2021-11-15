@@ -13,7 +13,12 @@
 
         public class ApplicationUserConstants
         {
+            public const string EmailNotConfirmed = "Email is not confirmed.";
+            public const string Locked = "Account is locked.";
+            public const string LoginFailed = "Login failed.";
+            public const string UserNotFound = "There is not such user with Id '{0}'";
             public const string WrongGender = "There is no such gender.";
+            public const string WrongUsernameOrPassword = "Wrong email or password.";
         }
     }
 }
