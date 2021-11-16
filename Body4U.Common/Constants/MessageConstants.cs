@@ -7,6 +7,8 @@
             public const string EmailConfirmHtmlContent = "<p>To confirm your email, please click <a href=\"{0}\">HERE</a></p>";
             public const string EmailConfirmSubject = "Email Confirmation";
             public const string EmailProblem = "Email was not sent successfuly.";
+            public const string ForgotPasswordHtmlContent = "<p>To reset your password, please click <a href=\"{0}\">HERE</a></p>";
+            public const string ForgotPasswordSubject = "Password Reset";
             public const string Wrong = "Something went wrong in {0}.";
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
         }

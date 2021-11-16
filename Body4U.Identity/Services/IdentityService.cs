@@ -131,6 +131,76 @@
             }
         }
 
+        public async Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId)
+        {
+            try
+            {
+                var user = await this.userManager.FindByIdAsync(userId);
+                var result = await this.userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+
+                if (result.Succeeded)
+                {
+                    return Result.Success;
+                }
+
+                var errors = result.Errors.Select(e => e.Description);
+                return Result.Failure(errors);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.ChangePassword)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(this.ChangePassword)));
+            }
+        }
+
+        public async Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request)
+        {
+            try
+            {
+                var user = await this.userManager.FindByEmailAsync(request.Email);
+                if (user != null && await this.userManager.IsEmailConfirmedAsync(user))
+                {
+                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                    return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = user.Email, UserId = user.Id, Token = token });
+                }
+
+                return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = null, UserId = null, Token = null });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.ForgotPassword)}", ex);
+                return Result<ForgotPasswordResponseModel>.Failure(string.Format(Wrong, nameof(this.ForgotPassword)));
+            }
+        }
+
+        public async Task<Result> ResetPassword(string userId, string token, ResetPasswordRequestModel request)
+        {
+            try
+            {
+                var user = await this.userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return Result.Failure(string.Format(UserNotFound, userId));
+                }
+
+                var tokenDecoded = HttpUtility.UrlDecode(token);
+                var result = await this.userManager.ResetPasswordAsync(user, token, request.NewPassword);
+
+                if (!result.Succeeded)
+                {
+                    var errors = result.Errors.Select(x => x.Description);
+                    return Result.Failure(errors);
+                }
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.ResetPassword)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(this.ResetPassword)));
+            }
+        }
+
         public async Task<Result> VerifyEmail(VerifyEmailRequestModel request)
         {
             try

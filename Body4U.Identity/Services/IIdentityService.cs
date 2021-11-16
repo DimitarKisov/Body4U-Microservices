@@ -11,6 +11,12 @@
 
         Task<Result<string>> Login(LoginUserRequestModel request);
 
+        Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId);
+
+        Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request);
+
+        Task<Result> ResetPassword(string userId, string token, ResetPasswordRequestModel request);
+
         Task<Result> VerifyEmail(VerifyEmailRequestModel request);
     }
 }

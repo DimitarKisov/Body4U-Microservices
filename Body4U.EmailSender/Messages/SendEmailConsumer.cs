@@ -5,14 +5,14 @@
     using MassTransit;
     using System.Threading.Tasks;
 
-    public class SendEmailConfirmationConsumer : IConsumer<SendEmailConfirmationMessage>
+    public class SendEmailConsumer : IConsumer<SendEmailMessage>
     {
         private readonly IEmailService emailService;
 
-        public SendEmailConfirmationConsumer(IEmailService emailService)
+        public SendEmailConsumer(IEmailService emailService)
             => this.emailService = emailService;
 
-        public async Task Consume(ConsumeContext<SendEmailConfirmationMessage> context)
+        public async Task Consume(ConsumeContext<SendEmailMessage> context)
             => await Task.Run(() => this.emailService.SendEmailAsync(context.Message.To, context.Message.Subject, context.Message.HtmlContent));
     }
 }

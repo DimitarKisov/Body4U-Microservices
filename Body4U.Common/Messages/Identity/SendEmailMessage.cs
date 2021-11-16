@@ -1,6 +1,6 @@
 ﻿namespace Body4U.Common.Messages.Identity
 {
-    public class SendEmailConfirmationMessage
+    public class SendEmailMessage
     {
         public string To { get; set; }
 
