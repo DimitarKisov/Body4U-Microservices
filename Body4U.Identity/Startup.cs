@@ -45,6 +45,8 @@ namespace Body4U.Identity
 
             using (var dbContext = (IdentityDbContext)serviceProvider.GetService(typeof(IdentityDbContext)))
             {
+                var strategy = dbContext.Database.CreateExecutionStrategy();
+
                 if (!(dbContext.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)!.Exists())
                 {
                     dbContext.Database.Migrate();
@@ -52,19 +54,23 @@ namespace Body4U.Identity
 
                 if (!dbContext.Users.Any())
                 {
-                    using (var transaction = dbContext.Database.BeginTransaction())
-                    {
-                        try
+                    strategy.Execute(
+                        () =>
                         {
-                            new ApplicationDbContextSeeder(this.Configuration).SeedAsync(dbContext, serviceProvider).GetAwaiter().GetResult();
+                            using (var transaction = dbContext.Database.BeginTransaction())
+                            {
+                                try
+                                {
+                                    new ApplicationDbContextSeeder(this.Configuration).SeedAsync(dbContext, serviceProvider).GetAwaiter().GetResult();
 
-                            transaction.Commit();
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error($"Identity/{nameof(Startup)}.{nameof(SeedIdentityData)}", ex);
-                        }
-                    }
+                                    transaction.Commit();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error($"Identity/{nameof(Startup)}.{nameof(SeedIdentityData)}", ex);
+                                }
+                            }
+                        });
                 }
             }
         }
