@@ -131,6 +131,41 @@
             }
         }
 
+        public async Task<Result<MyProfileResponseModel>> MyProfile(string userId)
+        {
+            try
+            {
+                var user = await this.userManager.FindByIdAsync(userId);
+
+                if (user == null)
+                {
+                    return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, userId));
+                }
+
+                var profilePicture = user.ProfilePicture != null
+                    ? Convert.ToBase64String(user.ProfilePicture)
+                    : null;
+
+                return Result<MyProfileResponseModel>.SuccessWith(
+                    new MyProfileResponseModel 
+                    {
+                        Id = user.Id,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        ProfilePicture = profilePicture,
+                        Age = user.Age,
+                        PhoneNumber = user.PhoneNumber,
+                        Gender = user.Gender 
+                    });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.MyProfile)}", ex);
+                return Result<MyProfileResponseModel>.Failure(string.Format(Wrong, nameof(this.MyProfile)));
+            }
+        }
+
         public async Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId)
         {
             try

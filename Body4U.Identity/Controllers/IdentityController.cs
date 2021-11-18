@@ -79,6 +79,25 @@
             return Ok(result.Data);
         }
 
+        [HttpPost]
+        [Authorize]
+        [Route(nameof(MyProfile))]
+        public async Task<ActionResult> MyProfile()
+        {
+            if (currentUserService.UserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await this.identityService.MyProfile(currentUserService.UserId);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
         [HttpPut]
         [Authorize]
         [Route(nameof(ChangePassword))]

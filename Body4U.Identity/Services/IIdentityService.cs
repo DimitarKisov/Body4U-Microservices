@@ -11,6 +11,8 @@
 
         Task<Result<string>> Login(LoginUserRequestModel request);
 
+        Task<Result<MyProfileResponseModel>> MyProfile(string userId);
+
         Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId);
 
         Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request);
