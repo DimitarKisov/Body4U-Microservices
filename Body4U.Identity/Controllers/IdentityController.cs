@@ -15,7 +15,7 @@
     public class IdentityController : ApiController
     {
         private readonly IIdentityService identityService;
-        private readonly ICurrentUserService currentUserService;
+        //private readonly ICurrentUserService currentUserService;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly IBus publisher;
 
@@ -26,7 +26,7 @@
             IJwtTokenGeneratorService jwtTokenGeneratorService)
         {
             this.identityService = identityService;
-            this.currentUserService = currentUserService;
+            //this.currentUserService = currentUserService;
             this.publisher = publisher;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
         }
@@ -84,18 +84,33 @@
         [Route(nameof(MyProfile))]
         public async Task<ActionResult> MyProfile()
         {
-            if (currentUserService.UserId == null)
-            {
-                return Unauthorized();
-            }
-
-            var result = await this.identityService.MyProfile(currentUserService.UserId);
+            var result = await this.identityService.MyProfile();
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);
             }
 
             return this.Ok(result.Data);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route(nameof(Edit))]
+        public async Task<ActionResult> Edit(EditMyProfileRequestModel request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.identityService.EditMyProfile(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok();
         }
 
         [HttpPut]
@@ -108,7 +123,7 @@
                 return this.BadRequest(this.ModelState);
             }
 
-            var result = await this.identityService.ChangePassword(request, currentUserService.UserId);
+            var result = await this.identityService.ChangePassword(request);
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
@@ -181,7 +196,7 @@
         [Route(nameof(GenerateRefreshToken))]
         public async Task<ActionResult> GenerateRefreshToken()
         {
-            var result = await this.jwtTokenGeneratorService.GenerateRefreshToken(currentUserService.UserId);
+            var result = await this.jwtTokenGeneratorService.GenerateRefreshToken();
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);

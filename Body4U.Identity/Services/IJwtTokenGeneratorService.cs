@@ -6,8 +6,8 @@
 
     public interface IJwtTokenGeneratorService
     {
-        Result<string> GenerateToken(ApplicationUser user);
+        Task<Result<string>> GenerateToken(ApplicationUser user);
 
-        Task<Result<string>> GenerateRefreshToken(string userId);
+        Task<Result<string>> GenerateRefreshToken();
     }
 }

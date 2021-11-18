@@ -11,9 +11,11 @@
 
         Task<Result<string>> Login(LoginUserRequestModel request);
 
-        Task<Result<MyProfileResponseModel>> MyProfile(string userId);
+        Task<Result<MyProfileResponseModel>> MyProfile();
 
-        Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId);
+        Task<Result> EditMyProfile(EditMyProfileRequestModel request);
+
+        Task<Result> ChangePassword(ChangePasswordRequestModel request);
 
         Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request);
 

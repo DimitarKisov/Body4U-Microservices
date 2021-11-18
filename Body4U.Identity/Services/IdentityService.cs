@@ -1,6 +1,7 @@
 ﻿namespace Body4U.Identity.Services
 {
     using Body4U.Common;
+    using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data.Models;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
@@ -20,17 +21,20 @@
     public class IdentityService : IIdentityService
     {
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
+        private readonly ICurrentUserService currentUserService;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
-            SignInManager<ApplicationUser> signInManager)
+            ICurrentUserService currentUserService)
         {
             this.userManager = userManager;
-            this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.signInManager = signInManager;
+            this.jwtTokenGeneratorService = jwtTokenGeneratorService;
+            this.currentUserService = currentUserService;
         }
 
         public async Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request)
@@ -112,7 +116,7 @@
                 var result = await this.signInManager.PasswordSignInAsync(user, request.Password, request.RememberMe, user.LockoutEnabled);
                 if (result.Succeeded)
                 {
-                    var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user);
+                    var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user);
 
                     if (tokenResult.Succeeded)
                     {
@@ -131,15 +135,15 @@
             }
         }
 
-        public async Task<Result<MyProfileResponseModel>> MyProfile(string userId)
+        public async Task<Result<MyProfileResponseModel>> MyProfile()
         {
             try
             {
-                var user = await this.userManager.FindByIdAsync(userId);
+                var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
 
                 if (user == null)
                 {
-                    return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, userId));
+                    return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, currentUserService.UserId));
                 }
 
                 var profilePicture = user.ProfilePicture != null
@@ -166,11 +170,74 @@
             }
         }
 
-        public async Task<Result> ChangePassword(ChangePasswordRequestModel request, string userId)
+        public async Task<Result> EditMyProfile(EditMyProfileRequestModel request)
         {
             try
             {
-                var user = await this.userManager.FindByIdAsync(userId);
+                if (request.Id != currentUserService.UserId && !currentUserService.IsAdmin)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                var user = await this.userManager.FindByIdAsync(request.Id);
+                if (user == null)
+                {
+                    return Result.Failure(string.Format(UserNotFound, request.Id));
+                }
+
+                if (request.ProfilePicture != null &&
+                    request.ProfilePicture.ContentType != "image/jpeg" &&
+                    request.ProfilePicture.ContentType != "image/png" &&
+                    request.ProfilePicture.ContentType != "image/jpg")
+                {
+                    return Result.Failure(WrongImageFormat);
+                }
+
+                if (!Enum.IsDefined(typeof(Gender), request.Gender))
+                {
+                    return Result.Failure(WrongGender);
+                }
+
+                user.PhoneNumber = request.PhoneNumber;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Age = request.Age;
+                user.Gender = request.Gender;
+
+                if (request.ProfilePicture.Length > 0)
+                {
+                    using (var stream = new MemoryStream())
+                    {
+                        await request.ProfilePicture.CopyToAsync(stream);
+
+                        if (user.ProfilePicture != stream.ToArray())
+                        {
+                            user.ProfilePicture = stream.ToArray();
+                        }
+                    }
+                }
+
+                return Result.Success;
+
+                //TODO: Когато се добавят и треньори го довърши? Може и да не се ъпдейтва оттука.
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.EditMyProfile)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(this.EditMyProfile)));
+            }
+        }
+
+        public async Task<Result> ChangePassword(ChangePasswordRequestModel request)
+        {
+            try
+            {
+                var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
+                if (user == null)
+                {
+                    return Result.Failure(string.Format(UserNotFound, currentUserService.UserId));
+                }
+
                 var result = await this.userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
 
                 if (result.Succeeded)

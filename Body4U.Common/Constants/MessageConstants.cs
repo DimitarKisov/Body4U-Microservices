@@ -11,6 +11,7 @@
             public const string ForgotPasswordSubject = "Password Reset";
             public const string Wrong = "Something went wrong in {0}.";
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
+            public const string WrongWrights = "You don't have the rights for this action!";
         }
 
         public class ApplicationUserConstants
