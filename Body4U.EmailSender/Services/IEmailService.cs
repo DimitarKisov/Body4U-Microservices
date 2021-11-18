@@ -4,6 +4,6 @@
 
     public interface IEmailService
     {
-        Result SendEmailAsync(string to, string subject, string htmlContent);
+        void SendEmailAsync(string to, string subject, string htmlContent);
     }
 }

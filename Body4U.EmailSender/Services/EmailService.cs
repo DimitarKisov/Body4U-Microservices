@@ -1,6 +1,5 @@
 ﻿namespace Body4U.EmailSender.Services
 {
-    using Body4U.Common;
     using Microsoft.Extensions.Configuration;
     using Serilog;
     using System;
@@ -8,18 +7,14 @@
     using System.Net;
     using System.Net.Mail;
 
-    using static Body4U.Common.Constants.MessageConstants.Common;
-
     public class EmailService : IEmailService
     {
         private readonly IConfiguration configuration;
-        private bool sendSuccessfuly = false;
-        private bool sendCompleted = false;
 
         public EmailService(IConfiguration configuration)
             => this.configuration = configuration;
 
-        public Result SendEmailAsync(string to, string subject, string htmlContent)
+        public void SendEmailAsync(string to, string subject, string htmlContent)
         {
             try
             {
@@ -53,19 +48,10 @@
 
                 client.SendCompleted += ClientSendComplete;
                 client.Send(message);
-
-                while (!sendCompleted)
-                {
-                }
-
-                return sendSuccessfuly
-                    ? Result.Success
-                    : Result.Failure(EmailProblem);
             }
             catch (Exception ex)
             {
                 Log.Error($"{nameof(EmailService)}.{nameof(this.SendEmailAsync)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.SendEmailAsync)));
             }
         }
 
@@ -74,12 +60,7 @@
             if (e.Error != null)
             {
                 Log.Error($"{nameof(EmailService)}.{nameof(this.ClientSendComplete)}", e.Error);
-                sendCompleted = true;
-                return;
             }
-
-            sendSuccessfuly = true;
-            sendCompleted = true;
         }
     }
 }
