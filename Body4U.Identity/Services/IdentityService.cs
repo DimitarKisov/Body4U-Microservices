@@ -86,9 +86,7 @@
         {
             try
             {
-                var user = await this.userManager.Users
-                    //.Include(x => x.Trainer)
-                    .SingleAsync(x => x.NormalizedEmail == request.Email);
+                var user = await this.userManager.FindByEmailAsync(request.Email);
 
                 if (user == null)
                 {
@@ -113,20 +111,16 @@
                     return Result<string>.Failure(WrongUsernameOrPassword);
                 }
 
-                var result = await this.signInManager.PasswordSignInAsync(user, request.Password, request.RememberMe, user.LockoutEnabled);
-                if (result.Succeeded)
+                var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user);
+
+                if (tokenResult.Succeeded)
                 {
-                    var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user);
-
-                    if (tokenResult.Succeeded)
-                    {
-                        return Result<string>.SuccessWith(tokenResult.Data);
-                    }
-
-                    return Result<string>.Failure(LoginFailed);
+                    return Result<string>.SuccessWith(tokenResult.Data);
                 }
 
-                return Result<string>.Failure(WrongUsernameOrPassword);
+                return Result<string>.Failure(LoginFailed);
+
+                //return Result<string>.Failure(WrongUsernameOrPassword);
             }
             catch (Exception ex)
             {
@@ -174,7 +168,7 @@
         {
             try
             {
-                if (request.Id != currentUserService.UserId && !currentUserService.IsAdmin)
+                if (request.Id != currentUserService.UserId && !currentUserService.IsAdmin.HasValue)
                 {
                     return Result.Failure(WrongWrights);
                 }

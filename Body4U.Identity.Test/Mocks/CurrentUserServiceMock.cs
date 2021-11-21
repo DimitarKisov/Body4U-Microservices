@@ -3,6 +3,8 @@
     using Body4U.Common.Services.Identity;
     using Moq;
 
+    using static Body4U.Common.Constants.Fakes.Identity;
+
     public class CurrentUserServiceMock
     {
         public static ICurrentUserService Instance 
@@ -13,7 +15,7 @@
 
                 mock
                     .Setup(x => x.UserId)
-                    .Returns("123-user-guid-456");
+                    .Returns(FakeUserId);
 
                 mock.Setup(x => x.IsAdmin)
                     .Returns(true);

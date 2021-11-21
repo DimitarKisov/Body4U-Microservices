@@ -13,12 +13,21 @@
             if (user != null)
             {
                 this.UserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-                this.IsAdmin = bool.Parse(user.FindFirstValue(CustomClaimTypes.IsAdmin));
+
+                var isAdmin = user.FindFirstValue(CustomClaimTypes.IsAdmin);
+                if (isAdmin == null)
+                {
+                    this.IsAdmin = null;
+                }
+                else
+                {
+                    this.IsAdmin = bool.Parse(isAdmin);
+                }
             }
         }
 
         public string UserId { get; }
 
-        public bool IsAdmin { get; }
+        public bool? IsAdmin { get; }
     }
 }
