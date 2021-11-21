@@ -2,12 +2,13 @@
 {
     using Body4U.Identity.Controllers;
     using Body4U.Identity.Models.Requests;
+    using Body4U.Identity.Models.Responses;
     using MyTested.AspNetCore.Mvc;
     using Xunit;
 
     using static Body4U.Common.Constants.Fakes.Identity;
 
-    public class IdentityControllerIntegrationTests
+    public class IdentityControllerPipelineTests
     {
         [Fact]
         public void LoginShouldReturnTokenWhenUserEntersValidCredentials()
@@ -30,5 +31,18 @@
                 .Which()
                 .ShouldReturn()
                 .Ok(FakeToken);
+
+        [Fact]
+        public void MyProfileShouldReturnDataSuccessfully()
+            => MyPipeline
+                .Configuration()
+                .ShouldMap(request => request
+                    .WithLocation("/Identity/MyProfile")
+                    .WithMethod(HttpMethod.Post))
+                .To<IdentityController>(x => x
+                    .MyProfile())
+                .Which()
+                .ShouldReturn()
+                .Ok(new MyProfileResponseModel { Id = FakeUserId});
     }
 }

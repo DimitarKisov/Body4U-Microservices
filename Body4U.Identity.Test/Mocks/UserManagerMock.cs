@@ -12,12 +12,13 @@
         {
             get
             {
-                var store = new Mock<IUserStore<ApplicationUser>>();
-                var umMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+                var storeMock = new Mock<IUserStore<ApplicationUser>>();
+                var umMock = new Mock<UserManager<ApplicationUser>>(storeMock.Object, null, null, null, null, null, null, null, null);
                 umMock.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
                 umMock.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
 
                 umMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { Email = FakeEmail });
+                umMock.Setup(x => x.FindByIdAsync(It.IsAny<string>())).ReturnsAsync(new ApplicationUser { Id = FakeUserId });
                 umMock.Setup(x => x.IsEmailConfirmedAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(true);
                 umMock.Setup(x => x.IsLockedOutAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(false);
                 umMock.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);

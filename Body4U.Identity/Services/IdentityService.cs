@@ -119,8 +119,6 @@
                 }
 
                 return Result<string>.Failure(LoginFailed);
-
-                //return Result<string>.Failure(WrongUsernameOrPassword);
             }
             catch (Exception ex)
             {
