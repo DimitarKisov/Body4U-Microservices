@@ -15,5 +15,14 @@
                     .WithLocation("/Identity/Register")
                     .WithMethod(HttpMethod.Post))
                 .To<IdentityController>(x => x.Register(With.Any<RegisterUserRequestModel>()));
+
+        [Fact]
+        public void LoginShouldBeRouterCorrectly()
+            => MyRouting
+                .Configuration()
+                .ShouldMap(request => request
+                    .WithLocation("/Identity/Login")
+                    .WithMethod(HttpMethod.Post))
+                .To<IdentityController>(x => x.Login(With.Any<LoginUserRequestModel>()));
     }
 }

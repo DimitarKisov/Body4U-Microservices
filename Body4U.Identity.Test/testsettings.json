@@ -4,5 +4,11 @@
   },
   "JwtSettings": {
     "Secret": "Test Secret"
+  },
+  "SeedInfo": {
+    "Email": "test@test.com",
+    "FirstName": "Test",
+    "LastName": "User",
+    "Password": "testpassword"
   }
 }

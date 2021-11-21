@@ -13,7 +13,7 @@
 
                 mock
                     .Setup(x => x.UserId)
-                    .Returns("123");
+                    .Returns("123-user-guid-456");
 
                 mock.Setup(x => x.IsAdmin)
                     .Returns(true);

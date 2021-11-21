@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{32ADDA49
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{EC924908-F00A-4D8F-B10B-5D84927EC31E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Body4U.Identity.Test", "Body4U.Identity.Test\Body4U.Identity.Test.csproj", "{F6892146-29CA-4019-9A34-20410268D4ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Body4U.Identity.Test", "Body4U.Identity.Test\Body4U.Identity.Test.csproj", "{F6892146-29CA-4019-9A34-20410268D4ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

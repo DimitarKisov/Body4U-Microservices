@@ -29,9 +29,10 @@
         {
             if (!userManager.Users.Any() && !roleManager.Roles.Any())
             {
-                var email = "body4u2020@gmail.com";
-                var firstName = "Body4U";
-                var lastName = "Admin";
+                var email = configuration.GetSection("SeedInfo")["Email"];
+                var firstName = configuration.GetSection("SeedInfo")["FirstName"];
+                var lastName = configuration.GetSection("SeedInfo")["LastName"];
+                var passsword = configuration.GetSection("SeedInfo")["Password"];
 
                 Task.Run(async () =>
                 {
@@ -50,7 +51,7 @@
                         EmailConfirmed = true
                     };
 
-                    await userManager.CreateAsync(user, "123456");
+                    await userManager.CreateAsync(user, passsword);
 
                     await userManager.AddToRoleAsync(user, AdministratorRoleName);
                 })
