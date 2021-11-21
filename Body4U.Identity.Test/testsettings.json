@@ -1,0 +1,8 @@
+﻿{
+  "ConnectionStrings": {
+    "DefaultConnection": "Test Connection"
+  },
+  "JwtSettings": {
+    "Secret": "Test Secret"
+  }
+}

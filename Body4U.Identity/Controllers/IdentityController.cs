@@ -15,20 +15,17 @@
     public class IdentityController : ApiController
     {
         private readonly IIdentityService identityService;
-        //private readonly ICurrentUserService currentUserService;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly IBus publisher;
 
         public IdentityController(
             IIdentityService identityService,
-            ICurrentUserService currentUserService,
-            IBus publisher,
-            IJwtTokenGeneratorService jwtTokenGeneratorService)
+            IJwtTokenGeneratorService jwtTokenGeneratorService,
+            IBus publisher)
         {
             this.identityService = identityService;
-            //this.currentUserService = currentUserService;
-            this.publisher = publisher;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
+            this.publisher = publisher;
         }
 
         [HttpPost]
@@ -192,20 +189,6 @@
         }
 
         [HttpPost]
-        [Authorize]
-        [Route(nameof(GenerateRefreshToken))]
-        public async Task<ActionResult> GenerateRefreshToken()
-        {
-            var result = await this.jwtTokenGeneratorService.GenerateRefreshToken();
-            if (!result.Succeeded)
-            {
-                return this.BadRequest(result.Errors);
-            }
-
-            return Ok(result.Data);
-        }
-
-        [HttpPost]
         [Route(nameof(VerifyEmail))]
         public async Task<ActionResult> VerifyEmail([FromQuery] VerifyEmailRequestModel request)
         {
@@ -222,6 +205,20 @@
             }
 
             return this.Ok();
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route(nameof(GenerateRefreshToken))]
+        public async Task<ActionResult> GenerateRefreshToken()
+        {
+            var result = await this.jwtTokenGeneratorService.GenerateRefreshToken();
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok(result.Data);
         }
     }
 }

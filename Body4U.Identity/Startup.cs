@@ -1,20 +1,15 @@
-namespace Body4U.Identity
+﻿namespace Body4U.Identity
 {
     using Body4U.Common.Infrastructure;
+    using Body4U.Common.Services;
     using Body4U.Identity.Data;
     using Body4U.Identity.Data.Seeders;
     using Body4U.Identity.Infrastructure;
     using Body4U.Identity.Services;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Infrastructure;
-    using Microsoft.EntityFrameworkCore.Storage;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using Serilog;
-    using System;
-    using System.Linq;
 
     public class Startup
     {
@@ -28,51 +23,15 @@ namespace Body4U.Identity
             services
                 .AddWebService<IdentityDbContext>(this.Configuration)
                 .AddUserStorage()
+                .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()
                 .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>()
                 .AddMessaging();
-
-            this.SeedIdentityData(services);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
-                .UseWebService(env);
-
-        private void SeedIdentityData(IServiceCollection services)
-        {
-            var serviceProvider = services.BuildServiceProvider();
-
-            using (var dbContext = (IdentityDbContext)serviceProvider.GetService(typeof(IdentityDbContext)))
-            {
-                var strategy = dbContext.Database.CreateExecutionStrategy();
-
-                if (!(dbContext.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)!.Exists())
-                {
-                    dbContext.Database.Migrate();
-                }
-
-                if (!dbContext.Users.Any())
-                {
-                    strategy.Execute(
-                        () =>
-                        {
-                            using (var transaction = dbContext.Database.BeginTransaction())
-                            {
-                                try
-                                {
-                                    new ApplicationDbContextSeeder(this.Configuration).SeedAsync(dbContext, serviceProvider).GetAwaiter().GetResult();
-
-                                    transaction.Commit();
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Error($"Identity/{nameof(Startup)}.{nameof(SeedIdentityData)}", ex);
-                                }
-                            }
-                        });
-                }
-            }
-        }
+                .UseWebService(env)
+                .Initialize();
     }
 }
