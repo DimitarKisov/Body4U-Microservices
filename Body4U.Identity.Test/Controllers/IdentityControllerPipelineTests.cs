@@ -38,11 +38,14 @@
                 .Configuration()
                 .ShouldMap(request => request
                     .WithLocation("/Identity/MyProfile")
+                    .WithUser(user => user
+                        .WithUsername(FakeEmail)
+                        .WithIdentifier(FakeUserId))
                     .WithMethod(HttpMethod.Post))
                 .To<IdentityController>(x => x
                     .MyProfile())
                 .Which()
                 .ShouldReturn()
-                .Ok(new MyProfileResponseModel { Id = FakeUserId});
+                .Ok(new MyProfileResponseModel { Id = FakeUserId });
     }
 }

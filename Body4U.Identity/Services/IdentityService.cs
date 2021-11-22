@@ -166,7 +166,7 @@
         {
             try
             {
-                if (request.Id != currentUserService.UserId && !currentUserService.IsAdmin.HasValue)
+                if (request.Id != this.currentUserService.UserId && !this.currentUserService.IsAdmin.HasValue)
                 {
                     return Result.Failure(WrongWrights);
                 }
