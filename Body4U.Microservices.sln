@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{EC924908-F00
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Body4U.Identity.Test", "Body4U.Identity.Test\Body4U.Identity.Test.csproj", "{F6892146-29CA-4019-9A34-20410268D4ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Body4U.Article", "Body4U.Article\Body4U.Article.csproj", "{109922A5-DB36-498E-B1E1-58D523637C27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{F6892146-29CA-4019-9A34-20410268D4ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6892146-29CA-4019-9A34-20410268D4ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6892146-29CA-4019-9A34-20410268D4ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{109922A5-DB36-498E-B1E1-58D523637C27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{109922A5-DB36-498E-B1E1-58D523637C27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{109922A5-DB36-498E-B1E1-58D523637C27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{109922A5-DB36-498E-B1E1-58D523637C27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +51,7 @@ Global
 		{D373FC48-2686-4869-9B84-0C56AD0D1B5E} = {EC924908-F00A-4D8F-B10B-5D84927EC31E}
 		{F3E5C0D2-A98F-4C8A-B093-5A9B5EECE0B6} = {EC924908-F00A-4D8F-B10B-5D84927EC31E}
 		{F6892146-29CA-4019-9A34-20410268D4ED} = {32ADDA49-AA81-433B-94B0-3A02B6558C1E}
+		{109922A5-DB36-498E-B1E1-58D523637C27} = {EC924908-F00A-4D8F-B10B-5D84927EC31E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0684F6B0-3819-4C3A-8FB7-1319523C41F1}

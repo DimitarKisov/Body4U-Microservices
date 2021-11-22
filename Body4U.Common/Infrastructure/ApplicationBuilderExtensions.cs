@@ -6,6 +6,10 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.OpenApi.Models;
+    using System;
+    using System.IO;
+    using System.Reflection;
 
     public static class ApplicationBuilderExtensions
     {
@@ -15,7 +19,8 @@
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app.UseDeveloperExceptionPage()
+                    .UseSwagger();
             }
 
             app
@@ -49,6 +54,21 @@
 
                 return app;
             }
+        }
+
+        public static IApplicationBuilder UseSwagger(this IApplicationBuilder app)
+        {
+            app.UseSwagger(c =>
+            {
+                c.SerializeAsV2 = true;
+            });
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.RoutePrefix = string.Empty;
+            });
+
+            return app;
         }
     }
 }
