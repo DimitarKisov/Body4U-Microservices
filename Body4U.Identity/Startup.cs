@@ -20,8 +20,8 @@
 
         public void ConfigureServices(IServiceCollection services)
             => services
-                .AddWebService<IdentityDbContext>(this.Configuration)
                 .AddUserStorage()
+                .AddWebService<IdentityDbContext>(this.Configuration)
                 .AddMessaging()
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()

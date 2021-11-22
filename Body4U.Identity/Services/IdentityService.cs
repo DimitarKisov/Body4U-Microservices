@@ -7,13 +7,14 @@
     using Body4U.Identity.Models.Responses;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
-    using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Web;
+
+    using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -111,7 +112,9 @@
                     return Result<string>.Failure(WrongUsernameOrPassword);
                 }
 
-                var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user);
+                var roles = await this.userManager.GetRolesAsync(user);
+
+                var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
 
                 if (tokenResult.Succeeded)
                 {
@@ -166,15 +169,15 @@
         {
             try
             {
-                if (request.Id != this.currentUserService.UserId && !this.currentUserService.IsAdmin.HasValue)
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
                 var user = await this.userManager.FindByIdAsync(request.Id);
                 if (user == null)
                 {
                     return Result.Failure(string.Format(UserNotFound, request.Id));
+                }
+
+                if (request.Id != this.currentUserService.UserId && await userManager.IsInRoleAsync(user, AdministratorRoleName))
+                {
+                    return Result.Failure(WrongWrights);
                 }
 
                 if (request.ProfilePicture != null &&

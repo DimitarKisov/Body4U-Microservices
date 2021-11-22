@@ -37,6 +37,7 @@
         public class Common
         {
             public const string AdministratorRoleName = "Administrator";
+            public const string TrainerRoleName = "Trainer";
         }
     }
 }

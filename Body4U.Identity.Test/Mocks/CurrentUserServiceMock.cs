@@ -17,9 +17,6 @@
                     .Setup(x => x.UserId)
                     .Returns(FakeUserId);
 
-                mock.Setup(x => x.IsAdmin)
-                    .Returns(true);
-
                 return mock.Object;
             }
         }

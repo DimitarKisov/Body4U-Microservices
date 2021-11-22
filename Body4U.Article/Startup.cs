@@ -1,6 +1,7 @@
 namespace Body4U.Article
 {
     using Body4U.Article.Data;
+    using Body4U.Article.Services;
     using Body4U.Common.Infrastructure;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -16,7 +17,8 @@ namespace Body4U.Article
 
         public void ConfigureServices(IServiceCollection services)
             => services
-                .AddWebService<ArticleDbContext>(this.Configuration);
+                .AddWebService<ArticleDbContext>(this.Configuration)
+                .AddTransient<IArticleService, ArticleService>();
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app

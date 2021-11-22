@@ -11,11 +11,10 @@
     using System;
     using System.Collections.Generic;
     using System.IdentityModel.Tokens.Jwt;
+    using System.Linq;
     using System.Security.Claims;
     using System.Text;
     using System.Threading.Tasks;
-
-    using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -36,7 +35,7 @@
             this.currentUserService = currentUserService;
         }
 
-        public async Task<Result<string>> GenerateToken(ApplicationUser user)
+        public Result<string> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
         {
             try
             {
@@ -49,23 +48,24 @@
                     new Claim(ClaimTypes.Email, user.Email)
                 };
 
-                var isAdmin = await this.userManager.IsInRoleAsync(user, AdministratorRoleName);
-                claims.Add(new Claim(CustomClaimTypes.IsAdmin, isAdmin.ToString()));
+                if (roles != null)
+                {
+                    claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+                }
 
-                SymmetricSecurityKey key = new SymmetricSecurityKey(encodedKey);
-                SigningCredentials signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                //TODO: Намали валидноста на токена на по-късен етап
-                DateTime expires = DateTime.Now.AddDays(1);
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(encodedKey),
+                    SecurityAlgorithms.HmacSha256Signature)
+                };
 
-                JwtSecurityToken token = new JwtSecurityToken(
-                    "http://yourdomain.com",
-                    "http://yourdomain.com",
-                    claims,
-                    expires: expires,
-                    signingCredentials: signingCredentials
-                );
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var encryptedToken = tokenHandler.WriteToken(token);
 
-                return Result<string>.SuccessWith(new JwtSecurityTokenHandler().WriteToken(token));
+                return Result<string>.SuccessWith(encryptedToken);
             }
             catch (Exception ex)
             {
@@ -89,7 +89,7 @@
                     return Result<string>.Failure(Locked);
                 }
 
-                return await this.GenerateToken(user);
+                return this.GenerateToken(user);
             }
             catch (Exception ex)
             {

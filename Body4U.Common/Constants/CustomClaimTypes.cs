@@ -3,5 +3,6 @@
     public  class CustomClaimTypes
     {
         public const string IsAdmin = "IsAdmin";
+        public const string TrainerId = "TrainerId";
     }
 }
