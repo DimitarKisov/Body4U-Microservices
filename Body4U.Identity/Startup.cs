@@ -23,15 +23,17 @@
             services
                 .AddWebService<IdentityDbContext>(this.Configuration)
                 .AddUserStorage()
+                .AddSwagger()
+                .AddMessaging()
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()
-                .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>()
-                .AddMessaging();
+                .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
                 .UseWebService(env)
+                .UseSwagger()
                 .Initialize();
     }
 }
