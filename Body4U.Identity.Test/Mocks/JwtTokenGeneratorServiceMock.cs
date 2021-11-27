@@ -4,6 +4,7 @@
     using Body4U.Identity.Data.Models;
     using Body4U.Identity.Services;
     using Moq;
+
     using static Body4U.Common.Constants.Fakes.Identity;
 
     public class JwtTokenGeneratorServiceMock
@@ -13,7 +14,7 @@
             get
             {
                 var mock = new Mock<IJwtTokenGeneratorService>();
-                mock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), null)).ReturnsAsync(Result<string>.SuccessWith(FakeToken));
+                mock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), null)).Returns(Result<string>.SuccessWith(FakeToken));
 
                 return mock.Object;
             }

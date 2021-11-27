@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Models.Requests
+﻿namespace Body4U.Admin.Models.Identity
 {
     using System.ComponentModel.DataAnnotations;
 
