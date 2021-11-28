@@ -1,12 +1,16 @@
 ﻿namespace Body4U.Identity.Services
 {
     using Body4U.Common;
+    using Body4U.Common.Models.Identity.Requests;
+    using Body4U.Common.Models.Identity.Responses;
     using Body4U.Common.Services.Identity;
+    using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
     using System.IO;
@@ -25,17 +29,20 @@
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly ICurrentUserService currentUserService;
+        private readonly IdentityDbContext dbContext;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IdentityDbContext dbContext)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.currentUserService = currentUserService;
+            this.dbContext = dbContext;
         }
 
         public async Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request)
@@ -321,6 +328,78 @@
             {
                 Log.Error($"{nameof(IdentityService)}.{nameof(this.VerifyEmail)}", ex);
                 return Result.Failure(string.Format(Wrong, nameof(this.VerifyEmail)));
+            }
+        }
+
+        public async Task<Result<SearchUsersResponseModel>> AllUsers(SearchUsersRequestModel request)
+        {
+            try
+            {
+                var users = this.dbContext
+                .Users
+                .Select(x => new UserResponseModel
+                {
+                    Id = x.Id,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    Email = x.Email,
+                    PhoneNumber = x.PhoneNumber,
+                    Roles = this.dbContext.Roles
+                        .Where(y => x.Roles
+                            .Any(z => z.RoleId == y.Id))
+                        .Select(y => new RoleResponseModel { Id = y.Id, Name = y.Name })
+                })
+                .AsQueryable();
+
+                var totalRecords = await users.CountAsync();
+
+                var pageIndex = request.PageIndex;
+                var pageSize = request.PageSize;
+                var sortingOrder = request.OrderBy!;
+                var sortingField = request.SortBy!;
+
+                var orderBy = "Id";
+
+                if (!string.IsNullOrWhiteSpace(sortingField))
+                {
+                    if (sortingField.ToLower() == "firstname")
+                    {
+                        orderBy = nameof(request.FirstName);
+                    }
+                    else if (sortingField.ToLower() == "lastname")
+                    {
+                        orderBy = nameof(request.LastName);
+                    }
+                    else if (sortingField.ToLower() == "email")
+                    {
+                        orderBy = nameof(request.Email);
+                    }
+                    else if (sortingField.ToLower() == "phonenumber")
+                    {
+                        orderBy = nameof(request.PhoneNumber);
+                    }
+                }
+
+                if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+                {
+                    users = users.OrderByDescending(x => orderBy);
+                }
+                else
+                {
+                    users = users.OrderBy(x => orderBy);
+                }
+
+                var data = await users
+                 .Skip(pageIndex * pageSize)
+                 .Take(pageSize)
+                 .ToListAsync();
+
+                return Result<SearchUsersResponseModel>.SuccessWith(new SearchUsersResponseModel { Data = data, TotalRecords = totalRecords });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.AllUsers)}", ex);
+                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(this.AllUsers)));
             }
         }
 

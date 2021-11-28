@@ -2,6 +2,8 @@
 {
     using Body4U.Admin.Models.Identity;
     using Body4U.Admin.Services.Identity;
+    using Body4U.Common.Models.Identity.Requests;
+    using Body4U.Common.Models.Identity.Responses;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Newtonsoft.Json;
@@ -28,6 +30,19 @@
             try
             {
                 return await identityService.Login(request);
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<SearchUsersResponseModel>> Users([FromBody] SearchUsersRequestModel request)
+        {
+            try
+            {
+                return await this.identityService.AllUsers(request);
             }
             catch (ApiException ex)
             {

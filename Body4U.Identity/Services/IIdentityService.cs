@@ -1,6 +1,8 @@
 ﻿namespace Body4U.Identity.Services
 {
     using Body4U.Common;
+    using Body4U.Common.Models.Identity.Requests;
+    using Body4U.Common.Models.Identity.Responses;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
     using System.Threading.Tasks;
@@ -22,5 +24,7 @@
         Task<Result> ResetPassword(string userId, string token, ResetPasswordRequestModel request);
 
         Task<Result> VerifyEmail(VerifyEmailRequestModel request);
+
+        Task<Result<SearchUsersResponseModel>> AllUsers(SearchUsersRequestModel request);
     }
 }

@@ -1,7 +1,9 @@
 ﻿namespace Body4U.Identity.Controllers
 {
     using Body4U.Common.Controllers;
+    using Body4U.Common.Infrastructure;
     using Body4U.Common.Messages.Identity;
+    using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Services;
@@ -213,6 +215,19 @@
         public async Task<ActionResult> GenerateRefreshToken()
         {
             var result = await this.jwtTokenGeneratorService.GenerateRefreshToken();
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok(result.Data);
+        }
+
+        [HttpPost]
+        [AuthorizeAdministrator]
+        public async Task<ActionResult> AllUsers(SearchUsersRequestModel request)
+        {
+            var result = await this.identityService.AllUsers(request);
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);

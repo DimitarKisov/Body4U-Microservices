@@ -38,6 +38,7 @@
         {
             public const string AdministratorRoleName = "Administrator";
             public const string TrainerRoleName = "Trainer";
+            public const string Desc = "desc";
         }
     }
 }
