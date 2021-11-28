@@ -1,5 +1,6 @@
 ﻿namespace Body4U.Identity.Test.Controllers
 {
+    using Body4U.Common.Models.Identity.Requests;
     using Body4U.Identity.Controllers;
     using Body4U.Identity.Models.Requests;
     using MyTested.AspNetCore.Mvc;

@@ -25,6 +25,6 @@
 
         Task<Result> VerifyEmail(VerifyEmailRequestModel request);
 
-        Task<Result<SearchUsersResponseModel>> AllUsers(SearchUsersRequestModel request);
+        Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request);
     }
 }

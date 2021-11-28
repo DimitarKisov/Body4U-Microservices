@@ -2,18 +2,18 @@ namespace Body4U.Admin
 {
     using Body4U.Admin.Services.Identity;
     using Body4U.Common.Infrastructure;
+    using Body4U.Common.Services.Identity;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Refit;
-    using System;
 
     public class Startup
     {
         public Startup(IConfiguration configuration)
-            => Configuration = configuration;
+            => this.Configuration = configuration;
 
         public IConfiguration Configuration { get; }
 
@@ -21,13 +21,14 @@ namespace Body4U.Admin
         {
             services
                 .AddTokenAuthentication(this.Configuration)
+                .AddScoped<ICurrentTokenService, CurrentTokenService>()
+                .AddTransient<JwtHeaderAuthenticationMiddleware>()
                 .AddSwagger()
                 .AddControllers();
 
             services
                 .AddRefitClient<IIdentityService>()
-                .ConfigureHttpClient(c => c
-                    .BaseAddress = new Uri(this.Configuration.GetSection("ServiceEndpoints")["Identity"]));
+                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Identity"]);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -37,9 +38,10 @@ namespace Body4U.Admin
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection()
+            app
+                .UseHttpsRedirection()
                 .UseRouting()
-                .UseAuthentication()
+                .UseJwtHeaderAuthentication()
                 .UseAuthorization()
                 .UseSwagger()
                 .UseEndpoints(endpoints => endpoints

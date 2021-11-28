@@ -331,7 +331,7 @@
             }
         }
 
-        public async Task<Result<SearchUsersResponseModel>> AllUsers(SearchUsersRequestModel request)
+        public async Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request)
         {
             try
             {
@@ -398,8 +398,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.AllUsers)}", ex);
-                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(this.AllUsers)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.Users)}", ex);
+                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(this.Users)));
             }
         }
 

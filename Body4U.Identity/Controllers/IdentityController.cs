@@ -225,9 +225,10 @@
 
         [HttpPost]
         [AuthorizeAdministrator]
-        public async Task<ActionResult> AllUsers(SearchUsersRequestModel request)
+        [Route(nameof(Users))]
+        public async Task<ActionResult> Users(SearchUsersRequestModel request)
         {
-            var result = await this.identityService.AllUsers(request);
+            var result = await this.identityService.Users(request);
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);
