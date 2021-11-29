@@ -13,9 +13,5 @@
     <ProjectReference Include="..\Body4U.Common\Body4U.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\Identity\" />
-  </ItemGroup>
-
 
 </Project>

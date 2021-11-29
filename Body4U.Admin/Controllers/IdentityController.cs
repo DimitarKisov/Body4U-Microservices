@@ -8,6 +8,7 @@
     using Newtonsoft.Json;
     using Refit;
     using System.Collections.Generic;
+    using System.Net;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -53,10 +54,21 @@
 
         private BadRequestObjectResult ProccessErrors(ApiException ex)
         {
-            //Виж дали може да се вземе статус кода от грешката и спрямо него да се генерира съобщението, защото при 404, 401 гърми и не може да се кастне
             var errors = new List<string>();
 
-            if (ex.ContentHeaders != null && ex.ContentHeaders.ContentLength == 0 && !string.IsNullOrWhiteSpace(ex.Content))
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                errors.Add(HttpStatusCode.NotFound.ToString());
+                return this.BadRequest(errors);
+            }
+
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                errors.Add(HttpStatusCode.Unauthorized.ToString());
+                return this.BadRequest(errors);
+            }
+
+            if (ex.ContentHeaders != null)
             {
                 JsonConvert
                     .DeserializeObject<List<string>>(ex.Content)
@@ -65,9 +77,9 @@
                 return this.BadRequest(errors);
             }
 
-            var vaex = (ValidationApiException)ex;
+            var vaex = ex as ValidationApiException;
 
-            if (ex.HasContent)
+            if (ex.HasContent && vaex != null)
             {
                 foreach (var kvp in vaex.Content.Errors)
                 {
