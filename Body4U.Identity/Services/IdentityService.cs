@@ -13,6 +13,7 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -400,6 +401,21 @@
             {
                 Log.Error($"{nameof(IdentityService)}.{nameof(this.Users)}", ex);
                 return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(this.Users)));
+            }
+        }
+
+        public async Task<Result<List<RoleResponseModel>>> Roles()
+        {
+            try
+            {
+                var roles = await this.dbContext.Roles.Select(x => new RoleResponseModel { Id = x.Id, Name = x.Name }).ToListAsync();
+
+                return Result<List<RoleResponseModel>>.SuccessWith(roles);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.Roles)}", ex);
+                return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(this.Roles)));
             }
         }
 

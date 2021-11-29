@@ -52,6 +52,20 @@
             }
         }
 
+        [HttpPost]
+        [Route(nameof(Roles))]
+        public async Task<ActionResult<List<RoleResponseModel>>> Roles()
+        {
+            try
+            {
+                return await this.identityService.Roles();
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
         private BadRequestObjectResult ProccessErrors(ApiException ex)
         {
             var errors = new List<string>();

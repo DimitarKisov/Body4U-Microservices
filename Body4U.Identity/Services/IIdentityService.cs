@@ -5,6 +5,7 @@
     using Body4U.Common.Models.Identity.Responses;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public interface IIdentityService
@@ -26,5 +27,7 @@
         Task<Result> VerifyEmail(VerifyEmailRequestModel request);
 
         Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request);
+
+        Task<Result<List<RoleResponseModel>>> Roles();
     }
 }

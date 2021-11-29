@@ -236,5 +236,19 @@
 
             return Ok(result.Data);
         }
+
+        [HttpPost]
+        [AuthorizeAdministrator]
+        [Route(nameof(Roles))]
+        public async Task<ActionResult> Roles()
+        {
+            var result = await this.identityService.Roles();
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }
