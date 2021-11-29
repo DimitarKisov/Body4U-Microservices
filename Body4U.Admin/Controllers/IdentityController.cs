@@ -66,6 +66,21 @@
             }
         }
 
+        [HttpPost]
+        [Route(nameof(EditUserRoles))]
+        public async Task<ActionResult> EditUserRoles([FromBody] EditUserRolesRequestModel request)
+        {
+            try
+            {
+                await this.identityService.EditUserRoles(request);
+                return Ok();
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
         private BadRequestObjectResult ProccessErrors(ApiException ex)
         {
             var errors = new List<string>();

@@ -16,5 +16,8 @@
 
         [Post("/Identity/Roles")]
         Task<List<RoleResponseModel>> Roles();
+
+        [Post("/Identity/EditUserRoles")]
+        Task EditUserRoles(EditUserRolesRequestModel request);
     }
 }

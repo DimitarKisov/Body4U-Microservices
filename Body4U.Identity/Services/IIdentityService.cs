@@ -29,5 +29,7 @@
         Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request);
 
         Task<Result<List<RoleResponseModel>>> Roles();
+
+        Task<Result> EditUserRoles(EditUserRolesRequestModel request);
     }
 }

@@ -27,6 +27,7 @@
     public class IdentityService : IIdentityService
     {
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly ICurrentUserService currentUserService;
@@ -34,12 +35,14 @@
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
             ICurrentUserService currentUserService,
             IdentityDbContext dbContext)
         {
             this.userManager = userManager;
+            this.roleManager = roleManager;
             this.signInManager = signInManager;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.currentUserService = currentUserService;
@@ -336,20 +339,20 @@
         {
             try
             {
-                var users = this.dbContext
-                .Users
-                .Select(x => new UserResponseModel
-                {
-                    Id = x.Id,
-                    FirstName = x.FirstName,
-                    LastName = x.LastName,
-                    Email = x.Email,
-                    PhoneNumber = x.PhoneNumber,
-                    Roles = this.dbContext.Roles
+                var users = this.userManager
+                    .Users
+                    .Select(x => new UserResponseModel
+                    {
+                        Id = x.Id,
+                        FirstName = x.FirstName,
+                        LastName = x.LastName,
+                        Email = x.Email,
+                        PhoneNumber = x.PhoneNumber,
+                        Roles = this.roleManager.Roles
                         .Where(y => x.Roles
                             .Any(z => z.RoleId == y.Id))
                         .Select(y => new RoleResponseModel { Id = y.Id, Name = y.Name })
-                })
+                    })
                 .AsQueryable();
 
                 var totalRecords = await users.CountAsync();
@@ -416,6 +419,91 @@
             {
                 Log.Error($"{nameof(IdentityService)}.{nameof(this.Roles)}", ex);
                 return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(this.Roles)));
+            }
+        }
+
+        public async Task<Result> EditUserRoles(EditUserRolesRequestModel request)
+        {
+            try
+            {
+                var user = await this.userManager.FindByEmailAsync(request.Email);
+                var userRolesIds = new List<string>();
+
+                //Взимаме всички имена на роли за дадения потребител
+                var userRoleNames = await userManager.GetRolesAsync(user);
+                //Взимаме тези роли, които отговарят за съответния потребител
+                var roles = await roleManager.Roles
+                    .Where(x => userRoleNames
+                        .Contains(x.Name))
+                    .Select(x => x.Id)
+                    .ToListAsync();
+
+                //И ги добавяме към списъка за роли от ИД-та на потребителя
+                roles.ForEach(x => userRolesIds.Add(x));
+
+                var rolesDistincted = request.RolesIds.Distinct();
+
+                var rolesForAdd = rolesDistincted.Except(userRolesIds);
+                var rolesForRemove = rolesDistincted.Except(request.RolesIds);
+
+                var errors = new List<string>();
+
+                foreach (var roleId in rolesForAdd)
+                {
+                    var roleName = (await this.roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleId))?.Name;
+
+                    IdentityResult identityResult;
+
+                    if (roleName != null)
+                    {
+                        if (!await this.userManager.IsInRoleAsync(user, roleName))
+                        {
+                            identityResult = await this.userManager.AddToRoleAsync(user, roleName);
+
+                            if (identityResult.Succeeded && roleName == TrainerRoleName)
+                            {
+                                //TODO: Създай треньор
+                            }
+                            else
+                            {
+                                errors.AddRange(identityResult.Errors.Select(x => x.Description));
+                            }
+                        }
+                    }
+                }
+
+                foreach (var roleId in rolesForRemove)
+                {
+                    var roleName = (await this.roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleId))?.Name;
+
+                    IdentityResult identityResult;
+
+                    if (roleName != null)
+                    {
+                        if (await this.userManager.IsInRoleAsync(user, roleName))
+                        {
+                            identityResult = await this.userManager.RemoveFromRoleAsync(user, roleName);
+
+                            if (identityResult.Succeeded && roleName == TrainerRoleName)
+                            {
+                                //TODO: Изтрий треньор
+                            }
+                            else
+                            {
+                                errors.AddRange(identityResult.Errors.Select(x => x.Description));
+                            }
+                        }
+                    }
+                }
+
+                return errors.Count() == 0
+                    ? Result.Success
+                    : Result.Failure(errors);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(this.EditUserRoles)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(this.EditUserRoles)));
             }
         }
 

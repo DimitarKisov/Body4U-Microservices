@@ -34,7 +34,7 @@
         [Route(nameof(Register))]
         public async Task<ActionResult> Register(RegisterUserRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -63,7 +63,7 @@
         [Route(nameof(Login))]
         public async Task<ActionResult> Login(LoginUserRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -97,7 +97,7 @@
         [Route(nameof(Edit))]
         public async Task<ActionResult> Edit(EditMyProfileRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -117,7 +117,7 @@
         [Route(nameof(ChangePassword))]
         public async Task<ActionResult> ChangePassword(ChangePasswordRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -136,7 +136,7 @@
         [Route(nameof(ForgotPassword))]
         public async Task<ActionResult> ForgotPassword(ForgotPasswordRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -175,7 +175,7 @@
                 return this.BadRequest();
             }
 
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -194,7 +194,7 @@
         [Route(nameof(VerifyEmail))]
         public async Task<ActionResult> VerifyEmail([FromQuery] VerifyEmailRequestModel request)
         {
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
@@ -249,6 +249,26 @@
             }
 
             return this.Ok(result.Data);
+        }
+
+        [HttpPost]
+        [AuthorizeAdministrator]
+        [Route(nameof(EditUserRoles))]
+        public async Task<ActionResult> EditUserRoles(EditUserRolesRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.identityService.EditUserRoles(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok();
         }
     }
 }
