@@ -100,9 +100,6 @@
             try
             {
                 var user = await this.userManager.FindByEmailAsync(request.Email);
-                var trainerRole = new IdentityRole(TrainerRoleName);
-                await this.roleManager.CreateAsync(trainerRole);
-                await userManager.AddToRoleAsync(user, TrainerRoleName);
 
                 if (user == null)
                 {
@@ -431,7 +428,6 @@
             try
             {
                 var user = await this.userManager.FindByEmailAsync(request.Email);
-                //var userRolesIds = new List<string>();
 
                 //Взимаме всички имена на роли за дадения потребител
                 var userRoleNames = await userManager.GetRolesAsync(user);
@@ -442,9 +438,7 @@
                     .Select(x => x.Id)
                     .ToListAsync();
 
-                //И ги добавяме към списъка за роли от ИД-та на потребителя
-                //roles.ForEach(x => userRolesIds.Add(x));
-
+                //Премахваме дублиранията ако има такива
                 var rolesDistincted = request.RolesIds.Distinct();
 
                 var rolesForAdd = rolesDistincted.Except(roles);
