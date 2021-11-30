@@ -17,11 +17,9 @@
     {
         private readonly IIdentityService identityService;
 
-        public IdentityController(
-            IIdentityService identityService)
-        {
-            this.identityService = identityService;
-        }
+        public IdentityController(IIdentityService identityService)
+            => this.identityService = identityService;
+
 
         [HttpPost]
         [AllowAnonymous]

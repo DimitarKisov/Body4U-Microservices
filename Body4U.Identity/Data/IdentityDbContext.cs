@@ -12,6 +12,12 @@
         {
         }
 
+        public DbSet<Trainer> Trainers { get; set; }
+
+        public DbSet<TrainerImage> TrainerImages { get; set; }
+
+        public DbSet<TrainerVideo> TrainerVideos { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -49,6 +55,26 @@
                 .HasForeignKey(x => x.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
+            #region Trainer
+            builder.Entity<Trainer>()
+                .HasOne(x => x.ApplicationUser)
+                .WithOne(y => y.Trainer)
+                .HasForeignKey<Trainer>(x => x.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Trainer>()
+                .HasMany(x => x.TrainerImages)
+                .WithOne(y => y.Trainer)
+                .HasForeignKey(y => y.TrainerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Trainer>()
+                .HasMany(x => x.TrainerVideos)
+                .WithOne(y => y.Trainer)
+                .HasForeignKey(y => y.TrainerId)
+                .OnDelete(DeleteBehavior.Restrict);
             #endregion
         }
     }

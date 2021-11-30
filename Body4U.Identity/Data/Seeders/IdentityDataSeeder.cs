@@ -4,6 +4,7 @@
     using Body4U.Identity.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Configuration;
+    using System;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -14,15 +15,18 @@
         private readonly IConfiguration configuration;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly IdentityDbContext dbContext;
 
         public IdentityDataSeeder(
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            IdentityDbContext dbContext)
         {
             this.configuration = configuration;
             this.userManager = userManager;
             this.roleManager = roleManager;
+            this.dbContext = dbContext;
         }
 
         public void SeedData()
@@ -37,8 +41,10 @@
                 Task.Run(async () =>
                 {
                     var adminRole = new IdentityRole(AdministratorRoleName);
+                    var trainerRole = new IdentityRole(TrainerRoleName);
 
                     await this.roleManager.CreateAsync(adminRole);
+                    await this.roleManager.CreateAsync(trainerRole);
 
                     var user = new ApplicationUser
                     {
@@ -54,6 +60,10 @@
                     await userManager.CreateAsync(user, passsword);
 
                     await userManager.AddToRoleAsync(user, AdministratorRoleName);
+                    await userManager.AddToRoleAsync(user, TrainerRoleName);
+
+                    var trainer = new Trainer() { ApplicationUserId = user.Id, ApplicationUser = user, CreatedOn = DateTime.Now };
+                    await this.dbContext.Trainers.AddAsync(trainer);
                 })
                 .GetAwaiter()
                 .GetResult();

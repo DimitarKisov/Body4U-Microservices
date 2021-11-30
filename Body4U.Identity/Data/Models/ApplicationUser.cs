@@ -46,6 +46,8 @@
 
         public string ModifiedBy { get; set; }
 
+        public Trainer Trainer { get; set; }
+
         public ICollection<IdentityUserRole<string>> Roles { get; set; }
 
         public ICollection<IdentityUserClaim<string>> Claims { get; set; }

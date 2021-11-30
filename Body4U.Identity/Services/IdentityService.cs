@@ -23,6 +23,7 @@
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.TrainerConstants;
 
     public class IdentityService : IIdentityService
     {
@@ -99,6 +100,9 @@
             try
             {
                 var user = await this.userManager.FindByEmailAsync(request.Email);
+                var trainerRole = new IdentityRole(TrainerRoleName);
+                await this.roleManager.CreateAsync(trainerRole);
+                await userManager.AddToRoleAsync(user, TrainerRoleName);
 
                 if (user == null)
                 {
@@ -427,7 +431,7 @@
             try
             {
                 var user = await this.userManager.FindByEmailAsync(request.Email);
-                var userRolesIds = new List<string>();
+                //var userRolesIds = new List<string>();
 
                 //Взимаме всички имена на роли за дадения потребител
                 var userRoleNames = await userManager.GetRolesAsync(user);
@@ -439,12 +443,14 @@
                     .ToListAsync();
 
                 //И ги добавяме към списъка за роли от ИД-та на потребителя
-                roles.ForEach(x => userRolesIds.Add(x));
+                //roles.ForEach(x => userRolesIds.Add(x));
 
                 var rolesDistincted = request.RolesIds.Distinct();
 
-                var rolesForAdd = rolesDistincted.Except(userRolesIds);
-                var rolesForRemove = rolesDistincted.Except(request.RolesIds);
+                var rolesForAdd = rolesDistincted.Except(roles);
+                var rolesForRemove = roles.Except(request.RolesIds);
+
+                var hasChanges = false;
 
                 var errors = new List<string>();
 
@@ -462,7 +468,9 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                //TODO: Създай треньор
+                                var trainer = new Trainer() { ApplicationUserId = user.Id, ApplicationUser = user, CreatedOn = DateTime.Now };
+                                await this.dbContext.Trainers.AddAsync(trainer);
+                                hasChanges = true;
                             }
                             else
                             {
@@ -486,7 +494,16 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                //TODO: Изтрий треньор
+                                var trainer = await this.dbContext.Trainers.FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+                                if (trainer != null)
+                                {
+                                    this.dbContext.Trainers.Remove(trainer);
+                                    hasChanges = true;
+                                }
+                                else
+                                {
+                                    errors.Add(string.Format(TrainerNotFound, user.Id));
+                                }
                             }
                             else
                             {
@@ -494,6 +511,11 @@
                             }
                         }
                     }
+                }
+
+                if (hasChanges)
+                {
+                    await this.dbContext.SaveChangesAsync();
                 }
 
                 return errors.Count() == 0

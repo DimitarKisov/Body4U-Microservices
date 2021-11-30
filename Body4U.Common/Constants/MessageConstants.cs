@@ -24,5 +24,10 @@
             public const string WrongGender = "There is no such gender.";
             public const string WrongUsernameOrPassword = "Wrong email or password.";
         }
+
+        public class TrainerConstants
+        {
+            public const string TrainerNotFound = "User with ID '{0}' is not a trainer.";
+        }
     }
 }
