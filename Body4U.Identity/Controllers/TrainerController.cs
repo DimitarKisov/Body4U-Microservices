@@ -2,6 +2,7 @@
 {
     using Body4U.Common.Controllers;
     using Body4U.Identity.Infrastructure;
+    using Body4U.Identity.Models.Requests.Trainer;
     using Body4U.Identity.Services.Trainer;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
@@ -27,6 +28,27 @@
             }
 
             return this.Ok(result.Data);
+        }
+
+        //TODO: MyArticles
+
+        [HttpPut]
+        [Route(nameof(Edit))]
+        public async Task<ActionResult> Edit(EditMyTrainerProfileRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.trainerService.Edit(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok();
         }
     }
 }

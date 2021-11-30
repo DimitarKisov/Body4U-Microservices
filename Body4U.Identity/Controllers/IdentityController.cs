@@ -92,7 +92,7 @@
             return this.Ok(result.Data);
         }
 
-        [HttpPost]
+        [HttpPut]
         [Authorize]
         [Route(nameof(Edit))]
         public async Task<ActionResult> Edit(EditMyProfileRequestModel request)

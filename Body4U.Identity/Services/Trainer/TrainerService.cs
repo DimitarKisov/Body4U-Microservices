@@ -3,6 +3,7 @@
     using Body4U.Common;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
+    using Body4U.Identity.Models.Requests.Trainer;
     using Body4U.Identity.Models.Responses.Trainer;
     using Serilog;
     using System;
@@ -23,13 +24,12 @@
             this.dbContext = dbContext;
             this.currentUserService = currentUserService;
         }
-
+        
         public async Task<Result<MyTrainerProfileResponseModel>> MyProfile()
         {
             try
             {
                 var trainer = await this.dbContext.Trainers.FindAsync(new object[] { currentUserService.TrainerId });
-
                 if (trainer == null)
                 {
                     return Result<MyTrainerProfileResponseModel>.Failure(string.Format(TrainerNotFound, currentUserService.TrainerId));
@@ -52,6 +52,54 @@
                 Log.Error($"{nameof(TrainerService)}.{nameof(MyProfile)}", ex);
                 return Result<MyTrainerProfileResponseModel>.Failure(string.Format(Wrong, nameof(MyProfile)));
             }
+        }
+
+        public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)
+        {
+            var trainer = await this.dbContext.Trainers.FindAsync(new object[] { request.Id });
+            if (trainer == null)
+            {
+                return Result.Failure(string.Format(TrainerNotFound, currentUserService.TrainerId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Bio))
+            {
+                trainer.Bio = request.Bio.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(request.ShortBio))
+            {
+                trainer.ShortBio = request.ShortBio.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(request.FacebookUrl))
+            {
+                trainer.FacebookUrl = request.FacebookUrl.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(request.InstagramUrl))
+            {
+                trainer.InstagramUrl = request.InstagramUrl.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(request.YoutubeChannelUrl))
+            {
+                trainer.YoutubeChannelUrl = request.YoutubeChannelUrl.Trim();
+            }
+
+            if (trainer.Bio != null && trainer.ShortBio != null)
+            {
+                trainer.IsReadyToWrite = true;
+                trainer.IsReadyToVisualize = true;
+            }
+            else
+            {
+                trainer.IsReadyToWrite = false;
+                trainer.IsReadyToVisualize = false;
+            }
+
+            trainer.ModifiedOn = DateTime.Now;
+            trainer.ModifiedBy = currentUserService.UserId;
+
+            await this.dbContext.SaveChangesAsync();
+
+            return Result.Success;
         }
     }
 }
