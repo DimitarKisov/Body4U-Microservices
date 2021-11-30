@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Services
+﻿namespace Body4U.Identity.Services.Identity
 {
     using Body4U.Common;
     using Body4U.Common.Models.Identity.Requests;
@@ -23,7 +23,6 @@
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.MessageConstants.Common;
-    using static Body4U.Common.Constants.MessageConstants.TrainerConstants;
 
     public class IdentityService : IIdentityService
     {
@@ -126,7 +125,7 @@
 
                 var roles = await this.userManager.GetRolesAsync(user);
 
-                var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
+                var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user, roles);
 
                 if (tokenResult.Succeeded)
                 {
@@ -137,8 +136,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.Login)}", ex);
-                return Result<string>.Failure(string.Format(Wrong, nameof(this.Login)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(Login)}", ex);
+                return Result<string>.Failure(string.Format(Wrong, nameof(Login)));
             }
         }
 
@@ -172,8 +171,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.MyProfile)}", ex);
-                return Result<MyProfileResponseModel>.Failure(string.Format(Wrong, nameof(this.MyProfile)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(MyProfile)}", ex);
+                return Result<MyProfileResponseModel>.Failure(string.Format(Wrong, nameof(MyProfile)));
             }
         }
 
@@ -187,7 +186,7 @@
                     return Result.Failure(string.Format(UserNotFound, request.Id));
                 }
 
-                if (request.Id != this.currentUserService.UserId && await userManager.IsInRoleAsync(user, AdministratorRoleName))
+                if (request.Id != this.currentUserService.UserId && !await userManager.IsInRoleAsync(user, AdministratorRoleName))
                 {
                     return Result.Failure(WrongWrights);
                 }
@@ -230,8 +229,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.EditMyProfile)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.EditMyProfile)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(EditMyProfile)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(EditMyProfile)));
             }
         }
 
@@ -257,8 +256,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.ChangePassword)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.ChangePassword)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(ChangePassword)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(ChangePassword)));
             }
         }
 
@@ -277,8 +276,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.ForgotPassword)}", ex);
-                return Result<ForgotPasswordResponseModel>.Failure(string.Format(Wrong, nameof(this.ForgotPassword)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(ForgotPassword)}", ex);
+                return Result<ForgotPasswordResponseModel>.Failure(string.Format(Wrong, nameof(ForgotPassword)));
             }
         }
 
@@ -305,8 +304,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.ResetPassword)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.ResetPassword)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(ResetPassword)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(ResetPassword)));
             }
         }
 
@@ -331,8 +330,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.VerifyEmail)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.VerifyEmail)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(VerifyEmail)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(VerifyEmail)));
             }
         }
 
@@ -403,8 +402,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.Users)}", ex);
-                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(this.Users)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(Users)}", ex);
+                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(Users)));
             }
         }
 
@@ -418,8 +417,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.Roles)}", ex);
-                return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(this.Roles)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(Roles)}", ex);
+                return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(Roles)));
             }
         }
 
@@ -518,35 +517,43 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.EditUserRoles)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(this.EditUserRoles)));
+                Log.Error($"{nameof(IdentityService)}.{nameof(EditUserRoles)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(EditUserRoles)));
             }
         }
 
         #region Private methods
         private Result<byte[]> ImageConverter(IFormFile file)
         {
-            if (file == null)
+            try
             {
-                return Result<byte[]>.SuccessWith(new byte[0]);
-            }
-            if (file != null && file.ContentType != "image/jpeg" && file.ContentType != "image/png")
-            {
-                return Result<byte[]>.Failure(WrongImageFormat);
-            }
-
-            var result = new byte[file!.Length];
-
-            if (file!.Length > 0)
-            {
-                using (var stream = new MemoryStream())
+                if (file == null)
                 {
-                    file.CopyTo(stream);
-                    result = stream.ToArray();
+                    return Result<byte[]>.SuccessWith(new byte[0]);
                 }
-            }
+                if (file != null && file.ContentType != "image/jpeg" && file.ContentType != "image/png")
+                {
+                    return Result<byte[]>.Failure(WrongImageFormat);
+                }
 
-            return Result<byte[]>.SuccessWith(result);
+                var result = new byte[file!.Length];
+
+                if (file!.Length > 0)
+                {
+                    using (var stream = new MemoryStream())
+                    {
+                        file.CopyTo(stream);
+                        result = stream.ToArray();
+                    }
+                }
+
+                return Result<byte[]>.SuccessWith(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(ImageConverter)}", ex);
+                return Result<byte[]>.Failure(string.Format(Wrong, nameof(ImageConverter)));
+            }
         }
         #endregion
     }

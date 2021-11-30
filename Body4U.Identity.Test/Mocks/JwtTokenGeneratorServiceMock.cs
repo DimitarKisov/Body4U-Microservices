@@ -14,7 +14,7 @@
             get
             {
                 var mock = new Mock<IJwtTokenGeneratorService>();
-                mock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), null)).Returns(Result<string>.SuccessWith(FakeToken));
+                mock.Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>(), null)).ReturnsAsync(Result<string>.SuccessWith(FakeToken));
 
                 return mock.Object;
             }

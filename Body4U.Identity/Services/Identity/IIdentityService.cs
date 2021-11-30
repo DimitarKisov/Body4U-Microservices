@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Services
+﻿namespace Body4U.Identity.Services.Identity
 {
     using Body4U.Common;
     using Body4U.Common.Models.Identity.Requests;

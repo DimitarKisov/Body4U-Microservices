@@ -6,6 +6,8 @@
     using Body4U.Identity.Data.Seeders;
     using Body4U.Identity.Infrastructure;
     using Body4U.Identity.Services;
+    using Body4U.Identity.Services.Identity;
+    using Body4U.Identity.Services.Trainer;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -25,6 +27,7 @@
                 .AddMessaging()
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()
+                .AddTransient<ITrainerService, TrainerService>()
                 .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

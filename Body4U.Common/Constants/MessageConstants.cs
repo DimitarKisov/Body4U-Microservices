@@ -20,6 +20,7 @@
             public const string EmailNotConfirmed = "Email is not confirmed.";
             public const string Locked = "Account is locked.";
             public const string LoginFailed = "Login failed.";
+            public const string TrainerNotFound = "User with ID '{0}' is not a trainer.";
             public const string UserNotFound = "There is not such user with Id '{0}'";
             public const string WrongGender = "There is no such gender.";
             public const string WrongUsernameOrPassword = "Wrong email or password.";
@@ -27,7 +28,7 @@
 
         public class TrainerConstants
         {
-            public const string TrainerNotFound = "User with ID '{0}' is not a trainer.";
+            public const string TrainerNotFound = "Trainer with ID '{0}' was not found.";
         }
     }
 }

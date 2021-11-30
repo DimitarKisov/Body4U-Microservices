@@ -3,8 +3,10 @@
     using Body4U.Common;
     using Body4U.Common.Constants;
     using Body4U.Common.Services.Identity;
+    using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.IdentityModel.Tokens;
     using Serilog;
@@ -24,18 +26,21 @@
         private readonly IConfiguration configuration;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly ICurrentUserService currentUserService;
+        private readonly IdentityDbContext dbContext;
 
         public JwtTokenGeneratorService(
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IdentityDbContext dbContext)
         {
             this.configuration = configuration;
             this.userManager = userManager;
             this.currentUserService = currentUserService;
+            this.dbContext = dbContext;
         }
 
-        public Result<string> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
+        public async Task<Result<string>> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
         {
             try
             {
@@ -53,6 +58,13 @@
                     claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
                 }
 
+                var trainerId = (await this.dbContext.Trainers.FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?.Id;
+                if (trainerId != null)
+                {
+                    claims.Add(new Claim(CustomClaimTypes.TrainerId, trainerId.ToString()));
+                }
+                
+                //TODO: Намали валидността на токена
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
@@ -89,7 +101,7 @@
                     return Result<string>.Failure(Locked);
                 }
 
-                return this.GenerateToken(user);
+                return await this.GenerateToken(user);
             }
             catch (Exception ex)
             {

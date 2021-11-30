@@ -4,9 +4,9 @@
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models.Identity.Requests;
-    using Body4U.Common.Services.Identity;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Services;
+    using Body4U.Identity.Services.Identity;
     using MassTransit;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -78,7 +78,7 @@
             return Ok(result.Data);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
         [Route(nameof(MyProfile))]
         public async Task<ActionResult> MyProfile()

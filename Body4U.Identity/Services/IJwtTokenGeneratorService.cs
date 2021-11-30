@@ -7,7 +7,7 @@
 
     public interface IJwtTokenGeneratorService
     {
-        Result<string> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null);
+        Task<Result<string>> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null);
 
         Task<Result<string>> GenerateRefreshToken();
     }
