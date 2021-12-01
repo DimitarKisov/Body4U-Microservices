@@ -5,5 +5,7 @@
         string UserId { get; }
 
         int? TrainerId { get; }
+
+        bool IsAdministrator { get; }
     }
 }

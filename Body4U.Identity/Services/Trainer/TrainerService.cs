@@ -3,8 +3,10 @@
     using Body4U.Common;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
+    using Body4U.Identity.Data.Models;
     using Body4U.Identity.Models.Requests.Trainer;
     using Body4U.Identity.Models.Responses.Trainer;
+    using Microsoft.AspNetCore.Identity;
     using Serilog;
     using System;
     using System.Threading.Tasks;
@@ -16,15 +18,18 @@
     {
         private readonly IdentityDbContext dbContext;
         private readonly ICurrentUserService currentUserService;
+        private readonly UserManager<ApplicationUser> userManager;
 
         public TrainerService(
             IdentityDbContext dbContext,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            UserManager<ApplicationUser> userManager)
         {
             this.dbContext = dbContext;
             this.currentUserService = currentUserService;
+            this.userManager = userManager;
         }
-        
+
         public async Task<Result<MyTrainerProfileResponseModel>> MyProfile()
         {
             try
@@ -56,6 +61,11 @@
 
         public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)
         {
+            if (request.Id != this.currentUserService.TrainerId && !this.currentUserService.IsAdministrator)
+            {
+                return Result.Failure(WrongWrights);
+            }
+
             var trainer = await this.dbContext.Trainers.FindAsync(new object[] { request.Id });
             if (trainer == null)
             {

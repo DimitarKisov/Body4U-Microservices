@@ -180,6 +180,11 @@
         {
             try
             {
+                if (request.Id != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
                 var user = await this.userManager.FindByIdAsync(request.Id);
                 if (user == null)
                 {

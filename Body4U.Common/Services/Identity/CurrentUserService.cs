@@ -4,6 +4,8 @@
     using Microsoft.AspNetCore.Http;
     using System.Security.Claims;
 
+    using static Body4U.Common.Constants.DataConstants.Common;
+
     public class CurrentUserService : ICurrentUserService
     {
         public CurrentUserService(IHttpContextAccessor httpContextAccessor)
@@ -19,11 +21,15 @@
                 {
                     this.TrainerId = int.Parse(trainerId);
                 }
+
+                this.IsAdministrator = user.IsInRole(AdministratorRoleName);
             }
         }
 
         public string UserId { get; }
 
         public int? TrainerId { get; }
+
+        public bool IsAdministrator { get; }
     }
 }
