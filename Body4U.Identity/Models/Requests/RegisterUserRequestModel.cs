@@ -16,11 +16,11 @@
         public string PhoneNumber { get; set; }
 
         [Required]
-        [StringLength(FirstNameMaxLength, ErrorMessage = "Last name must be between {0} and {1} symbols long!", MinimumLength = FirstNameMinLenght)]
+        [StringLength(FirstNameMaxLength, ErrorMessage = "Last name must be between {2} and {1} symbols long!", MinimumLength = FirstNameMinLenght)]
         public string FirstName { get; set; }
 
         [Required]
-        [StringLength(LastNameMaxLength, ErrorMessage = "Last name must be between {0} and {1} symbols long!", MinimumLength = LastNameMinLength)]
+        [StringLength(LastNameMaxLength, ErrorMessage = "Last name must be between {2} and {1} symbols long!", MinimumLength = LastNameMinLength)]
         public string LastName { get; set; }
 
         [Range(MinAge, MaxAge)]
@@ -35,6 +35,7 @@
         [StringLength(MaxPasswordLength, ErrorMessage = "Password must be between {2} and {1} symbols long!", MinimumLength = MinPasswordLength)]
         public string Password { get; set; }
 
+        [Required]
         [Compare(nameof(Password), ErrorMessage = "Passwords does not match.")]
         public string ConfirmPassword { get; set; }
     }

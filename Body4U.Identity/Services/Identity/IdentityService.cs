@@ -12,6 +12,9 @@
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
+    using SixLabors.ImageSharp;
+    using SixLabors.ImageSharp.Formats.Jpeg;
+    using SixLabors.ImageSharp.Processing;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -19,6 +22,7 @@
     using System.Threading.Tasks;
     using System.Web;
 
+    using static Body4U.Common.Constants.DataConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
@@ -53,10 +57,41 @@
         {
             try
             {
-                var imageResult = this.ImageConverter(request.ProfilePicture);
-                if (!imageResult.Succeeded)
+                var addImage = false;
+                var id = string.Empty;
+                var path = string.Empty;
+                var name = string.Empty;
+                var storagePath = string.Empty;
+
+                if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
-                    return Result<RegisterUserResponseModel>.Failure(imageResult.Errors);
+                    if (request.ProfilePicture.ContentType != "image/jpeg" && request.ProfilePicture.ContentType != "image/jpg" && request.ProfilePicture.ContentType != "image/png" && request.ProfilePicture.ContentType != "image/bmp")
+                    {
+                        return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
+                    }
+
+                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
+                    {
+                        //If the picture has smaller width or height than the size needed in profile section we will abort the action because the picture in the profile will be always bigger than the others (thumbnail)
+                        if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
+                        {
+                            return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
+                        }
+
+                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+
+                        id = Guid.NewGuid().ToString();
+                        path = $"/images/{totalImages % 1000}/";
+                        name = $"{id}.jpg";
+
+                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\"));
+                        if (!Directory.Exists(storagePath))
+                        {
+                            Directory.CreateDirectory(storagePath);
+                        }
+
+                        addImage = true;
+                    }
                 }
 
                 if (!Enum.IsDefined(typeof(Gender), request.Gender))
@@ -72,7 +107,6 @@
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Age = request.Age,
-                    ProfilePicture = imageResult.Data.Length == 0 ? null : imageResult.Data,
                     Gender = request.Gender,
                     CreateOn = DateTime.Now
                 };
@@ -81,15 +115,27 @@
 
                 if (result.Succeeded)
                 {
+                    if (addImage)
+                    {
+                        await this.SaveImage(request.ProfilePicture, $"Original_{name}", storagePath, null, null);
+                        await this.SaveImage(request.ProfilePicture, $"InProfile_{name}", storagePath, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight);
+                        await this.SaveImage(request.ProfilePicture, $"Thumbnail_{name}", storagePath, ProfilePictureThumbnailWidth, ProfilePictureThumbailHeight);
+
+                        await this.dbContext.UserImageDatas.AddAsync(new UserImageData { Id = id, Folder = path, ApplicationUserId = user.Id });
+                        await this.dbContext.SaveChangesAsync();
+                    }
+
                     var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
+
                     return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token });
                 }
 
                 return Result<RegisterUserResponseModel>.Failure(result.Errors.Select(x => x.Description));
+
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(this.Register)}", ex);
+                Log.Error(ex.Message, $"{nameof(IdentityService)}.{nameof(this.Register)}");
                 return Result<RegisterUserResponseModel>.Failure(string.Format(Wrong, nameof(this.Register)));
             }
         }
@@ -136,7 +182,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(Login)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Login)}");
                 return Result<string>.Failure(string.Format(Wrong, nameof(Login)));
             }
         }
@@ -145,16 +191,35 @@
         {
             try
             {
-                var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
+                var user = await this.dbContext
+                    .Users
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.FirstName,
+                        x.LastName,
+                        x.Email,
+                        x.Age,
+                        x.PhoneNumber,
+                        x.Gender
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == currentUserService.UserId);
 
                 if (user == null)
                 {
                     return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, currentUserService.UserId));
                 }
 
-                var profilePicture = user.ProfilePicture != null
-                    ? Convert.ToBase64String(user.ProfilePicture)
-                    : null;
+                string profilePicturePath = null;
+
+                var profilePictureData = await this.dbContext
+                    .UserImageDatas
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+
+                if (profilePictureData != null)
+                {
+                    profilePicturePath = profilePictureData.Folder + "InProfile_" + profilePictureData.Id + ".jpg";
+                }
 
                 return Result<MyProfileResponseModel>.SuccessWith(
                     new MyProfileResponseModel 
@@ -163,7 +228,7 @@
                         FirstName = user.FirstName,
                         LastName = user.LastName,
                         Email = user.Email,
-                        ProfilePicture = profilePicture,
+                        ProfilePicturePath = profilePicturePath,
                         Age = user.Age,
                         PhoneNumber = user.PhoneNumber,
                         Gender = user.Gender 
@@ -215,18 +280,18 @@
                 user.Age = request.Age;
                 user.Gender = request.Gender;
 
-                if (request.ProfilePicture.Length > 0)
-                {
-                    using (var stream = new MemoryStream())
-                    {
-                        await request.ProfilePicture.CopyToAsync(stream);
+                //if (request.ProfilePicture.Length > 0)
+                //{
+                //    using (var stream = new MemoryStream())
+                //    {
+                //        await request.ProfilePicture.CopyToAsync(stream);
 
-                        if (user.ProfilePicture != stream.ToArray())
-                        {
-                            user.ProfilePicture = stream.ToArray();
-                        }
-                    }
-                }
+                //        if (user.ProfilePicture != stream.ToArray())
+                //        {
+                //            user.ProfilePicture = stream.ToArray();
+                //        }
+                //    }
+                //}
 
                 return Result.Success;
 
@@ -528,36 +593,36 @@
         }
 
         #region Private methods
-        private Result<byte[]> ImageConverter(IFormFile file)
+
+        private async Task SaveImage(IFormFile imageFile, string name, string path, int? resizedWidth = null, int? resizedHeight = null)
         {
             try
             {
-                if (file == null)
+                using (var image = Image.Load(imageFile.OpenReadStream()))
                 {
-                    return Result<byte[]>.SuccessWith(new byte[0]);
-                }
-                if (file != null && file.ContentType != "image/jpeg" && file.ContentType != "image/png")
-                {
-                    return Result<byte[]>.Failure(WrongImageFormat);
-                }
+                    var width = image.Width;
+                    var height = image.Height;
 
-                var result = new byte[file!.Length];
-
-                if (file!.Length > 0)
-                {
-                    using (var stream = new MemoryStream())
+                    if (resizedWidth != null && resizedHeight != null)
                     {
-                        file.CopyTo(stream);
-                        result = stream.ToArray();
+                        width = (int)resizedWidth;
+                        height = (int)resizedHeight;
                     }
-                }
 
-                return Result<byte[]>.SuccessWith(result);
+                    image.Mutate(x => x.Resize(new Size(width, height)));
+
+                    //Used to remove information about the picture if someone download it.
+                    image.Metadata.ExifProfile = null;
+
+                    await image.SaveAsJpegAsync($"{path}/{name}", new JpegEncoder
+                    {
+                        Quality = 75
+                    });
+                }
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(ImageConverter)}", ex);
-                return Result<byte[]>.Failure(string.Format(Wrong, nameof(ImageConverter)));
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(SaveImage)}");
             }
         }
         #endregion

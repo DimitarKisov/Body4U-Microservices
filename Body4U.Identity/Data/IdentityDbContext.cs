@@ -12,6 +12,8 @@
         {
         }
 
+        public DbSet<UserImageData> UserImageDatas { get; set; }
+
         public DbSet<Trainer> Trainers { get; set; }
 
         public DbSet<TrainerImage> TrainerImages { get; set; }
@@ -55,6 +57,12 @@
                 .HasForeignKey(x => x.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<ApplicationUser>()
+                .HasOne(x => x.UserImageData)
+                .WithOne(y => y.ApplicationUser)
+                .HasForeignKey<UserImageData>(y => y.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
             #region Trainer

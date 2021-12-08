@@ -1,6 +1,7 @@
 ﻿namespace Body4U.Identity.Models.Responses
 {
     using Body4U.Identity.Data.Models;
+    using System.IO;
 
     public class MyProfileResponseModel
     {
@@ -12,7 +13,7 @@
 
         public string Email { get; set; }
 
-        public string ProfilePicture { get; set; }
+        public string ProfilePicturePath { get; set; }
 
         public int? Age { get; set; }
 

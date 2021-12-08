@@ -12,6 +12,7 @@
             public const string InternalServerError = "Internal server error.";
             public const string Wrong = "Something went wrong in {0}.";
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
+            public const string WrongWidthOrHeight = "Please upload a image with bigger width or height.";
             public const string WrongWrights = "You don't have the rights for this action!";
         }
 

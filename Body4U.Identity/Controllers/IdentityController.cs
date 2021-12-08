@@ -3,12 +3,14 @@
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Messages.Identity;
+    using Body4U.Common.Models;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Services;
     using Body4U.Identity.Services.Identity;
     using MassTransit;
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
@@ -31,8 +33,9 @@
         }
 
         [HttpPost]
+        [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(Register))]
-        public async Task<ActionResult> Register(RegisterUserRequestModel request)
+        public async Task<ActionResult> Register([FromForm] RegisterUserRequestModel request) //TODO: Ако е с атрибут [FromForm] в слагер можем да изберем снимка, но в Postman не можем да го пуснем, защото не байндва нито едно пропърти. Ако е без атрибуте [FromForm] в постман работи, но в слагер не можем да изберем файл. Виж дали има начин да се направи да работи и с двете
         {
             if (!this.ModelState.IsValid)
             {

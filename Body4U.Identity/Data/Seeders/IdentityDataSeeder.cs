@@ -52,7 +52,6 @@
                         UserName = email,
                         FirstName = firstName,
                         LastName = lastName,
-                        ProfilePicture = null,
                         Gender = Gender.Male,
                         EmailConfirmed = true
                     };

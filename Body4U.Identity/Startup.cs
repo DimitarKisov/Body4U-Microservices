@@ -25,6 +25,7 @@
                 .AddUserStorage()
                 .AddWebService<IdentityDbContext>(this.Configuration)
                 .AddMessaging()
+                .AddTransient<ExceptionMiddleware>()
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()
                 .AddTransient<ITrainerService, TrainerService>()
@@ -33,6 +34,8 @@
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
                 .UseWebService(env)
+                .UseDefaultFiles()
+                .UseStaticFiles()
                 .Initialize();
     }
 }

@@ -20,6 +20,7 @@ namespace Body4U.Identity
 
             try
             {
+                Log.Information("Starting Body4U.Identity...");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)

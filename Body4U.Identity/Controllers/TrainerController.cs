@@ -13,9 +13,7 @@
         private readonly ITrainerService trainerService;
 
         public TrainerController(ITrainerService trainerService)
-        {
-            this.trainerService = trainerService;
-        }
+            => this.trainerService = trainerService;
 
         [HttpGet]
         [Route(nameof(MyProfile))]
@@ -29,8 +27,6 @@
 
             return this.Ok(result.Data);
         }
-
-        //TODO: MyArticles
 
         [HttpPut]
         [Route(nameof(Edit))]
@@ -50,5 +46,7 @@
 
             return this.Ok();
         }
+
+        //TODO: MyArticles, MyPhotos, MyVideos
     }
 }

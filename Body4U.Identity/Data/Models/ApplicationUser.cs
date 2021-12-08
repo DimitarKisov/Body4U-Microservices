@@ -31,8 +31,6 @@
         [Range(MinAge, MaxAge)]
         public int? Age { get; set; }
 
-        public byte[] ProfilePicture { get; set; }
-
         [Required]
         public Gender Gender { get; set; }
 
@@ -45,6 +43,10 @@
         public DateTime? ModifiedOn { get; set; }
 
         public string ModifiedBy { get; set; }
+
+        public UserImageData UserImageData { get; set; }
+
+        public string UserImageDataId { get; set; }
 
         public Trainer Trainer { get; set; }
 

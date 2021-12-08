@@ -16,6 +16,7 @@
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage()
+                    .UseExceptionMiddleware() // TODO: След време ако не е нужно от други апита, да го премахна и сложа само в Startup-ите на тези, които ще го ползват, тъй като не всички ще имат снимки
                     .UseSwagger();
             }
 

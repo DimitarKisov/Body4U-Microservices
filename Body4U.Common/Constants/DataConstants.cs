@@ -13,6 +13,10 @@
             public const int MaxAge = 80;
             public const int MinPasswordLength = 6;
             public const int MaxPasswordLength = 20;
+            public const int ProfilePictureInProfileWidth = 200;
+            public const int ProfilePictureInProfileHeight = 200;
+            public const int ProfilePictureThumbnailWidth = 100;
+            public const int ProfilePictureThumbailHeight = 100;
         }
 
         public class Article
