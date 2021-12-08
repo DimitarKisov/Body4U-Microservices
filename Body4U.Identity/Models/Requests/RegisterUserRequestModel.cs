@@ -1,6 +1,6 @@
 ﻿namespace Body4U.Identity.Models.Requests
 {
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Microsoft.AspNetCore.Http;
     using System.ComponentModel.DataAnnotations;
 

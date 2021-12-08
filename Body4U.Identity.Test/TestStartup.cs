@@ -1,7 +1,7 @@
 ﻿namespace Body4U.Identity.Test
 {
     using Body4U.Common.Services.Identity;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Body4U.Identity.Services;
     using Body4U.Identity.Test.Mocks;
     using Microsoft.AspNetCore.Identity;

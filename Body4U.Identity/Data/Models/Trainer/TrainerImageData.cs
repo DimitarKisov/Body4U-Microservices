@@ -1,17 +1,17 @@
-﻿namespace Body4U.Identity.Data.Models
+﻿namespace Body4U.Identity.Data.Models.Trainer
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class UserImageData
+    public class TrainerImageData
     {
         public string Id { get; set; }
 
         [Required]
         public string Folder { get; set; }
 
-        public ApplicationUser ApplicationUser { get; set; }
+        public Trainer Trainer { get; set; }
 
         [Required]
-        public string ApplicationUserId { get; set; }
+        public int TrainerId { get; set; }
     }
 }

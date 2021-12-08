@@ -1,7 +1,8 @@
 ﻿namespace Body4U.Identity.Data.Seeders
 {
     using Body4U.Common.Services;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
+    using Body4U.Identity.Data.Models.Trainer;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Configuration;
     using System;

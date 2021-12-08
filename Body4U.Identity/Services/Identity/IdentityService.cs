@@ -5,12 +5,14 @@
     using Body4U.Common.Models.Identity.Responses;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
+    using Body4U.Identity.Data.Models.Trainer;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
     using Serilog;
     using SixLabors.ImageSharp;
     using SixLabors.ImageSharp.Formats.Jpeg;
@@ -36,6 +38,7 @@
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly ICurrentUserService currentUserService;
         private readonly IdentityDbContext dbContext;
+        private readonly IConfiguration configuration;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
@@ -43,7 +46,8 @@
             SignInManager<ApplicationUser> signInManager,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
             ICurrentUserService currentUserService,
-            IdentityDbContext dbContext)
+            IdentityDbContext dbContext,
+            IConfiguration configuration)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
@@ -51,6 +55,7 @@
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.currentUserService = currentUserService;
             this.dbContext = dbContext;
+            this.configuration = configuration;
         }
 
         public async Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request)
@@ -82,12 +87,15 @@
                         }
 
                         var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                        var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
 
                         id = Guid.NewGuid().ToString();
-                        path = $"/images/{totalImages % 1000}/";
+                        //path = $"/images/{totalImages % 1000}/"; Used for saving in wwwroot folder
+                        path = $"{rootPath}/Identity/{totalImages % 1000}/";
                         name = $"{id}.jpg";
 
-                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\"));
+                        //storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\")); Used for saving in wwwroot folder
+                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"{path}".Replace("/", "\\"));
                         if (!Directory.Exists(storagePath))
                         {
                             Directory.CreateDirectory(storagePath);
@@ -221,7 +229,9 @@
 
                 if (profilePictureData != null)
                 {
-                    profilePicturePath = profilePictureData.Folder + "InProfile_" + profilePictureData.Id + ".jpg";
+                    var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
+
+                    profilePicturePath = rootPath + "/Identity/" + (profilePictureData.Folder + "InProfile_" + profilePictureData.Id).Replace("/", "\\") + ".jpg";
                 }
 
                 return Result<MyProfileResponseModel>.SuccessWith(
@@ -275,6 +285,10 @@
                 var name = string.Empty;
                 var storagePath = string.Empty;
 
+                var userImage = await this.dbContext
+                    .UserImageDatas
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
                     if (request.ProfilePicture.ContentType != "image/jpeg" &&
@@ -293,30 +307,27 @@
                             return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
                         }
 
-                        var userImage = await this.dbContext
-                            .UserImageDatas
-                            .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
-
                         if (userImage != null)
                         {
                             //TODO: Проверка дали съшествуват ще бъде ли нужна?
-                            var deleteFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg");
-
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
 
                             this.dbContext.UserImageDatas.Remove(userImage);
                             await this.dbContext.SaveChangesAsync();
                         }
 
                         var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                        var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
 
                         id = Guid.NewGuid().ToString();
-                        path = $"/images/{totalImages % 1000}/";
+                        //path = $"/images/{totalImages % 1000}/"; Used for saving in wwwroot folder
+                        path = $"{rootPath}/Identity/{totalImages % 1000}/";
                         name = $"{id}.jpg";
 
-                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\"));
+                        //storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\")); Used for saving in wwwroot folder
+                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"{path}".Replace("/", "\\"));
                         if (!Directory.Exists(storagePath))
                         {
                             Directory.CreateDirectory(storagePath);
@@ -331,6 +342,8 @@
                 user.LastName = request.LastName;
                 user.Age = request.Age;
                 user.Gender = request.Gender;
+                user.ModifiedOn = DateTime.Now;
+                user.ModifiedBy = this.currentUserService.UserId;
 
                 if (addImage)
                 {
@@ -340,6 +353,19 @@
 
                     await this.dbContext.UserImageDatas.AddAsync(new UserImageData { Id = id, Folder = path, ApplicationUserId = user.Id });
                     await this.dbContext.SaveChangesAsync();
+                }
+                else
+                {
+                    if (userImage != null)
+                    {
+                        //TODO: Проверка дали съшествуват ще бъде ли нужна?
+                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
+                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
+                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
+
+                        this.dbContext.UserImageDatas.Remove(userImage);
+                        await this.dbContext.SaveChangesAsync();
+                    }
                 }
 
                 return Result.Success;
@@ -642,7 +668,6 @@
         }
 
         #region Private methods
-
         private async Task SaveImage(IFormFile imageFile, string name, string path, int? resizedWidth = null, int? resizedHeight = null)
         {
             try

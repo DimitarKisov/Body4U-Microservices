@@ -1,5 +1,6 @@
-﻿namespace Body4U.Identity.Data.Models
+﻿namespace Body4U.Identity.Data.Models.Identity
 {
+    using Body4U.Identity.Data.Models.Trainer;
     using Microsoft.AspNetCore.Identity;
     using System;
     using System.Collections.Generic;
@@ -45,8 +46,6 @@
         public string ModifiedBy { get; set; }
 
         public UserImageData UserImageData { get; set; }
-
-        public string UserImageDataId { get; set; }
 
         public Trainer Trainer { get; set; }
 

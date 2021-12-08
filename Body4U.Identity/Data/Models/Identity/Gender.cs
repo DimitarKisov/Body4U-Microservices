@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Data.Models
+﻿namespace Body4U.Identity.Data.Models.Identity
 {
     public enum Gender
     {

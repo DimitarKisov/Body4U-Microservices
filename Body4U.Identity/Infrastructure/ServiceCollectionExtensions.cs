@@ -1,7 +1,7 @@
 ﻿namespace Body4U.Identity.Infrastructure
 {
     using Body4U.Identity.Data;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.DependencyInjection;
 

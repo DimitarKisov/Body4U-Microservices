@@ -3,7 +3,7 @@
     using Body4U.Common;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Body4U.Identity.Models.Requests.Trainer;
     using Body4U.Identity.Models.Responses.Trainer;
     using Microsoft.AspNetCore.Identity;

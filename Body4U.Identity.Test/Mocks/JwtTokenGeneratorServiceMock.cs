@@ -1,7 +1,7 @@
 ﻿namespace Body4U.Identity.Test.Mocks
 {
     using Body4U.Common;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Body4U.Identity.Services;
     using Moq;
 

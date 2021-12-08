@@ -1,6 +1,6 @@
 ﻿namespace Body4U.Identity.Models.Responses
 {
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using System.IO;
 
     public class MyProfileResponseModel

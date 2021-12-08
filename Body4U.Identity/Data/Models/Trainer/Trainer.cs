@@ -1,5 +1,6 @@
-﻿namespace Body4U.Identity.Data.Models
+﻿namespace Body4U.Identity.Data.Models.Trainer
 {
+    using Body4U.Identity.Data.Models.Identity;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -11,7 +12,7 @@
     {
         public Trainer()
         {
-            this.TrainerImages = new HashSet<TrainerImage>();
+            this.TrainerImagesDatas = new HashSet<TrainerImageData>();
             this.TrainerVideos = new HashSet<TrainerVideo>();
         }
 
@@ -52,7 +53,7 @@
         [Required]
         public string ApplicationUserId { get; set; }
 
-        public ICollection<TrainerImage> TrainerImages { get; set; }
+        public ICollection<TrainerImageData> TrainerImagesDatas { get; set; }
 
         public ICollection<TrainerVideo> TrainerVideos { get; set; }
     }

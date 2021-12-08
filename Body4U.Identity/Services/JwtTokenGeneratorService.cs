@@ -4,7 +4,7 @@
     using Body4U.Common.Constants;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
-    using Body4U.Identity.Data.Models;
+    using Body4U.Identity.Data.Models.Identity;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
