@@ -65,7 +65,10 @@
 
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
-                    if (request.ProfilePicture.ContentType != "image/jpeg" && request.ProfilePicture.ContentType != "image/jpg" && request.ProfilePicture.ContentType != "image/png" && request.ProfilePicture.ContentType != "image/bmp")
+                    if (request.ProfilePicture.ContentType != "image/jpeg" &&
+                        request.ProfilePicture.ContentType != "image/jpg" &&
+                        request.ProfilePicture.ContentType != "image/png" &&
+                        request.ProfilePicture.ContentType != "image/bmp")
                     {
                         return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
                     }
@@ -222,7 +225,7 @@
                 }
 
                 return Result<MyProfileResponseModel>.SuccessWith(
-                    new MyProfileResponseModel 
+                    new MyProfileResponseModel
                     {
                         Id = user.Id,
                         FirstName = user.FirstName,
@@ -231,7 +234,7 @@
                         ProfilePicturePath = profilePicturePath,
                         Age = user.Age,
                         PhoneNumber = user.PhoneNumber,
-                        Gender = user.Gender 
+                        Gender = user.Gender
                     });
             }
             catch (Exception ex)
@@ -261,17 +264,66 @@
                     return Result.Failure(WrongWrights);
                 }
 
-                if (request.ProfilePicture != null &&
-                    request.ProfilePicture.ContentType != "image/jpeg" &&
-                    request.ProfilePicture.ContentType != "image/png" &&
-                    request.ProfilePicture.ContentType != "image/jpg")
-                {
-                    return Result.Failure(WrongImageFormat);
-                }
-
                 if (!Enum.IsDefined(typeof(Gender), request.Gender))
                 {
                     return Result.Failure(WrongGender);
+                }
+
+                var addImage = false;
+                var id = string.Empty;
+                var path = string.Empty;
+                var name = string.Empty;
+                var storagePath = string.Empty;
+
+                if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
+                {
+                    if (request.ProfilePicture.ContentType != "image/jpeg" &&
+                        request.ProfilePicture.ContentType != "image/jpg" &&
+                        request.ProfilePicture.ContentType != "image/png" &&
+                        request.ProfilePicture.ContentType != "image/bmp")
+                    {
+                        return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
+                    }
+
+                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
+                    {
+                        //If the picture has smaller width or height than the size needed in profile section we will abort the action because the picture in the profile will be always bigger than the others (thumbnail)
+                        if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
+                        {
+                            return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
+                        }
+
+                        var userImage = await this.dbContext
+                            .UserImageDatas
+                            .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+
+                        if (userImage != null)
+                        {
+                            //TODO: Проверка дали съшествуват ще бъде ли нужна?
+                            var deleteFilePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg");
+
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
+                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
+
+                            this.dbContext.UserImageDatas.Remove(userImage);
+                            await this.dbContext.SaveChangesAsync();
+                        }
+
+                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+
+                        id = Guid.NewGuid().ToString();
+                        path = $"/images/{totalImages % 1000}/";
+                        name = $"{id}.jpg";
+
+                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\"));
+                        if (!Directory.Exists(storagePath))
+                        {
+                            Directory.CreateDirectory(storagePath);
+                        }
+
+                        addImage = true;
+                    }
                 }
 
                 user.PhoneNumber = request.PhoneNumber;
@@ -280,18 +332,15 @@
                 user.Age = request.Age;
                 user.Gender = request.Gender;
 
-                //if (request.ProfilePicture.Length > 0)
-                //{
-                //    using (var stream = new MemoryStream())
-                //    {
-                //        await request.ProfilePicture.CopyToAsync(stream);
+                if (addImage)
+                {
+                    await this.SaveImage(request.ProfilePicture, $"Original_{name}", storagePath, null, null);
+                    await this.SaveImage(request.ProfilePicture, $"InProfile_{name}", storagePath, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight);
+                    await this.SaveImage(request.ProfilePicture, $"Thumbnail_{name}", storagePath, ProfilePictureThumbnailWidth, ProfilePictureThumbailHeight);
 
-                //        if (user.ProfilePicture != stream.ToArray())
-                //        {
-                //            user.ProfilePicture = stream.ToArray();
-                //        }
-                //    }
-                //}
+                    await this.dbContext.UserImageDatas.AddAsync(new UserImageData { Id = id, Folder = path, ApplicationUserId = user.Id });
+                    await this.dbContext.SaveChangesAsync();
+                }
 
                 return Result.Success;
 
