@@ -37,6 +37,8 @@
             public const string InstragramUrlRegex = @"^(?:(?:http|https):\/\/)?(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9-_\.]+)\/$";
             public const string YoutubeChannelUrlRegex = @"((http|https):\/\/|)(www\.|)youtube\.com\/((channel|c)\/|user\/)[a-zA-Z0-9\-]{1,}";
             public const string YoutubeVideoUrlRegex = @"^(?:https?\:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v\=))([\w-]{10,12})(?:$|\&|\?\#).*";
+            public const int TrainerImageWidth = 500;
+            public const int TrainerImageHeight = 500;
         }
 
         public class Common

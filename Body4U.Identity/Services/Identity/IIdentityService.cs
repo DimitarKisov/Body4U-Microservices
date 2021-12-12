@@ -6,6 +6,7 @@
     using Body4U.Common.Models.Identity.Responses;
     using Body4U.Identity.Models.Requests;
     using Body4U.Identity.Models.Responses;
+    using Microsoft.AspNetCore.Http;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
@@ -17,7 +18,11 @@
 
         Task<Result<MyProfileResponseModel>> MyProfile();
 
-        Task<Result> EditMyProfile(EditMyProfileRequestModel request);
+        Task<Result> Edit(EditMyProfileRequestModel request);
+
+        Task<Result> ChangeProfilePicture(ChangeProfilePictureRequestModel request);
+
+        Task<Result> DeleteProfilePicture(DeleteProfilePictureRequestModel request);
 
         Task<Result> ChangePassword(ChangePasswordRequestModel request);
 

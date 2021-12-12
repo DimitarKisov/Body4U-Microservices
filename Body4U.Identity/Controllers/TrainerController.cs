@@ -4,7 +4,9 @@
     using Body4U.Identity.Infrastructure;
     using Body4U.Identity.Models.Requests.Trainer;
     using Body4U.Identity.Services.Trainer;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     [AuthorizeTrainer]
@@ -46,7 +48,5 @@
 
             return this.Ok();
         }
-
-        //TODO: MyArticles, MyPhotos, MyVideos
     }
 }

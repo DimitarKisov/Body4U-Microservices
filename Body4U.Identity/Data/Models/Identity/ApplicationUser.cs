@@ -19,6 +19,9 @@
             this.Logins = new HashSet<IdentityUserLogin<string>>();
         }
 
+        [RegularExpression(PhoneNumberRegex)]
+        public override string PhoneNumber { get => base.PhoneNumber; set => base.PhoneNumber = value; }
+
         [Required]
         [MinLength(FirstNameMinLenght)]
         [MaxLength(FirstNameMaxLength)]

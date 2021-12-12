@@ -3,6 +3,7 @@
     using Body4U.Common;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
+    using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models.Identity;
@@ -37,6 +38,7 @@
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly ICurrentUserService currentUserService;
+        private readonly ICloudinaryService cloudinaryService;
         private readonly IdentityDbContext dbContext;
         private readonly IConfiguration configuration;
 
@@ -46,6 +48,7 @@
             SignInManager<ApplicationUser> signInManager,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
             ICurrentUserService currentUserService,
+            ICloudinaryService cloudinaryService,
             IdentityDbContext dbContext,
             IConfiguration configuration)
         {
@@ -54,6 +57,7 @@
             this.signInManager = signInManager;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.currentUserService = currentUserService;
+            this.cloudinaryService = cloudinaryService;
             this.dbContext = dbContext;
             this.configuration = configuration;
         }
@@ -63,10 +67,7 @@
             try
             {
                 var addImage = false;
-                var id = string.Empty;
-                var path = string.Empty;
-                var name = string.Empty;
-                var storagePath = string.Empty;
+                Stream imageStream = null;
 
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
@@ -78,27 +79,12 @@
                         return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
                     }
 
-                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
+                    imageStream = request.ProfilePicture.OpenReadStream();
+                    using (var imageResult = Image.Load(imageStream))
                     {
-                        //If the picture has smaller width or height than the size needed in profile section we will abort the action because the picture in the profile will be always bigger than the others (thumbnail)
                         if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                         {
                             return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
-                        }
-
-                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
-                        var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
-
-                        id = Guid.NewGuid().ToString();
-                        //path = $"/images/{totalImages % 1000}/"; Used for saving in wwwroot folder
-                        path = $"{rootPath}/Identity/{totalImages % 1000}/";
-                        name = $"{id}.jpg";
-
-                        //storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\")); Used for saving in wwwroot folder
-                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"{path}".Replace("/", "\\"));
-                        if (!Directory.Exists(storagePath))
-                        {
-                            Directory.CreateDirectory(storagePath);
                         }
 
                         addImage = true;
@@ -122,18 +108,29 @@
                     CreateOn = DateTime.Now
                 };
 
-                var result = await this.userManager.CreateAsync(user, request.Password);
+                var createUserResult = await this.userManager.CreateAsync(user, request.Password);
 
-                if (result.Succeeded)
+                if (createUserResult.Succeeded)
                 {
                     if (addImage)
                     {
-                        await this.SaveImage(request.ProfilePicture, $"Original_{name}", storagePath, null, null);
-                        await this.SaveImage(request.ProfilePicture, $"InProfile_{name}", storagePath, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight);
-                        await this.SaveImage(request.ProfilePicture, $"Thumbnail_{name}", storagePath, ProfilePictureThumbnailWidth, ProfilePictureThumbailHeight);
+                        var id = Guid.NewGuid().ToString();
+                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                        var folder = $"Identity/Profile/{totalImages % 1000}";
 
-                        await this.dbContext.UserImageDatas.AddAsync(new UserImageData { Id = id, Folder = path, ApplicationUserId = user.Id });
-                        await this.dbContext.SaveChangesAsync();
+                        var uploadImageResult = await this.cloudinaryService.UploadImage(imageStream, id, folder);
+                        if (createUserResult.Succeeded)
+                        {
+                            var userImageData = new UserImageData
+                            {
+                                Id = uploadImageResult.Data.PublicId,
+                                Url = uploadImageResult.Data.Url,
+                                ApplicationUserId = user.Id
+                            };
+
+                            await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                            await this.dbContext.SaveChangesAsync();
+                        }
                     }
 
                     var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -141,7 +138,7 @@
                     return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token });
                 }
 
-                return Result<RegisterUserResponseModel>.Failure(result.Errors.Select(x => x.Description));
+                return Result<RegisterUserResponseModel>.Failure(createUserResult.Errors.Select(x => x.Description));
 
             }
             catch (Exception ex)
@@ -221,18 +218,9 @@
                     return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, currentUserService.UserId));
                 }
 
-                string profilePicturePath = null;
-
-                var profilePictureData = await this.dbContext
+                var profilePicturePath = (await this.dbContext
                     .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
-
-                if (profilePictureData != null)
-                {
-                    var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
-
-                    profilePicturePath = rootPath + "/Identity/" + (profilePictureData.Folder + "InProfile_" + profilePictureData.Id).Replace("/", "\\") + ".jpg";
-                }
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?.Url;
 
                 return Result<MyProfileResponseModel>.SuccessWith(
                     new MyProfileResponseModel
@@ -254,7 +242,7 @@
             }
         }
 
-        public async Task<Result> EditMyProfile(EditMyProfileRequestModel request)
+        public async Task<Result> Edit(EditMyProfileRequestModel request)
         {
             try
             {
@@ -269,25 +257,36 @@
                     return Result.Failure(string.Format(UserNotFound, request.Id));
                 }
 
-                if (request.Id != this.currentUserService.UserId && !await userManager.IsInRoleAsync(user, AdministratorRoleName))
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
                 if (!Enum.IsDefined(typeof(Gender), request.Gender))
                 {
                     return Result.Failure(WrongGender);
                 }
 
-                var addImage = false;
-                var id = string.Empty;
-                var path = string.Empty;
-                var name = string.Empty;
-                var storagePath = string.Empty;
+                user.PhoneNumber = request.PhoneNumber;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Age = request.Age;
+                user.Gender = request.Gender;
+                user.ModifiedOn = DateTime.Now;
+                user.ModifiedBy = this.currentUserService.UserId;
 
-                var userImage = await this.dbContext
-                    .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{nameof(IdentityService)}.{nameof(Edit)}", ex);
+                return Result.Failure(string.Format(Wrong, nameof(Edit)));
+            }
+        }
+
+        public async Task<Result> ChangeProfilePicture(ChangeProfilePictureRequestModel request)
+        {
+            try
+            {
+                if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
 
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
@@ -301,81 +300,79 @@
 
                     using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
                     {
-                        //If the picture has smaller width or height than the size needed in profile section we will abort the action because the picture in the profile will be always bigger than the others (thumbnail)
                         if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                         {
-                            return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
+                            return Result.Failure(WrongWidthOrHeight);
                         }
-
-                        if (userImage != null)
-                        {
-                            //TODO: Проверка дали съшествуват ще бъде ли нужна?
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
-                            File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
-
-                            this.dbContext.UserImageDatas.Remove(userImage);
-                            await this.dbContext.SaveChangesAsync();
-                        }
-
-                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
-                        var rootPath = this.configuration.GetSection("DataSavingsInfo")["ImagesFolderPath"];
-
-                        id = Guid.NewGuid().ToString();
-                        //path = $"/images/{totalImages % 1000}/"; Used for saving in wwwroot folder
-                        path = $"{rootPath}/Identity/{totalImages % 1000}/";
-                        name = $"{id}.jpg";
-
-                        //storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot{path}".Replace("/", "\\")); Used for saving in wwwroot folder
-                        storagePath = Path.Combine(Directory.GetCurrentDirectory(), $"{path}".Replace("/", "\\"));
-                        if (!Directory.Exists(storagePath))
-                        {
-                            Directory.CreateDirectory(storagePath);
-                        }
-
-                        addImage = true;
                     }
-                }
 
-                user.PhoneNumber = request.PhoneNumber;
-                user.FirstName = request.FirstName;
-                user.LastName = request.LastName;
-                user.Age = request.Age;
-                user.Gender = request.Gender;
-                user.ModifiedOn = DateTime.Now;
-                user.ModifiedBy = this.currentUserService.UserId;
+                    var userProfilePicture = await this.dbContext
+                    .UserImageDatas
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == request.UserId);
 
-                if (addImage)
-                {
-                    await this.SaveImage(request.ProfilePicture, $"Original_{name}", storagePath, null, null);
-                    await this.SaveImage(request.ProfilePicture, $"InProfile_{name}", storagePath, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight);
-                    await this.SaveImage(request.ProfilePicture, $"Thumbnail_{name}", storagePath, ProfilePictureThumbnailWidth, ProfilePictureThumbailHeight);
-
-                    await this.dbContext.UserImageDatas.AddAsync(new UserImageData { Id = id, Folder = path, ApplicationUserId = user.Id });
-                    await this.dbContext.SaveChangesAsync();
-                }
-                else
-                {
-                    if (userImage != null)
+                    if (userProfilePicture != null)
                     {
-                        //TODO: Проверка дали съшествуват ще бъде ли нужна?
-                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Original_" + userImage.Id + ".jpg"));
-                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "InProfile_" + userImage.Id + ".jpg"));
-                        File.Delete(Path.Combine(Directory.GetCurrentDirectory(), $"{userImage.Folder}".Replace("/", "\\"), "Thumbnail_" + userImage.Id + ".jpg"));
+                        var deleteResult = await this.cloudinaryService.DeleteImage(userProfilePicture.Id);
+                        if (!deleteResult.Succeeded)
+                        {
+                            return Result<RegisterUserResponseModel>.Failure(deleteResult.Errors);
+                        }
 
-                        this.dbContext.UserImageDatas.Remove(userImage);
-                        await this.dbContext.SaveChangesAsync();
+                        var id = Guid.NewGuid().ToString();
+                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                        var folder = $"Identity/Profile/{totalImages % 1000}";
+
+                        var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
+                        if (!result.Succeeded)
+                        {
+                            return Result.Failure(result.Errors);
+                        }
+
+                        return Result.Success;
                     }
+
+                    return Result.Failure(ProfilePictureNotFound);
                 }
 
-                return Result.Success;
-
-                //TODO: Когато се добавят и треньори го довърши? Може и да не се ъпдейтва оттука.
+                return Result.Failure(NoImage);
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(EditMyProfile)}", ex);
-                return Result.Failure(string.Format(Wrong, nameof(EditMyProfile)));
+
+                throw;
+            }
+        }
+
+        public async Task<Result> DeleteProfilePicture(DeleteProfilePictureRequestModel request)
+        {
+            try
+            {
+                if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                var userProfilePicture = await this.dbContext
+                .UserImageDatas
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == request.UserId);
+
+                if (userProfilePicture == null)
+                {
+                    return Result.Failure(ProfilePictureNotFound);
+                }
+
+                var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id);
+                if (!result.Succeeded)
+                {
+                    return Result<RegisterUserResponseModel>.Failure(result.Errors);
+                }
+
+                return Result.Success;
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
         }
 

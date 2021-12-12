@@ -7,7 +7,7 @@
         public string Id { get; set; }
 
         [Required]
-        public string Folder { get; set; }
+        public string Url { get; set; }
 
         public ApplicationUser ApplicationUser { get; set; }
 

@@ -1,6 +1,8 @@
 ﻿namespace Body4U.Common.Infrastructure
 {
+    using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
+    using CloudinaryDotNet;
     using MassTransit;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.EntityFrameworkCore;
@@ -24,6 +26,7 @@
                 .AddDatabase<TDbContext>(configuration)
                 .AddTokenAuthentication(configuration)
                 .AddSwagger()
+                .AddCloudinary(configuration)
                 .AddControllers();
 
             return services;
@@ -144,6 +147,30 @@
                     }
                 });
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddCloudinary(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var cloudinarySection = configuration.GetSection("Cloudinary");
+            var cloudName = cloudinarySection["CloudName"];
+            var apiKey = cloudinarySection["ApiKey"];
+            var apiSecret = cloudinarySection["ApiSecret"];
+
+            Account account = new Account
+                (
+                    cloudName,
+                    apiKey,
+                    apiSecret
+                );
+
+            Cloudinary cloudinary = new Cloudinary(account);
+
+            services.AddSingleton(cloudinary);
+            services.AddTransient<ICloudinaryService, CloudinaryService>();
 
             return services;
         }

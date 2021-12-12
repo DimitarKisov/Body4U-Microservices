@@ -105,7 +105,46 @@
                 return this.BadRequest(this.ModelState);
             }
 
-            var result = await this.identityService.EditMyProfile(request);
+            var result = await this.identityService.Edit(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok();
+        }
+
+        [HttpPut]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        [Route(nameof(ChangeProfilePicture))]
+        public async Task<ActionResult> ChangeProfilePicture([FromForm] ChangeProfilePictureRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.identityService.ChangeProfilePicture(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route(nameof(DeleteProfilePicture))]
+        public async Task<ActionResult> DeleteProfilePicture(DeleteProfilePictureRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.identityService.DeleteProfilePicture(request);
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
