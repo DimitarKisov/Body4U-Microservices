@@ -51,7 +51,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(EmailService)}.{nameof(this.SendEmailAsync)}", ex);
+                Log.Error(ex, $"{nameof(EmailService)}.{nameof(this.SendEmailAsync)}");
             }
         }
 
@@ -59,7 +59,7 @@
         {
             if (e.Error != null)
             {
-                Log.Error($"{nameof(EmailService)}.{nameof(this.ClientSendComplete)}", e.Error);
+                Log.Error(e.Error, $"{nameof(EmailService)}.{nameof(this.ClientSendComplete)}");
             }
         }
     }

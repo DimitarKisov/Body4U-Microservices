@@ -143,7 +143,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message, $"{nameof(IdentityService)}.{nameof(this.Register)}");
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(this.Register)}");
                 return Result<RegisterUserResponseModel>.Failure(string.Format(Wrong, nameof(this.Register)));
             }
         }
@@ -237,7 +237,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(MyProfile)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(MyProfile)}");
                 return Result<MyProfileResponseModel>.Failure(string.Format(Wrong, nameof(MyProfile)));
             }
         }
@@ -274,7 +274,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(Edit)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Edit)}");
                 return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
@@ -338,8 +338,8 @@
             }
             catch (Exception ex)
             {
-
-                throw;
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ChangeProfilePicture)}");
+                return Result.Failure(string.Format(Wrong, nameof(ChangeProfilePicture)));
             }
         }
 
@@ -369,10 +369,10 @@
 
                 return Result.Success;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(DeleteProfilePicture)}");
+                return Result.Failure(string.Format(Wrong, nameof(DeleteProfilePicture)));
             }
         }
 
@@ -398,7 +398,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(ChangePassword)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ChangePassword)}");
                 return Result.Failure(string.Format(Wrong, nameof(ChangePassword)));
             }
         }
@@ -418,7 +418,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(ForgotPassword)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ForgotPassword)}");
                 return Result<ForgotPasswordResponseModel>.Failure(string.Format(Wrong, nameof(ForgotPassword)));
             }
         }
@@ -446,7 +446,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(ResetPassword)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ResetPassword)}");
                 return Result.Failure(string.Format(Wrong, nameof(ResetPassword)));
             }
         }
@@ -461,7 +461,7 @@
                     return Result.Failure(string.Format(UserNotFound, request.UserId));
                 }
 
-                //var tokenDecoded = HttpUtility.UrlDecode(request.Token);
+                var tokenDecoded = HttpUtility.UrlDecode(request.Token);
                 var result = await this.userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
@@ -472,7 +472,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(VerifyEmail)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(VerifyEmail)}");
                 return Result.Failure(string.Format(Wrong, nameof(VerifyEmail)));
             }
         }
@@ -544,7 +544,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(Users)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Users)}");
                 return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(Users)));
             }
         }
@@ -559,7 +559,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(Roles)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Roles)}");
                 return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(Roles)));
             }
         }
@@ -659,7 +659,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(IdentityService)}.{nameof(EditUserRoles)}", ex);
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)}");
                 return Result.Failure(string.Format(Wrong, nameof(EditUserRoles)));
             }
         }

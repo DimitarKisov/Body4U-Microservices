@@ -54,62 +54,70 @@
             }
             catch (Exception ex)
             {
-                Log.Error($"{nameof(TrainerService)}.{nameof(MyProfile)}", ex);
+                Log.Error(ex, $"{nameof(TrainerService)}.{nameof(MyProfile)}");
                 return Result<MyTrainerProfileResponseModel>.Failure(string.Format(Wrong, nameof(MyProfile)));
             }
         }
 
         public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)
         {
-            if (request.Id != this.currentUserService.TrainerId && !this.currentUserService.IsAdministrator)
+            try
             {
-                return Result.Failure(WrongWrights);
-            }
+                if (request.Id != this.currentUserService.TrainerId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
 
-            var trainer = await this.dbContext.Trainers.FindAsync(new object[] { request.Id });
-            if (trainer == null)
-            {
-                return Result.Failure(string.Format(TrainerNotFound, currentUserService.TrainerId));
-            }
+                var trainer = await this.dbContext.Trainers.FindAsync(new object[] { request.Id });
+                if (trainer == null)
+                {
+                    return Result.Failure(string.Format(TrainerNotFound, currentUserService.TrainerId));
+                }
 
-            if (!string.IsNullOrWhiteSpace(request.Bio))
-            {
-                trainer.Bio = request.Bio.Trim();
-            }
-            if (!string.IsNullOrWhiteSpace(request.ShortBio))
-            {
-                trainer.ShortBio = request.ShortBio.Trim();
-            }
-            if (!string.IsNullOrWhiteSpace(request.FacebookUrl))
-            {
-                trainer.FacebookUrl = request.FacebookUrl.Trim();
-            }
-            if (!string.IsNullOrWhiteSpace(request.InstagramUrl))
-            {
-                trainer.InstagramUrl = request.InstagramUrl.Trim();
-            }
-            if (!string.IsNullOrWhiteSpace(request.YoutubeChannelUrl))
-            {
-                trainer.YoutubeChannelUrl = request.YoutubeChannelUrl.Trim();
-            }
+                if (!string.IsNullOrWhiteSpace(request.Bio))
+                {
+                    trainer.Bio = request.Bio.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(request.ShortBio))
+                {
+                    trainer.ShortBio = request.ShortBio.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(request.FacebookUrl))
+                {
+                    trainer.FacebookUrl = request.FacebookUrl.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(request.InstagramUrl))
+                {
+                    trainer.InstagramUrl = request.InstagramUrl.Trim();
+                }
+                if (!string.IsNullOrWhiteSpace(request.YoutubeChannelUrl))
+                {
+                    trainer.YoutubeChannelUrl = request.YoutubeChannelUrl.Trim();
+                }
 
-            if (trainer.Bio != null && trainer.ShortBio != null)
-            {
-                trainer.IsReadyToWrite = true;
-                trainer.IsReadyToVisualize = true;
+                if (trainer.Bio != null && trainer.ShortBio != null)
+                {
+                    trainer.IsReadyToWrite = true;
+                    trainer.IsReadyToVisualize = true;
+                }
+                else
+                {
+                    trainer.IsReadyToWrite = false;
+                    trainer.IsReadyToVisualize = false;
+                }
+
+                trainer.ModifiedOn = DateTime.Now;
+                trainer.ModifiedBy = currentUserService.UserId;
+
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
             }
-            else
+            catch (Exception ex)
             {
-                trainer.IsReadyToWrite = false;
-                trainer.IsReadyToVisualize = false;
+                Log.Error(ex, $"{nameof(TrainerService)}.{nameof(Edit)}");
+                return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
-
-            trainer.ModifiedOn = DateTime.Now;
-            trainer.ModifiedBy = currentUserService.UserId;
-
-            await this.dbContext.SaveChangesAsync();
-
-            return Result.Success;
         }
     }
 }
