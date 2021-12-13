@@ -8,8 +8,8 @@
     using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models.Identity;
     using Body4U.Identity.Data.Models.Trainer;
-    using Body4U.Identity.Models.Requests;
-    using Body4U.Identity.Models.Responses;
+    using Body4U.Identity.Models.Requests.Identity;
+    using Body4U.Identity.Models.Responses.Identity;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;

@@ -4,9 +4,8 @@
     using Body4U.Common.Models;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
-    using Body4U.Identity.Models.Requests;
-    using Body4U.Identity.Models.Responses;
-    using Microsoft.AspNetCore.Http;
+    using Body4U.Identity.Models.Requests.Identity;
+    using Body4U.Identity.Models.Responses.Identity;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 

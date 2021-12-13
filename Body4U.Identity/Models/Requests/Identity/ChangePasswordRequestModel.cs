@@ -1,13 +1,17 @@
-﻿namespace Body4U.Identity.Models.Requests
+﻿namespace Body4U.Identity.Models.Requests.Identity
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class ResetPasswordRequestModel
+    public class ChangePasswordRequestModel
     {
+        [Required]
+        public string OldPassword { get; set; }
+
         [Required]
         public string NewPassword { get; set; }
 
         [Required]
+        [Compare(nameof(NewPassword))]
         public string ConfirmNewPassword { get; set; }
     }
 }

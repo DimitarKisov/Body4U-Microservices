@@ -5,6 +5,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="wwwroot\**" />
+	  <Content Remove="wwwroot\**" />
+	  <EmbeddedResource Remove="wwwroot\**" />
+	  <None Remove="wwwroot\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Remove="Data\Migrations\20211111105831_InitialIdentityTable.cs" />
 		<Compile Remove="Data\Migrations\20211111105831_InitialIdentityTable.Designer.cs" />
 		<Compile Remove="Data\Migrations\20211111110021_InitialIdentityTable.cs" />
@@ -38,10 +45,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Body4U.Common\Body4U.Common.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

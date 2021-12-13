@@ -1,4 +1,4 @@
-﻿namespace Body4U.Identity.Models.Responses
+﻿namespace Body4U.Identity.Models.Responses.Identity
 {
     using Body4U.Identity.Data.Models.Identity;
     using System.IO;

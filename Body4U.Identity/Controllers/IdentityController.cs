@@ -5,7 +5,7 @@
     using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models;
     using Body4U.Common.Models.Identity.Requests;
-    using Body4U.Identity.Models.Requests;
+    using Body4U.Identity.Models.Requests.Identity;
     using Body4U.Identity.Services;
     using Body4U.Identity.Services.Identity;
     using MassTransit;
