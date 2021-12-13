@@ -28,7 +28,7 @@
     using static Body4U.Common.Constants.DataConstants.ApplicationUserConstants;
     using static Body4U.Common.Constants.DataConstants.Common;
 
-    using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
+    using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
 
     public class IdentityService : IIdentityService
@@ -109,6 +109,7 @@
                 };
 
                 var createUserResult = await this.userManager.CreateAsync(user, request.Password);
+                List<string> errosInImageUploading = null;
 
                 if (createUserResult.Succeeded)
                 {
@@ -119,7 +120,7 @@
                         var folder = $"Identity/Profile/{totalImages % 1000}";
 
                         var uploadImageResult = await this.cloudinaryService.UploadImage(imageStream, id, folder);
-                        if (createUserResult.Succeeded)
+                        if (uploadImageResult.Succeeded)
                         {
                             var userImageData = new UserImageData
                             {
@@ -131,11 +132,16 @@
                             await this.dbContext.UserImageDatas.AddAsync(userImageData);
                             await this.dbContext.SaveChangesAsync();
                         }
+                        else
+                        {
+                            errosInImageUploading = new List<string>();
+                            errosInImageUploading.AddRange(uploadImageResult.Errors);
+                        }
                     }
 
                     var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                    return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token });
+                    return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token, ErrorsInImageUploading = errosInImageUploading });
                 }
 
                 return Result<RegisterUserResponseModel>.Failure(createUserResult.Errors.Select(x => x.Description));

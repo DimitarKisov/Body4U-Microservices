@@ -49,6 +49,37 @@
             return this.Ok();
         }
 
+        [HttpPost]
+        [RequestSizeLimit(50 * 1024 * 1024)]
+        [Route(nameof(UploadTrainerImages))]
+        public async Task<ActionResult> UploadTrainerImages(UploadImagesRequestModel request)
+        {
+            var result = await this.trainerService.UploadTrainerImages(request);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
 
+            return this.Ok();
+        }
+
+        [HttpPost]
+        [Route(nameof(DeleteTrainerImage))]
+        public async Task<ActionResult> DeleteTrainerImage(DeleteImageRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.trainerService.DeleteTrainerImage(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return Ok();
+        }
     }
 }

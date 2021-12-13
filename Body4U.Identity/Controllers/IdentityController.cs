@@ -59,7 +59,7 @@
                 HtmlContent = string.Format(EmailConfirmHtmlContent, confirmationLink)
             });
 
-            return this.Ok();
+            return this.Ok(result.Data.ErrorsInImageUploading);
         }
 
         [HttpPost]

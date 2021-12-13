@@ -9,7 +9,11 @@
             public const string EmailProblem = "Email was not sent successfuly.";
             public const string ForgotPasswordHtmlContent = "<p>To reset your password, please click <a href=\"{0}\">HERE</a></p>";
             public const string ForgotPasswordSubject = "Password Reset";
+            public const string ImageNotFound = "Image not found.";
             public const string InternalServerError = "Internal server error.";
+            public const string MultipleNoImagesChosen = "There isn't any images chosen.";
+            public const string MultipleWrongImageFormats = "There is a unsupported format in your images.";
+            public const string MultipleWrongWidthOrHeight = "There are images with width under {0} or height under {1} pixels.";
             public const string NoImage = "There is no image chosen.";
             public const string Wrong = "Something went wrong in {0}.";
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
@@ -17,7 +21,7 @@
             public const string WrongWrights = "You don't have the rights for this action!";
         }
 
-        public class ApplicationUserConstants
+        public class ApplicationUser
         {
             public const string EmailNotConfirmed = "Email is not confirmed.";
             public const string Locked = "Account is locked.";
@@ -29,10 +33,9 @@
             public const string WrongUsernameOrPassword = "Wrong email or password.";
         }
 
-        public class TrainerConstants
+        public class Trainer
         {
-            public const int ImagesCountLimit = 6;
-            public const string MaxAllowedImages = "The max allowed images is {0}";
+            public const string MaxAllowedImages = "The max allowed images you can upload is {0}";
             public const string TooManyImages = "The max allowed images is {0}. You can upload {1} more images.";
             public const string TrainerNotFound = "Trainer with ID '{0}' was not found.";
         }

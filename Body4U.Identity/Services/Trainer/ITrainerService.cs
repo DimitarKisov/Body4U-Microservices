@@ -10,5 +10,9 @@
         Task<Result<MyTrainerProfileResponseModel>> MyProfile();
 
         Task<Result> Edit(EditMyTrainerProfileRequestModel request);
+
+        Task<Result> UploadTrainerImages(UploadImagesRequestModel request);
+
+        Task<Result> DeleteTrainerImage(DeleteImageRequestModel request);
     }
 }

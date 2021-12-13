@@ -18,7 +18,7 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    using static Body4U.Common.Constants.MessageConstants.ApplicationUserConstants;
+    using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
 
     public class JwtTokenGeneratorService : IJwtTokenGeneratorService

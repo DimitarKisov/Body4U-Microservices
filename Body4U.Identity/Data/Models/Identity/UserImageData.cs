@@ -4,6 +4,7 @@
 
     public class UserImageData
     {
+        [Required]
         public string Id { get; set; }
 
         [Required]

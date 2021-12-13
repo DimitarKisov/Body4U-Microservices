@@ -4,10 +4,11 @@
 
     public class TrainerImageData
     {
+        [Required]
         public string Id { get; set; }
 
         [Required]
-        public string Folder { get; set; }
+        public string Url { get; set; }
 
         public Trainer Trainer { get; set; }
 

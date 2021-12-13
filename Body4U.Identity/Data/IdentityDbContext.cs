@@ -17,8 +17,6 @@
 
         public DbSet<Trainer> Trainers { get; set; }
 
-        //public DbSet<TrainerImage> TrainerImages { get; set; }
-
         public DbSet<TrainerImageData> TrainerImagesDatas { get; set; }
 
         public DbSet<TrainerVideo> TrainerVideos { get; set; }
@@ -74,12 +72,6 @@
                 .WithOne(y => y.Trainer)
                 .HasForeignKey<Trainer>(x => x.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            //builder.Entity<Trainer>()
-            //    .HasMany(x => x.TrainerImages)
-            //    .WithOne(y => y.Trainer)
-            //    .HasForeignKey(y => y.TrainerId)
-            //    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Trainer>()
                 .HasMany(x => x.TrainerImagesDatas)
