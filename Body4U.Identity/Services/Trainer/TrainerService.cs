@@ -71,6 +71,45 @@
             }
         }
 
+        public async Task<Result<List<string>>> MyImages()
+        {
+            try
+            {
+                var result = await this.dbContext
+                .TrainerImagesDatas
+                .Where(x => x.TrainerId == this.currentUserService.TrainerId)
+                .Select(x => x.Url)
+                .ToListAsync();
+
+                return Result<List<string>>.SuccessWith(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(TrainerService)}.{nameof(MyImages)}");
+                return Result<List<string>>.Failure(string.Format(Wrong, nameof(MyImages)));
+            }
+
+        }
+
+        public async Task<Result<List<string>>> MyVideos()
+        {
+            try
+            {
+                var result = await this.dbContext
+                    .TrainerVideos
+                    .Where(x => x.TrainerId == this.currentUserService.TrainerId)
+                    .Select(x => x.VideoUrl)
+                    .ToListAsync();
+
+                return Result<List<string>>.SuccessWith(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(TrainerService)}.{nameof(MyVideos)}");
+                return Result<List<string>>.Failure(string.Format(Wrong, nameof(MyVideos)));
+            }
+        }
+
         public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)
         {
             try
