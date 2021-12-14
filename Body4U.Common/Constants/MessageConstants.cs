@@ -4,6 +4,7 @@
     {
         public class Common
         {
+            public const string ChangeProfilePictureDeny = "First delete the current profile picture before you upload a new one.";
             public const string EmailConfirmHtmlContent = "<p>To confirm your email, please click <a href=\"{0}\">HERE</a></p>";
             public const string EmailConfirmSubject = "Email Confirmation";
             public const string EmailProblem = "Email was not sent successfuly.";

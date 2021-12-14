@@ -10,6 +10,9 @@
         [Required]
         public string Url { get; set; }
 
+        [Required]
+        public string Folder { get; set; }
+
         public Trainer Trainer { get; set; }
 
         [Required]

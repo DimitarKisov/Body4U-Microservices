@@ -115,17 +115,17 @@
             return Ok();
         }
 
-        [HttpPut]
+        [HttpPost]
         [RequestSizeLimit(10 * 1024 * 1024)]
-        [Route(nameof(ChangeProfilePicture))]
-        public async Task<ActionResult> ChangeProfilePicture([FromForm] ChangeProfilePictureRequestModel request)
+        [Route(nameof(AddProfilePicture))]
+        public async Task<ActionResult> AddProfilePicture(AddProfilePictureRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState);
             }
 
-            var result = await this.identityService.ChangeProfilePicture(request);
+            var result = await this.identityService.AddProfilePicture(request);
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();

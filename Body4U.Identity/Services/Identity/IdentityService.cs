@@ -67,7 +67,6 @@
             try
             {
                 var addImage = false;
-                Stream imageStream = null;
 
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
@@ -79,8 +78,7 @@
                         return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
                     }
 
-                    imageStream = request.ProfilePicture.OpenReadStream();
-                    using (var imageResult = Image.Load(imageStream))
+                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
                     {
                         if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                         {
@@ -119,13 +117,14 @@
                         var totalImages = await this.dbContext.UserImageDatas.CountAsync();
                         var folder = $"Identity/Profile/{totalImages % 1000}";
 
-                        var uploadImageResult = await this.cloudinaryService.UploadImage(imageStream, id, folder);
+                        var uploadImageResult = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
                         if (uploadImageResult.Succeeded)
                         {
                             var userImageData = new UserImageData
                             {
                                 Id = uploadImageResult.Data.PublicId,
                                 Url = uploadImageResult.Data.Url,
+                                Folder = folder,
                                 ApplicationUserId = user.Id
                             };
 
@@ -235,7 +234,7 @@
                         FirstName = user.FirstName,
                         LastName = user.LastName,
                         Email = user.Email,
-                        ProfilePicturePath = profilePicturePath,
+                        ProfilePictureUrl = profilePicturePath,
                         Age = user.Age,
                         PhoneNumber = user.PhoneNumber,
                         Gender = user.Gender
@@ -285,15 +284,10 @@
             }
         }
 
-        public async Task<Result> ChangeProfilePicture(ChangeProfilePictureRequestModel request)
+        public async Task<Result> AddProfilePicture(AddProfilePictureRequestModel request)
         {
             try
             {
-                if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
                 if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
                 {
                     if (request.ProfilePicture.ContentType != "image/jpeg" &&
@@ -314,38 +308,43 @@
 
                     var userProfilePicture = await this.dbContext
                     .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == request.UserId);
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
+
+                    var id = Guid.NewGuid().ToString();
+                    var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                    var folder = $"Identity/Profile/{totalImages % 1000}";
 
                     if (userProfilePicture != null)
                     {
-                        var deleteResult = await this.cloudinaryService.DeleteImage(userProfilePicture.Id);
-                        if (!deleteResult.Succeeded)
-                        {
-                            return Result<RegisterUserResponseModel>.Failure(deleteResult.Errors);
-                        }
+                        return Result.Failure(ChangeProfilePictureDeny);
+                    }
 
-                        var id = Guid.NewGuid().ToString();
-                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
-                        var folder = $"Identity/Profile/{totalImages % 1000}";
-
-                        var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
-                        if (!result.Succeeded)
+                    var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
+                    if (result.Succeeded)
+                    {
+                        var userImageData = new UserImageData
                         {
-                            return Result.Failure(result.Errors);
-                        }
+                            Id = result.Data.PublicId,
+                            Url = result.Data.Url,
+                            Folder = folder,
+                            ApplicationUserId = this.currentUserService.UserId
+                        };
+
+                        await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                        await this.dbContext.SaveChangesAsync();
 
                         return Result.Success;
                     }
 
-                    return Result.Failure(ProfilePictureNotFound);
+                    return Result.Failure(result.Errors);
                 }
 
                 return Result.Failure(NoImage);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ChangeProfilePicture)}");
-                return Result.Failure(string.Format(Wrong, nameof(ChangeProfilePicture)));
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)}");
+                return Result.Failure(string.Format(Wrong, nameof(AddProfilePicture)));
             }
         }
 
@@ -367,13 +366,16 @@
                     return Result.Failure(ProfilePictureNotFound);
                 }
 
-                var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id);
-                if (!result.Succeeded)
+                var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id, userProfilePicture.Folder);
+                if (result.Succeeded)
                 {
-                    return Result<RegisterUserResponseModel>.Failure(result.Errors);
+                    this.dbContext.UserImageDatas.Remove(userProfilePicture);
+                    await this.dbContext.SaveChangesAsync();
+
+                    return Result.Success;
                 }
 
-                return Result.Success;
+                return Result<RegisterUserResponseModel>.Failure(result.Errors);
             }
             catch (Exception ex)
             {

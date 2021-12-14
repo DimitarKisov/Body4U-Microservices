@@ -10,6 +10,9 @@
         [Required]
         public string Url { get; set; }
 
+        [Required]
+        public string Folder { get; set; }
+
         public ApplicationUser ApplicationUser { get; set; }
 
         [Required]

@@ -35,12 +35,12 @@
             return Result<UploadImageResponseModel>.SuccessWith(new UploadImageResponseModel { PublicId = publicId, Url = uploadResult.Uri.AbsoluteUri });
         }
 
-        public async Task<Result> DeleteImage(string publicId)
+        public async Task<Result> DeleteImage(string publicId, string folder)
         {
-            var deleteParams = new DeletionParams(publicId);
+            var deleteParams = new DeletionParams($"{folder}/{publicId}");
 
             var result = await this.cloudinary.DestroyAsync(deleteParams);
-            if (result.Result != "Ok")
+            if (result.Result != "ok")
             {
                 return Result.Failure(result.Error.Message);
             }

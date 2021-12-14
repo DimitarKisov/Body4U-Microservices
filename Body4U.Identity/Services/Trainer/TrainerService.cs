@@ -229,14 +229,15 @@
                             var result = await this.cloudinaryService.UploadImage(imageStream, id, folder);
                             if (result.Succeeded)
                             {
-                                var userImageData = new TrainerImageData
+                                var trainerImageData = new TrainerImageData
                                 {
                                     Id = result.Data.PublicId,
                                     Url = result.Data.Url,
+                                    Folder = folder,
                                     TrainerId = (int)this.currentUserService.TrainerId
                                 };
 
-                                await this.dbContext.TrainerImagesDatas.AddAsync(userImageData);
+                                await this.dbContext.TrainerImagesDatas.AddAsync(trainerImageData);
                             }
                             else
                             {
@@ -277,13 +278,16 @@
                     return Result.Failure(ImageNotFound);
                 }
 
-                var result = await this.cloudinaryService.DeleteImage(image.Id);
-                if (!result.Succeeded)
+                var result = await this.cloudinaryService.DeleteImage(image.Id, image.Folder);
+                if (result.Succeeded)
                 {
-                    return Result.Failure(result.Errors);
+                    this.dbContext.TrainerImagesDatas.Remove(image);
+                    await this.dbContext.SaveChangesAsync();
+
+                    return Result.Success;
                 }
 
-                return Result.Success;
+                return Result.Failure(result.Errors);
             }
             catch (Exception ex)
             {

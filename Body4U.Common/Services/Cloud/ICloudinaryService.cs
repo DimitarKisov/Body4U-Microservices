@@ -8,6 +8,6 @@
     {
         Task<Result<UploadImageResponseModel>> UploadImage(Stream image, string publicId, string folder);
 
-        Task<Result> DeleteImage(string publicId);
+        Task<Result> DeleteImage(string publicId, string folder);
     }
 }
