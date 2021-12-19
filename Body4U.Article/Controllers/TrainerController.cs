@@ -87,7 +87,7 @@
             return this.Ok();
         }
 
-        [HttpPost]
+        [HttpDelete]
         [Route(nameof(DeleteTrainerImage))]
         public async Task<ActionResult> DeleteTrainerImage(DeleteImageRequestModel request)
         {

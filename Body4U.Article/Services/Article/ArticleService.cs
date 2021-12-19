@@ -2,6 +2,7 @@
 {
     using Body4U.Article.Data;
     using Body4U.Article.Data.Models;
+    using Body4U.Article.Models.Requests;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Common;
     using Body4U.Common.Services.Cloud;
@@ -242,6 +243,51 @@
             {
                 Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Edit)}");
                 return Result<int>.Failure(string.Format(Wrong, nameof(Edit)));
+            }
+        }
+
+        public async Task<Result> Delete(DeleteArticleRequestModel request)
+        {
+            try
+            {
+                var article = await this.dbContext
+                    .Articles
+                    .FindAsync(new object[] { request.Id });
+
+                if (article == null)
+                {
+                    return Result.Failure(ArticleMissing);
+                }
+
+                var authorId = (await this.dbContext
+                    .Trainers
+                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .Id;
+
+                if (article.TrainerId != authorId)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                var articleImageData = await this.dbContext
+                    .ArticleImageDatas
+                    .FirstOrDefaultAsync(x => x.ArticleId == article.Id);
+
+                var deleteImageResult = await this.cloudinaryService.DeleteImage(articleImageData.Id, articleImageData.Folder);
+                if (!deleteImageResult.Succeeded)
+                {
+                    Log.Error(string.Join(Environment.NewLine, deleteImageResult.Errors), $"{nameof(ArticleService)}.{nameof(Delete)}");
+                }
+
+                this.dbContext.ArticleImageDatas.Remove(articleImageData);
+                this.dbContext.Articles.Remove(article);
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Delete)}");
+                return Result<int>.Failure(string.Format(Wrong, nameof(Delete)));
             }
         }
     }

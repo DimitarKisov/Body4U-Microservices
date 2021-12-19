@@ -1,5 +1,6 @@
 ﻿namespace Body4U.Article.Controllers
 {
+    using Body4U.Article.Models.Requests;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Article.Services.Article;
     using Body4U.Common.Controllers;
@@ -37,7 +38,7 @@
             return this.Ok(result.Data);
         }
 
-        [HttpPost]
+        [HttpPut]
         [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(Edit))]
         public async Task<ActionResult> Edit(EditArticleRequestModel request)
@@ -48,6 +49,25 @@
             }
 
             var result = await this.articleService.Edit(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok();
+        }
+
+        [HttpDelete]
+        [Route(nameof(Delete))]
+        public async Task<ActionResult> Delete(DeleteArticleRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.articleService.Delete(request);
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
