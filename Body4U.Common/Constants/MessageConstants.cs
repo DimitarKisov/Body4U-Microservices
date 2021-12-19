@@ -44,6 +44,7 @@
         public class Trainer
         {
             public const string MaxAllowedImages = "The max allowed images you can upload is {0}";
+            public const string NotReady = "Fill in the necessary information about you.";
             public const string TooManyImages = "The max allowed images is {0}. You can upload {1} more images.";
             public const string TrainerNotFound = "User is not a trainer.";
         }

@@ -47,7 +47,7 @@
 
                 //if (trainer == null)
                 //{
-                //    return Result<MyTrainerProfileResponseModel>.Failure(string.Format(TrainerNotFound, this.currentUserService.UserId));
+                //    return Result<MyTrainerProfileResponseModel>.Failure(TrainerNotFound);
                 //}
 
                 var result = new MyTrainerProfileResponseModel
@@ -80,7 +80,7 @@
 
                 //if (trainerId == null)
                 //{
-                //    return Result<List<string>>.Failure(string.Format(TrainerNotFound, this.currentUserService.UserId));
+                //    return Result<List<string>>.Failure(TrainerNotFound);
                 //}
 
                 var result = await this.dbContext
@@ -109,7 +109,7 @@
 
                 //if (trainerId == null)
                 //{
-                //    return Result<List<string>>.Failure(string.Format(TrainerNotFound, this.currentUserService.UserId));
+                //    return Result<List<string>>.Failure(TrainerNotFound);
                 //}
 
                 var result = await this.dbContext

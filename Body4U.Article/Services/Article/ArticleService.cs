@@ -16,6 +16,7 @@
 
     using static Body4U.Common.Constants.MessageConstants.Article;
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.Trainer;
 
     public class ArticleService : IArticleService
     {
@@ -37,6 +38,26 @@
         {
             try
             {
+                var trainer = await this.dbContext
+                    .Trainers
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.ApplicationUserId,
+                        x.IsReadyToWrite
+                    })
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
+
+                //if (trainer == null)
+                //{
+                //    return Result<int>.Failure(TrainerNotFound);
+                //}
+
+                if (trainer.IsReadyToWrite == false)
+                {
+                    return Result<int>.Failure(NotReady);
+                }
+
                 var isTitleTaken = await this.dbContext
                     .Articles
                     .AnyAsync(x => x.Title == request.Title);
@@ -75,22 +96,6 @@
                         var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), id, folder);
                         if (uploadImageResult.Succeeded)
                         {
-                            //TODO: Дали е добра идея да направя тригер, който да изтрива потребител от ролята треньор ако няма запис за него в базата, за да избегна постоянно проверката дали има или не? Или пък да я правя още в началото, за да не прави другата логика на горните редове?
-                            var trainerId = (await this.dbContext
-                                .Trainers
-                                .Select(x => new
-                                {
-                                    x.Id,
-                                    x.ApplicationUserId
-                                })
-                                .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
-                                .Id;
-
-                            if (trainerId == null)
-                            {
-                                //Еди кво си...
-                            }
-
                             var article = new Article
                             {
                                 Title = request.Title.Trim(),
@@ -98,7 +103,7 @@
                                 ArticleType = (ArticleType)request.ArticleType,
                                 Sources = request.Sources,
                                 CreatedOn = DateTime.Now,
-                                TrainerId = (int)trainerId
+                                TrainerId = trainer.Id
                             };
 
                             await this.dbContext.Articles.AddAsync(article);
