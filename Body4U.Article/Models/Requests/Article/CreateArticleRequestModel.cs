@@ -1,4 +1,4 @@
-﻿namespace Body4U.Common.Models.Article.Requests
+﻿namespace Body4U.Article.Models.Requests.Article
 {
     using Microsoft.AspNetCore.Http;
     using System.ComponentModel.DataAnnotations;
