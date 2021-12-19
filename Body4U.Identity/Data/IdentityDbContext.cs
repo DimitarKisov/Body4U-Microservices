@@ -1,7 +1,6 @@
 ﻿namespace Body4U.Identity.Data
 {
     using Body4U.Identity.Data.Models.Identity;
-    using Body4U.Identity.Data.Models.Trainer;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
@@ -14,12 +13,6 @@
         }
 
         public DbSet<UserImageData> UserImageDatas { get; set; }
-
-        public DbSet<Trainer> Trainers { get; set; }
-
-        public DbSet<TrainerImageData> TrainerImagesDatas { get; set; }
-
-        public DbSet<TrainerVideo> TrainerVideos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -63,26 +56,6 @@
                 .HasOne(x => x.UserImageData)
                 .WithOne(y => y.ApplicationUser)
                 .HasForeignKey<UserImageData>(y => y.ApplicationUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-            #endregion
-
-            #region Trainer
-            builder.Entity<Trainer>()
-                .HasOne(x => x.ApplicationUser)
-                .WithOne(y => y.Trainer)
-                .HasForeignKey<Trainer>(x => x.ApplicationUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Trainer>()
-                .HasMany(x => x.TrainerImagesDatas)
-                .WithOne(y => y.Trainer)
-                .HasForeignKey(y => y.TrainerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Entity<Trainer>()
-                .HasMany(x => x.TrainerVideos)
-                .WithOne(y => y.Trainer)
-                .HasForeignKey(y => y.TrainerId)
                 .OnDelete(DeleteBehavior.Restrict);
             #endregion
         }

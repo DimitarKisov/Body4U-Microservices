@@ -23,6 +23,7 @@ namespace Body4U.Admin
                 .AddTokenAuthentication(this.Configuration)
                 .AddScoped<ICurrentTokenService, CurrentTokenService>()
                 .AddTransient<JwtHeaderAuthenticationMiddleware>()
+                .AddTransient<ExceptionMiddleware>()
                 .AddSwagger()
                 .AddControllers();
 
@@ -35,7 +36,9 @@ namespace Body4U.Admin
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app
+                   .UseDeveloperExceptionPage()
+                   .UseSwagger();
             }
 
             app
@@ -43,7 +46,6 @@ namespace Body4U.Admin
                 .UseRouting()
                 .UseJwtHeaderAuthentication()
                 .UseAuthorization()
-                .UseSwagger()
                 .UseEndpoints(endpoints => endpoints
                     .MapControllers());
         }

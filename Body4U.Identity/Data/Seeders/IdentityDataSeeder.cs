@@ -1,8 +1,9 @@
 ﻿namespace Body4U.Identity.Data.Seeders
 {
+    using Body4U.Common.Messages.Article;
     using Body4U.Common.Services;
     using Body4U.Identity.Data.Models.Identity;
-    using Body4U.Identity.Data.Models.Trainer;
+    using MassTransit;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Configuration;
     using System;
@@ -17,17 +18,20 @@
         private readonly UserManager<ApplicationUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly IdentityDbContext dbContext;
+        private readonly IBus publisher;
 
         public IdentityDataSeeder(
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IdentityDbContext dbContext)
+            IdentityDbContext dbContext,
+            IBus publisher)
         {
             this.configuration = configuration;
             this.userManager = userManager;
             this.roleManager = roleManager;
             this.dbContext = dbContext;
+            this.publisher = publisher;
         }
 
         public void SeedData()
@@ -54,7 +58,8 @@
                         FirstName = firstName,
                         LastName = lastName,
                         Gender = Gender.Male,
-                        EmailConfirmed = true
+                        EmailConfirmed = true,
+                        CreateOn = DateTime.Now
                     };
 
                     await userManager.CreateAsync(user, passsword);
@@ -62,8 +67,11 @@
                     await userManager.AddToRoleAsync(user, AdministratorRoleName);
                     await userManager.AddToRoleAsync(user, TrainerRoleName);
 
-                    var trainer = new Trainer() { ApplicationUserId = user.Id, ApplicationUser = user, CreatedOn = DateTime.Now };
-                    await this.dbContext.Trainers.AddAsync(trainer);
+                    await this.publisher.Publish(new CreateTrainerMessage()
+                    {
+                        ApplicationUserId = user.Id,
+                        CreatedOn = DateTime.Now
+                    });
                 })
                 .GetAwaiter()
                 .GetResult();

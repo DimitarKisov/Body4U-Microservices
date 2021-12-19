@@ -25,6 +25,8 @@
             public const int MaxTitleLength = 100;
             public const int MinContentLength = 50;
             public const int MaxContentLength = 25000;
+            public const int MinImageWidth = 950;
+            public const int MinImageHeight = 550;
         }
 
         public class Trainer

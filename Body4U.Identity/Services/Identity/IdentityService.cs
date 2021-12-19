@@ -1,15 +1,16 @@
 ﻿namespace Body4U.Identity.Services.Identity
 {
     using Body4U.Common;
+    using Body4U.Common.Messages.Article;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models.Identity;
-    using Body4U.Identity.Data.Models.Trainer;
     using Body4U.Identity.Models.Requests.Identity;
     using Body4U.Identity.Models.Responses.Identity;
+    using MassTransit;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,7 @@
         private readonly ICloudinaryService cloudinaryService;
         private readonly IdentityDbContext dbContext;
         private readonly IConfiguration configuration;
+        private readonly IBus publisher;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
@@ -50,7 +52,8 @@
             ICurrentUserService currentUserService,
             ICloudinaryService cloudinaryService,
             IdentityDbContext dbContext,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IBus publisher)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
@@ -60,6 +63,7 @@
             this.cloudinaryService = cloudinaryService;
             this.dbContext = dbContext;
             this.configuration = configuration;
+            this.publisher = publisher;
         }
 
         public async Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request)
@@ -82,7 +86,7 @@
                     {
                         if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                         {
-                            return Result<RegisterUserResponseModel>.Failure(WrongWidthOrHeight);
+                            return Result<RegisterUserResponseModel>.Failure(string.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
                         }
 
                         addImage = true;
@@ -148,8 +152,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(this.Register)}");
-                return Result<RegisterUserResponseModel>.Failure(string.Format(Wrong, nameof(this.Register)));
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Register)}");
+                return Result<RegisterUserResponseModel>.Failure(string.Format(Wrong, nameof(Register)));
             }
         }
 
@@ -184,7 +188,7 @@
 
                 var roles = await this.userManager.GetRolesAsync(user);
 
-                var tokenResult = await this.jwtTokenGeneratorService.GenerateToken(user, roles);
+                var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
 
                 if (tokenResult.Succeeded)
                 {
@@ -302,7 +306,7 @@
                     {
                         if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                         {
-                            return Result.Failure(WrongWidthOrHeight);
+                            return Result.Failure(String.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
                         }
                     }
 
@@ -593,8 +597,6 @@
                 var rolesForAdd = rolesDistincted.Except(roles);
                 var rolesForRemove = roles.Except(request.RolesIds);
 
-                var hasChanges = false;
-
                 var errors = new List<string>();
 
                 foreach (var roleId in rolesForAdd)
@@ -611,9 +613,11 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                var trainer = new Trainer() { ApplicationUserId = user.Id, ApplicationUser = user, CreatedOn = DateTime.Now };
-                                await this.dbContext.Trainers.AddAsync(trainer);
-                                hasChanges = true;
+                                await this.publisher.Publish(new CreateTrainerMessage()
+                                {
+                                    ApplicationUserId = user.Id,
+                                    CreatedOn = DateTime.Now
+                                });
                             }
                             else
                             {
@@ -637,16 +641,10 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                var trainer = await this.dbContext.Trainers.FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id);
-                                if (trainer != null)
+                                await this.publisher.Publish(new DeleteTrainerMessage()
                                 {
-                                    this.dbContext.Trainers.Remove(trainer);
-                                    hasChanges = true;
-                                }
-                                else
-                                {
-                                    errors.Add(string.Format(TrainerNotFound, user.Id));
-                                }
+                                    ApplicationUserId = user.Id
+                                });
                             }
                             else
                             {
@@ -654,11 +652,6 @@
                             }
                         }
                     }
-                }
-
-                if (hasChanges)
-                {
-                    await this.dbContext.SaveChangesAsync();
                 }
 
                 return errors.Count() == 0

@@ -26,7 +26,6 @@
                 .AddDatabase<TDbContext>(configuration)
                 .AddTokenAuthentication(configuration)
                 .AddSwagger()
-                .AddCloudinary(configuration)
                 .AddControllers();
 
             return services;

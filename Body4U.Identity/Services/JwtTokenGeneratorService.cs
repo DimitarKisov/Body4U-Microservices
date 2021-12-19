@@ -40,7 +40,7 @@
             this.dbContext = dbContext;
         }
 
-        public async Task<Result<string>> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
+        public Result<string> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
         {
             try
             {
@@ -56,12 +56,6 @@
                 if (roles != null)
                 {
                     claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-                }
-
-                var trainerId = (await this.dbContext.Trainers.FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?.Id;
-                if (trainerId != null)
-                {
-                    claims.Add(new Claim(CustomClaimTypes.TrainerId, trainerId.ToString()));
                 }
                 
                 //TODO: Намали валидността на токена
@@ -101,7 +95,7 @@
                     return Result<string>.Failure(Locked);
                 }
 
-                return await this.GenerateToken(user);
+                return this.GenerateToken(user);
             }
             catch (Exception ex)
             {

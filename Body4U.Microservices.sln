@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Body4U.Article", "Body4U.Ar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Admin", "Admin", "{66229E52-C399-40A7-B275-FA7D747CD631}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Body4U.Admin", "Body4U.Admin\Body4U.Admin.csproj", "{B9965C21-EA5B-4B2E-8F16-80D6DE48E627}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Body4U.Admin", "Body4U.Admin\Body4U.Admin.csproj", "{B9965C21-EA5B-4B2E-8F16-80D6DE48E627}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

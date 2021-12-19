@@ -137,100 +137,6 @@ namespace Body4U.Identity.Data.Migrations
                     b.ToTable("UserImageDatas");
                 });
 
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.Trainer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Bio")
-                        .HasColumnType("nvarchar(500)")
-                        .HasMaxLength(500);
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FacebookUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InstagramUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsReadyToVisualize")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReadyToWrite")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ShortBio")
-                        .HasColumnType("nvarchar(200)")
-                        .HasMaxLength(200);
-
-                    b.Property<string>("YoutubeChannelUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId")
-                        .IsUnique();
-
-                    b.ToTable("Trainers");
-                });
-
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.TrainerImageData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Folder")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TrainerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrainerId");
-
-                    b.ToTable("TrainerImagesDatas");
-                });
-
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.TrainerVideo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("TrainerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrainerId");
-
-                    b.ToTable("TrainerVideos");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -367,33 +273,6 @@ namespace Body4U.Identity.Data.Migrations
                     b.HasOne("Body4U.Identity.Data.Models.Identity.ApplicationUser", "ApplicationUser")
                         .WithOne("UserImageData")
                         .HasForeignKey("Body4U.Identity.Data.Models.Identity.UserImageData", "ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.Trainer", b =>
-                {
-                    b.HasOne("Body4U.Identity.Data.Models.Identity.ApplicationUser", "ApplicationUser")
-                        .WithOne("Trainer")
-                        .HasForeignKey("Body4U.Identity.Data.Models.Trainer.Trainer", "ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.TrainerImageData", b =>
-                {
-                    b.HasOne("Body4U.Identity.Data.Models.Trainer.Trainer", "Trainer")
-                        .WithMany("TrainerImagesDatas")
-                        .HasForeignKey("TrainerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Body4U.Identity.Data.Models.Trainer.TrainerVideo", b =>
-                {
-                    b.HasOne("Body4U.Identity.Data.Models.Trainer.Trainer", "Trainer")
-                        .WithMany("TrainerVideos")
-                        .HasForeignKey("TrainerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

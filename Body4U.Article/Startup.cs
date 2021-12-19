@@ -1,7 +1,9 @@
 namespace Body4U.Article
 {
     using Body4U.Article.Data;
-    using Body4U.Article.Services;
+    using Body4U.Article.Messages;
+    using Body4U.Article.Services.Article;
+    using Body4U.Article.Services.Trainer;
     using Body4U.Common.Infrastructure;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -18,10 +20,15 @@ namespace Body4U.Article
         public void ConfigureServices(IServiceCollection services)
             => services
                 .AddWebService<ArticleDbContext>(this.Configuration)
-                .AddTransient<IArticleService, ArticleService>();
+                .AddTransient<ExceptionMiddleware>()
+                .AddCloudinary(this.Configuration)
+                .AddTransient<ITrainerService, TrainerService>()
+                .AddTransient<IArticleService, ArticleService>()
+                .AddMessaging(typeof(CreateTrainerConsumer), typeof(DeleteTrainerConsumer));
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
-                .UseWebService(env);
+                .UseWebService(env)
+                .Initialize();
     }
 }
