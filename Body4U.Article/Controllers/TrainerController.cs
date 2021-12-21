@@ -28,7 +28,7 @@
             return this.Ok(result.Data);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route(nameof(MyImages))]
         public async Task<ActionResult> MyImages()
         {
@@ -41,7 +41,7 @@
             return this.Ok(result.Data);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route(nameof(MyVideos))]
         public async Task<ActionResult> MyVideos()
         {
@@ -76,7 +76,7 @@
         [HttpPost]
         [RequestSizeLimit(50 * 1024 * 1024)]
         [Route(nameof(UploadTrainerImages))]
-        public async Task<ActionResult> UploadTrainerImages(UploadImagesRequestModel request)
+        public async Task<ActionResult> UploadTrainerImages([FromForm] UploadImagesRequestModel request) //For testing purposes I have to use postman, because swagger does not supports multiple files uploading
         {
             var result = await this.trainerService.UploadTrainerImages(request);
             if (!result.Succeeded)

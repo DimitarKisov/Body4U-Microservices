@@ -219,7 +219,6 @@
                     return Result.Failure(string.Format(TooManyImages, ImagesCountLimit, imagesCountLeft));
                 }
 
-                var imagesStreams = new List<Stream>();
                 var addImages = false;
                 if (request.Images.Count > 0)
                 {
@@ -234,7 +233,8 @@
 
                     foreach (var image in request.Images)
                     {
-                        using (var imageResult = Image.Load(image.OpenReadStream()))
+                        var imageStream = image.OpenReadStream();
+                        using (var imageResult = Image.Load(imageStream))
                         {
                             if (imageResult.Width < TrainerImageWidth || imageResult.Height < TrainerImageHeight)
                             {
@@ -248,13 +248,13 @@
 
                     if (addImages)
                     {
-                        foreach (var imageStream in imagesStreams)
+                        foreach (var image in request.Images)
                         {
                             var id = Guid.NewGuid().ToString();
                             var totalImages = await this.dbContext.TrainerImagesDatas.CountAsync();
                             var folder = $"Trainer/Images/{totalImages % 1000}";
 
-                            var result = await this.cloudinaryService.UploadImage(imageStream, id, folder);
+                            var result = await this.cloudinaryService.UploadImage(image.OpenReadStream(), id, folder);
                             if (result.Succeeded)
                             {
                                 var trainerImageData = new TrainerImageData

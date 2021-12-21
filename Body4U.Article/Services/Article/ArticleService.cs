@@ -2,9 +2,9 @@
 {
     using Body4U.Article.Data;
     using Body4U.Article.Data.Models;
-    using Body4U.Article.Models.Requests;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Common;
+    using Body4U.Common.Models.Article.Responses;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Microsoft.EntityFrameworkCore;
@@ -13,6 +13,7 @@
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+
     using static Body4U.Common.Constants.DataConstants.Article;
 
     using static Body4U.Common.Constants.MessageConstants.Article;
@@ -97,30 +98,47 @@
                         var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), id, folder);
                         if (uploadImageResult.Succeeded)
                         {
-                            var article = new Article
+                            var articleId = 0;
+                            var strategy = this.dbContext.Database.CreateExecutionStrategy();
+                            var result = await strategy.Execute(async () =>
                             {
-                                Title = request.Title.Trim(),
-                                Content = request.Content,
-                                ArticleType = (ArticleType)request.ArticleType,
-                                Sources = request.Sources,
-                                CreatedOn = DateTime.Now,
-                                TrainerId = trainer.Id
-                            };
+                                using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
+                                {
+                                    var article = new Article
+                                    {
+                                        Title = request.Title.Trim(),
+                                        Content = request.Content,
+                                        ArticleType = (ArticleType)request.ArticleType,
+                                        Sources = request.Sources,
+                                        CreatedOn = DateTime.Now,
+                                        TrainerId = trainer.Id
+                                    };
 
-                            await this.dbContext.Articles.AddAsync(article);
+                                    await this.dbContext.Articles.AddAsync(article);
+                                    await this.dbContext.SaveChangesAsync();
 
-                            var articleImageData = new ArticleImageData
+                                    articleId = article.Id;
+
+                                    var articleImageData = new ArticleImageData
+                                    {
+                                        Id = uploadImageResult.Data.PublicId,
+                                        Url = uploadImageResult.Data.Url,
+                                        Folder = folder,
+                                        ArticleId = article.Id
+                                    };
+
+                                    await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
+                                    await this.dbContext.SaveChangesAsync();
+
+                                    await transaction.CommitAsync();
+                                    return true;
+                                }
+                            });
+
+                            if (result)
                             {
-                                Id = uploadImageResult.Data.PublicId,
-                                Url = uploadImageResult.Data.Url,
-                                Folder = folder,
-                                ArticleId = article.Id
-                            };
-
-                            await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
-                            await this.dbContext.SaveChangesAsync();
-
-                            return Result<int>.SuccessWith(article.Id);
+                                return Result<int>.SuccessWith(articleId);
+                            }
                         }
 
                         return Result<int>.Failure(uploadImageResult.Errors);
@@ -191,19 +209,16 @@
                             return Result<int>.Failure(string.Format(WrongWidthOrHeight, MinImageWidth, MinImageHeight));
                         }
 
-                        var imageData = (await this.dbContext
+                        var imageData = await this.dbContext
                             .ArticleImageDatas
-                            .Select(x => new
-                            {
-                                x.Id,
-                                x.ArticleId,
-                                x.Folder
-                            })
-                            .FirstAsync(x => x.ArticleId == article.Id));
+                            .FirstAsync(x => x.ArticleId == article.Id);
 
                         var deleteImageResult = await this.cloudinaryService.DeleteImage(imageData.Id, imageData.Folder);
                         if (deleteImageResult.Succeeded)
                         {
+                            this.dbContext.ArticleImageDatas.Remove(imageData);
+                            await this.dbContext.SaveChangesAsync(); //I'm saving it here so the row where it creates the folder will be correct. Otherwise it will still count the article that we deleted in the previous line
+
                             var id = Guid.NewGuid().ToString();
                             var totalImages = await this.dbContext.ArticleImageDatas.CountAsync();
                             var folder = $"Article/Images/{totalImages % 1000}";
@@ -264,7 +279,7 @@
                     .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
                     .Id;
 
-                if (article.TrainerId != authorId)
+                if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
                 {
                     return Result.Failure(WrongWrights);
                 }
@@ -288,6 +303,59 @@
             {
                 Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Delete)}");
                 return Result<int>.Failure(string.Format(Wrong, nameof(Delete)));
+            }
+        }
+
+        public async Task<Result<GetArticleResponseModel>> Get(int id)
+        {
+            try
+            {
+                var article = await this.dbContext
+                    .Articles
+                    .FindAsync(new object[] { id });
+
+                if (article == null)
+                {
+                    return Result<GetArticleResponseModel>.Failure(ArticleMissing);
+                }
+
+                var articleImageUrl = (await this.dbContext
+                    .ArticleImageDatas
+                    .FirstOrDefaultAsync(x => x.ArticleId == article.Id))?
+                    .Url;
+
+                var trainerInformation = await this.dbContext
+                    .Trainers
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.ShortBio,
+                        x.FacebookUrl,
+                        x.InstagramUrl,
+                        x.YoutubeChannelUrl,
+                        x.ApplicationUserId
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == article.TrainerId);
+
+                return Result<GetArticleResponseModel>.SuccessWith(new GetArticleResponseModel()
+                {
+                    Title = article.Title,
+                    Content = article.Content,
+                    ImageUrl = articleImageUrl,
+                    CreatedOn = article.CreatedOn,
+                    ArticleType = (int)article.ArticleType,
+                    TrainerId = trainerInformation.Id,
+                    ShortBio = trainerInformation.ShortBio,
+                    TrainerFacebookUrl = trainerInformation.FacebookUrl,
+                    TrainerInstagramUrl = trainerInformation.InstagramUrl,
+                    TrainerYoutubeChannelUrl = trainerInformation.YoutubeChannelUrl,
+                    ApplicationUserId = trainerInformation.ApplicationUserId
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Get)}");
+                return Result<GetArticleResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
             }
         }
     }

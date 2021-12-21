@@ -8,24 +8,24 @@
     public class EditArticleRequestModel
     {
         [Required]
-        public int Id { get; }
+        public int Id { get; set; }
 
         [Required]
         [MinLength(MinTitleLength)]
         [MaxLength(MaxTitleLength)]
-        public string Title { get; }
+        public string Title { get; set; }
 
         [Required]
         [MinLength(MinContentLength)]
         [MaxLength(MaxContentLength)]
-        public string Content { get; }
+        public string Content { get; set; }
 
         [Required]
-        public IFormFile Image { get; }
+        public IFormFile Image { get; set; }
 
         [Required]
-        public int ArticleType { get; }
+        public int ArticleType { get; set; }
 
-        public string Sources { get; }
+        public string Sources { get; set; }
     }
 }

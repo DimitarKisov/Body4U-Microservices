@@ -665,6 +665,37 @@
             }
         }
 
+        public async Task<Result<GetUserInfoResponseModel>> GetUserInfo(string id)
+        {
+            try
+            {
+                var user = await this.dbContext
+                    .Users
+                    .Select(x => new GetUserInfoResponseModel
+                    {
+                        Id = x.Id,
+                        FullName = x.FirstName + " " + x.LastName,
+                        Age = x.Age
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                var profileImageUrl = (await this.dbContext
+                    .UserImageDatas
+                    .FindAsync(new object[] { user.Id }))
+                    .Url;
+
+                user.ProfileImageUrl = profileImageUrl;
+
+                return Result<GetUserInfoResponseModel>.SuccessWith(user);
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(GetUserInfo)}");
+                return Result<GetUserInfoResponseModel>.Failure(string.Format(Wrong, nameof(GetUserInfo)));
+            }
+        }
+
         #region Private methods
         private async Task SaveImage(IFormFile imageFile, string name, string path, int? resizedWidth = null, int? resizedHeight = null)
         {

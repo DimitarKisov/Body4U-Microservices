@@ -35,5 +35,7 @@
         Task<Result<List<RoleResponseModel>>> Roles();
 
         Task<Result> EditUserRoles(EditUserRolesRequestModel request);
+
+        Task<Result<GetUserInfoResponseModel>> GetUserInfo(string id);
     }
 }

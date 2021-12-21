@@ -1,7 +1,6 @@
 namespace Body4U.Article.Gateway
 {
-    using Body4U.Article.Gateway.Services.Article;
-    using Body4U.Article.Gateway.Services.Identity;
+    using Body4U.Article.Gateway.Services;
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Services.Identity;
     using Microsoft.AspNetCore.Builder;
@@ -29,12 +28,12 @@ namespace Body4U.Article.Gateway
                 .AddControllers();
 
             services
-                .AddRefitClient<IArticleService>()
-                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Article"]);
+               .AddRefitClient<IIdentityService>()
+               .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Identity"]);
 
             services
-                .AddRefitClient<ITrainerService>()
-                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Identity"]);
+               .AddRefitClient<IArticleService>()
+               .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Article"]);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -42,8 +41,8 @@ namespace Body4U.Article.Gateway
             if (env.IsDevelopment())
             {
                 app
-                   .UseDeveloperExceptionPage()
-                   .UseSwagger();
+                    .UseDeveloperExceptionPage()
+                    .UseSwagger();
             }
 
             app

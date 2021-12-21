@@ -1,10 +1,10 @@
 ﻿namespace Body4U.Article.Controllers
 {
-    using Body4U.Article.Models.Requests;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Article.Services.Article;
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
@@ -21,7 +21,7 @@
         [HttpPost]
         [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(Create))]
-        public async Task<ActionResult> Create(CreateArticleRequestModel request)
+        public async Task<ActionResult> Create([FromForm] CreateArticleRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {
@@ -41,7 +41,7 @@
         [HttpPut]
         [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(Edit))]
-        public async Task<ActionResult> Edit(EditArticleRequestModel request)
+        public async Task<ActionResult> Edit([FromForm] EditArticleRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {
@@ -75,6 +75,20 @@
             }
 
             return this.Ok();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route(nameof(Get))]
+        public async Task<ActionResult> Get(int id)
+        {
+            var result = await this.articleService.Get(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
         }
     }
 }

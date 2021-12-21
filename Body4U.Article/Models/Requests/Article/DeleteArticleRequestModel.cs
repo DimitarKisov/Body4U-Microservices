@@ -1,4 +1,4 @@
-﻿namespace Body4U.Article.Models.Requests
+﻿namespace Body4U.Article.Models.Requests.Article
 {
     using System.ComponentModel.DataAnnotations;
 

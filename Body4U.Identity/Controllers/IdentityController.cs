@@ -116,9 +116,10 @@
         }
 
         [HttpPost]
+        [Authorize]
         [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(AddProfilePicture))]
-        public async Task<ActionResult> AddProfilePicture(AddProfilePictureRequestModel request)
+        public async Task<ActionResult> AddProfilePicture([FromForm] AddProfilePictureRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {
@@ -135,7 +136,8 @@
             return Ok();
         }
 
-        [HttpPost]
+        [HttpDelete]
+        [Authorize]
         [Route(nameof(DeleteProfilePicture))]
         public async Task<ActionResult> DeleteProfilePicture(DeleteProfilePictureRequestModel request)
         {
@@ -311,6 +313,19 @@
             }
 
             return Ok();
+        }
+
+        [HttpGet]
+        [Route(nameof(GetUserInfo))]
+        public async Task<ActionResult> GetUserInfo(string id)
+        {
+            var result = await this.identityService.GetUserInfo(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
         }
     }
 }
