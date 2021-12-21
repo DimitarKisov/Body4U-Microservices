@@ -6,5 +6,7 @@
     [Route("[controller]")]
     public class ApiController : ControllerBase
     {
+        protected const string PathSeparator = "/";
+        protected const string Id = "{id}";
     }
 }

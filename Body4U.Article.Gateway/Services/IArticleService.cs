@@ -6,7 +6,7 @@
 
     public interface IArticleService
     {
-        [Get("/Article/Get")]
+        [Get("/Article/{id}")]
         Task<GetArticleResponseModel> Get(int id);
     }
 }

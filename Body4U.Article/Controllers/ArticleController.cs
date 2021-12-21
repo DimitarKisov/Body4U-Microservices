@@ -79,7 +79,7 @@
 
         [HttpGet]
         [AllowAnonymous]
-        [Route(nameof(Get))]
+        [Route(Id)]
         public async Task<ActionResult> Get(int id)
         {
             var result = await this.articleService.Get(id);

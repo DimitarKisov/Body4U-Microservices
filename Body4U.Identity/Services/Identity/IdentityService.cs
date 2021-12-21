@@ -681,7 +681,7 @@
 
                 var profileImageUrl = (await this.dbContext
                     .UserImageDatas
-                    .FindAsync(new object[] { user.Id }))
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
                     .Url;
 
                 user.ProfileImageUrl = profileImageUrl;

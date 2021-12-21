@@ -6,7 +6,7 @@
 
     public interface IIdentityService
     {
-        [Get("/Identity/GetUserInfo")]
+        [Get("/Identity/GetUserInfo/{id}")]
         Task<GetUserInfoResponseModel> GetUserInfo(string id);
     }
 }

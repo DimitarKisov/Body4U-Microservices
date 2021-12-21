@@ -26,7 +26,7 @@
         }
 
         [HttpGet]
-        [Route(nameof(Get))]
+        [Route(Id)]
         public async Task<ActionResult<GetArticleResultResponseModel>> Get(int id)
         {
             try

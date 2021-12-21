@@ -316,7 +316,7 @@
         }
 
         [HttpGet]
-        [Route(nameof(GetUserInfo))]
+        [Route(nameof(GetUserInfo) + PathSeparator + Id)]
         public async Task<ActionResult> GetUserInfo(string id)
         {
             var result = await this.identityService.GetUserInfo(id);
