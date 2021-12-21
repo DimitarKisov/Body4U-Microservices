@@ -105,5 +105,19 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(AutocompleteArticleTitle) + PathSeparator + Term)]
+        public async Task<ActionResult> AutocompleteArticleTitle(string term)
+        {
+            var result = await this.articleService.AutocompleteArticleTitle(term);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }

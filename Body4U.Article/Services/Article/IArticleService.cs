@@ -4,6 +4,7 @@
     using Body4U.Common;
     using Body4U.Common.Models.Article.Requests;
     using Body4U.Common.Models.Article.Responses;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public interface IArticleService
@@ -17,5 +18,7 @@
         Task<Result<GetArticleResponseModel>> Get(int id);
 
         Task<Result<SearchArticlesResponseModel>> Search(SearchArticlesRequestModel request);
+
+        Task<Result<List<string>>> AutocompleteArticleTitle(string term);
     }
 }

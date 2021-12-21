@@ -12,6 +12,7 @@
     using Serilog;
     using SixLabors.ImageSharp;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -424,6 +425,30 @@
             {
                 Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Search)}");
                 return Result<SearchArticlesResponseModel>.Failure(string.Format(Wrong, nameof(Search)));
+            }
+        }
+
+        public async Task<Result<List<string>>> AutocompleteArticleTitle(string term)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(term))
+                {
+                    var articlesTitles = await this.dbContext.Articles
+                    .Select(x => x.Title.ToLower())
+                    .Where(x => x.Contains(term.ToLower()))
+                    .ToListAsync();
+
+                    return Result<List<string>>.SuccessWith(articlesTitles);
+                }
+
+                return Result<List<string>>.SuccessWith(new List<string>());
+                
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(AutocompleteArticleTitle)}");
+                return Result<List<string>>.Failure(string.Format(Wrong, nameof(Search)));
             }
         }
     }
