@@ -5,6 +5,7 @@
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
 
+    using static Body4U.Common.Constants.DataConstants.ApplicationUser;
     using static Body4U.Common.Constants.DataConstants.Trainer;
 
     public class Trainer
@@ -50,6 +51,29 @@
 
         [Required]
         public string ApplicationUserId { get; set; }
+
+        [Required]
+        [MinLength(FirstNameMinLenght)]
+        [MaxLength(FirstNameMaxLength)]
+        public string FirstName { get; set; }
+
+        [Required]
+        [MinLength(LastNameMinLength)]
+        [MaxLength(LastNameMaxLength)]
+        public string LastName { get; set; }
+
+        [Required]
+        public string FullName
+        {
+            get
+            {
+                return this.FullName;
+            }
+            private set
+            {
+                this.FullName = this.FirstName + " " + this.LastName;
+            }
+        }
 
         public ICollection<Article> Articles { get; set; }
 

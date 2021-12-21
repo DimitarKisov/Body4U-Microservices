@@ -26,7 +26,7 @@
     using System.Threading.Tasks;
     using System.Web;
 
-    using static Body4U.Common.Constants.DataConstants.ApplicationUserConstants;
+    using static Body4U.Common.Constants.DataConstants.ApplicationUser;
     using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
@@ -616,7 +616,9 @@
                                 await this.publisher.Publish(new CreateTrainerMessage()
                                 {
                                     ApplicationUserId = user.Id,
-                                    CreatedOn = DateTime.Now
+                                    CreatedOn = DateTime.Now,
+                                    FirstName = user.FirstName,
+                                    Lastname = user.LastName
                                 });
                             }
                             else
@@ -671,7 +673,7 @@
             {
                 var user = await this.dbContext
                     .Users
-                    .Select(x => new GetUserInfoResponseModel
+                    .Select(x => new
                     {
                         Id = x.Id,
                         FullName = x.FirstName + " " + x.LastName,
@@ -684,9 +686,12 @@
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
                     .Url;
 
-                user.ProfileImageUrl = profileImageUrl;
-
-                return Result<GetUserInfoResponseModel>.SuccessWith(user);
+                return Result<GetUserInfoResponseModel>.SuccessWith(new GetUserInfoResponseModel()
+                {
+                    FullName = user.FullName,
+                    Age = user.Age,
+                    ProfileImageUrl = profileImageUrl
+                });
 
             }
             catch (Exception ex)

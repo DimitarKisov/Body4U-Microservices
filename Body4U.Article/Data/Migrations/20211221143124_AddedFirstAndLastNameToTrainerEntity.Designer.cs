@@ -4,14 +4,16 @@ using Body4U.Article.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Body4U.Article.Data.Migrations
 {
     [DbContext(typeof(ArticleDbContext))]
-    partial class ArticleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211221143124_AddedFirstAndLastNameToTrainerEntity")]
+    partial class AddedFirstAndLastNameToTrainerEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,10 +112,6 @@ namespace Body4U.Article.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(50)")
                         .HasMaxLength(50);
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("InstagramUrl")
                         .HasColumnType("nvarchar(max)");

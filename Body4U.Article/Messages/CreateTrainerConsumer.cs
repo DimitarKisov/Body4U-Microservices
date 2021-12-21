@@ -26,7 +26,9 @@
                 .AddAsync(new Trainer
                 {
                     ApplicationUserId = context.Message.ApplicationUserId,
-                    CreatedOn = context.Message.CreatedOn
+                    CreatedOn = context.Message.CreatedOn,
+                    FirstName = context.Message.FirstName,
+                    LastName = context.Message.Lastname
                 });
 
                 await this.dbContext.SaveChangesAsync();

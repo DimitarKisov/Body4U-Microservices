@@ -70,7 +70,9 @@
                     await this.publisher.Publish(new CreateTrainerMessage()
                     {
                         ApplicationUserId = user.Id,
-                        CreatedOn = DateTime.Now
+                        CreatedOn = DateTime.Now,
+                        FirstName = user.FirstName,
+                        Lastname = user.LastName
                     });
                 })
                 .GetAwaiter()

@@ -1,8 +1,8 @@
 ﻿namespace Body4U.Article.Services.Article
 {
-    using Body4U.Article.Models.Requests;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Common;
+    using Body4U.Common.Models.Article.Requests;
     using Body4U.Common.Models.Article.Responses;
     using System.Threading.Tasks;
 
@@ -15,5 +15,7 @@
         Task<Result> Delete(DeleteArticleRequestModel request);
 
         Task<Result<GetArticleResponseModel>> Get(int id);
+
+        Task<Result<SearchArticlesResponseModel>> Search(SearchArticlesRequestModel request);
     }
 }

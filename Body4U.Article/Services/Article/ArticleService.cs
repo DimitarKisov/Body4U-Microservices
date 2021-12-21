@@ -4,6 +4,7 @@
     using Body4U.Article.Data.Models;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Common;
+    using Body4U.Common.Models.Article.Requests;
     using Body4U.Common.Models.Article.Responses;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
@@ -15,6 +16,7 @@
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.DataConstants.Article;
+    using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.Article;
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -356,6 +358,72 @@
             {
                 Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Get)}");
                 return Result<GetArticleResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
+            }
+        }
+
+        public async Task<Result<SearchArticlesResponseModel>> Search(SearchArticlesRequestModel request)
+        {
+            try
+            {
+                var articles = this.dbContext
+                    .Articles
+                    .Select(x => new ArticleResponseModel
+                    {
+                        Id = x.Id,
+                        Title = x.Title,
+                        Content = x.Content,
+                        ImageUrl = this.dbContext.ArticleImageDatas.First(y => y.ArticleId == x.Id).Url,
+                        TrainerName = this.dbContext.Trainers.First(y => y.Id == x.Id).FullName,
+                        CreatedOn = x.CreatedOn,
+                        ArticleType = (int)x.ArticleType
+                    })
+                    .AsQueryable();
+
+                var totalRecords = await articles.CountAsync();
+
+                var pageIndex = request.PageIndex;
+                var pageSize = request.PageSize;
+                var sortingOrder = request.OrderBy!;
+                var sortingField = request.SortBy!;
+
+                var orderBy = "Id";
+
+                if (!string.IsNullOrWhiteSpace(sortingField))
+                {
+                    if (sortingField.ToLower() == "title")
+                    {
+                        orderBy = nameof(request.Title);
+                    }
+                    else if (sortingField.ToLower() == "trainername")
+                    {
+                        orderBy = nameof(request.TrainerName);
+                    }
+                    else if (sortingField.ToLower() == "articletype")
+                    {
+                        orderBy = nameof(request.ArticleType);
+                    }
+                }
+
+                if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+                {
+                    articles = articles.OrderByDescending(x => orderBy);
+                }
+                else
+                {
+                    articles = articles.OrderBy(x => orderBy);
+                }
+
+                var data = await articles
+                 .Skip(pageIndex * pageSize)
+                 .Take(pageSize)
+                 .ToListAsync();
+
+                return Result<SearchArticlesResponseModel>.SuccessWith(new SearchArticlesResponseModel { Data = data, TotalRecords = totalRecords });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Search)}");
+                return Result<SearchArticlesResponseModel>.Failure(string.Format(Wrong, nameof(Search)));
             }
         }
     }

@@ -4,6 +4,7 @@
     using Body4U.Article.Services.Article;
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
+    using Body4U.Common.Models.Article.Requests;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
@@ -83,6 +84,20 @@
         public async Task<ActionResult> Get(int id)
         {
             var result = await this.articleService.Get(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(Search))]
+        public async Task<ActionResult> Search(SearchArticlesRequestModel request)
+        {
+            var result = await this.articleService.Search(request);
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);

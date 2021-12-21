@@ -3,7 +3,7 @@
     using Body4U.Identity.Data.Models.Identity;
     using System.ComponentModel.DataAnnotations;
 
-    using static Body4U.Common.Constants.DataConstants.ApplicationUserConstants;
+    using static Body4U.Common.Constants.DataConstants.ApplicationUser;
 
     public class EditMyProfileRequestModel
     {
