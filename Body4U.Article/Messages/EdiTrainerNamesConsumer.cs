@@ -1,7 +1,7 @@
 ﻿namespace Body4U.Article.Messages
 {
     using Body4U.Article.Data;
-    using Body4U.Common.Messages.Article;
+    using Body4U.Common.Messages.Identity;
     using MassTransit;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
@@ -10,36 +10,38 @@
 
     using static Body4U.Common.Constants.MessageConstants.Trainer;
 
-    public class DeleteTrainerConsumer : IConsumer<DeleteTrainerMessage>
+    public class EdiTrainerNamesConsumer : IConsumer<EditUserNamesMessage>
     {
         private readonly ArticleDbContext dbContext;
 
-        public DeleteTrainerConsumer(ArticleDbContext dbContext)
+        public EdiTrainerNamesConsumer(ArticleDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
 
-        public async Task Consume(ConsumeContext<DeleteTrainerMessage> context)
+        public async Task Consume(ConsumeContext<EditUserNamesMessage> context)
         {
             try
             {
                 var trainer = await this.dbContext
-                    .Trainers
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == context.Message.ApplicationUserId);
+                .Trainers
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == context.Message.ApplicationUserId);
 
                 if (trainer != null)
                 {
-                    this.dbContext.Trainers.Remove(trainer);
+                    trainer.FirstName = context.Message.FirstName;
+                    trainer.LastName = context.Message.LastName;
+
                     await this.dbContext.SaveChangesAsync();
                 }
                 else
                 {
-                    Log.Error(nameof(DeleteTrainerConsumer) + "-" + TrainerNotFound + "-" + context.Message.ApplicationUserId);
+                    Log.Error(nameof(EdiTrainerNamesConsumer) + "-" + TrainerNotFound + "-" + context.Message.ApplicationUserId);
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(DeleteTrainerConsumer)}.{nameof(Consume)}");
+                Log.Error(ex, $"{nameof(EdiTrainerNamesConsumer)}.{nameof(Consume)}");
             }
         }
     }

@@ -2,6 +2,7 @@
 {
     using Body4U.Common;
     using Body4U.Common.Messages.Article;
+    using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
     using Body4U.Common.Services.Cloud;
@@ -271,6 +272,12 @@
                     return Result.Failure(WrongGender);
                 }
 
+                var sendEditMessage = false;
+                if (user.FirstName != request.FirstName || user.LastName != request.LastName)
+                {
+                    sendEditMessage = true;
+                }
+
                 user.PhoneNumber = request.PhoneNumber;
                 user.FirstName = request.FirstName;
                 user.LastName = request.LastName;
@@ -278,6 +285,16 @@
                 user.Gender = request.Gender;
                 user.ModifiedOn = DateTime.Now;
                 user.ModifiedBy = this.currentUserService.UserId;
+
+                if (sendEditMessage)
+                {
+                    await this.publisher.Publish(new EditUserNamesMessage()
+                    {
+                        ApplicationUserId = user.Id,
+                        FirstName = request.FirstName,
+                        LastName = request.LastName
+                    });
+                }
 
                 return Result.Success;
             }
