@@ -6,8 +6,10 @@
     using Body4U.Common;
     using Body4U.Common.Models.Article.Requests;
     using Body4U.Common.Models.Article.Responses;
+    using Body4U.Common.Models.Favourites.Requests;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
+    using Body4U.Identity.Models.Favourites.Responses;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using SixLabors.ImageSharp;
@@ -466,6 +468,50 @@
             {
                 Log.Error(ex, $"{nameof(ArticleService)}.{nameof(ArticleExists)}");
                 return Result<bool>.Failure(string.Format(Wrong, nameof(ArticleExists)));
+            }
+        }
+
+        public async Task<Result<SearchFavouritesResponseModel>> Favourites(SearchFavouritesRequestModel request)
+        {
+            try
+            {
+                var pageIndex = request.PageIndex;
+                var pageSize = request.PageSize;
+
+                var articles = await this.dbContext
+                    .Articles
+                    .Where(x => request.ArticlesIds.Contains(x.Id))
+                    .Select(x => new
+                    {
+                        ArticleId = x.Id,
+                        Title = x.Title,
+                        ImageUrl = this.dbContext.ArticleImageDatas.First(y => y.ArticleId == x.Id).Url
+                    })
+                    .Skip(pageIndex * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                //We do this so they will be sorted in the way the user added them in his favourites. There may be another way to do this with LINQ (and maybe with better performance) but right now I'm not looking for it.
+                var data = new List<FavouriteResponseModel>();
+                foreach (var id in request.ArticlesIds)
+                {
+                    var article = articles.FirstOrDefault(x => x.ArticleId == id);
+                    data.Add(new FavouriteResponseModel()
+                    {
+                        ArticleId = article.ArticleId,
+                        Title = article.Title,
+                        ImageUrl = article.ImageUrl
+                    });
+                }
+
+                var totalRecords = await this.dbContext.Articles.CountAsync();
+
+                return Result<SearchFavouritesResponseModel>.SuccessWith(new SearchFavouritesResponseModel() { Data = data, TotalRecords = totalRecords });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Favourites)}");
+                return Result<SearchFavouritesResponseModel>.Failure(string.Format(Wrong, nameof(Favourites)));
             }
         }
     }

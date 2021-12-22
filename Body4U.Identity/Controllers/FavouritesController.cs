@@ -54,5 +54,18 @@
 
             return this.Ok();
         }
+
+        [HttpGet]
+        [Route(nameof(Mines))]
+        public async Task<ActionResult> Mines()
+        {
+            var result = await this.favouritesService.Mines();
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }

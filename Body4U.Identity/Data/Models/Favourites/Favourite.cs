@@ -1,6 +1,7 @@
 ﻿namespace Body4U.Identity.Data.Models.Favourites
 {
     using Body4U.Identity.Data.Models.Identity;
+    using System;
     using System.ComponentModel.DataAnnotations;
 
     public class Favourite
@@ -12,5 +13,7 @@
 
         [Required]
         public int ArticleId { get; set; }
+
+        public DateTime AddedIn { get; set; }
     }
 }

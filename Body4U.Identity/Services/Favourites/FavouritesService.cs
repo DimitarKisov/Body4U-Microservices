@@ -2,6 +2,7 @@
 {
     using Body4U.Common;
     using Body4U.Common.Models.Favourites.Requests;
+    using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
     using Body4U.Identity.Data.Models.Favourites;
     using Body4U.Identity.Data.Models.Identity;
@@ -9,6 +10,8 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
@@ -18,13 +21,16 @@
     {
         private readonly IdentityDbContext dbContext;
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly ICurrentUserService currentUserService;
 
         public FavouritesService(
             IdentityDbContext dbContext,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            ICurrentUserService currentUserService)
         {
             this.dbContext = dbContext;
             this.userManager = userManager;
+            this.currentUserService = currentUserService;
         }
 
         public async Task<Result> Add(AddToFavouritesRequestModel request)
@@ -51,7 +57,8 @@
                 var favouriter = new Favourite()
                 {
                     ApplicationUserId = user.Id,
-                    ArticleId = request.ArticleId
+                    ArticleId = request.ArticleId,
+                    AddedIn = DateTime.Now
                 };
 
                 user.Favourites.Add(favouriter);
@@ -99,6 +106,26 @@
             {
                 Log.Error(ex, $"{nameof(FavouritesService)}.{nameof(Remove)}");
                 return Result.Failure(string.Format(Wrong, nameof(Remove)));
+            }
+        }
+
+        public async Task<Result<List<int>>> Mines()
+        {
+            try
+            {
+                var favourites = await this.dbContext
+                    .Favourites
+                    .Where(x => x.ApplicationUserId == this.currentUserService.UserId)
+                    .OrderByDescending(x => x.AddedIn)
+                    .Select(x => x.ArticleId)
+                    .ToListAsync();
+
+                return Result<List<int>>.SuccessWith(favourites);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(FavouritesService)}.{nameof(Mines)}");
+                return Result<List<int>>.Failure(string.Format(Wrong, nameof(Mines)));
             }
         }
     }

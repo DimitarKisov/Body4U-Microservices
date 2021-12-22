@@ -4,6 +4,7 @@
     using Body4U.Article.Gateway.Services;
     using Body4U.Common.Controllers;
     using Body4U.Common.Models.Favourites.Requests;
+    using Body4U.Identity.Models.Favourites.Responses;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Newtonsoft.Json;
@@ -113,6 +114,28 @@
                 await this.favouritesService.Remove(request);
 
                 return this.Ok();
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
+        [HttpGet]
+        [Route(nameof(Favourites))]
+        public async Task<ActionResult<SearchFavouritesResponseModel>> Favourites([FromQuery] int pageIndex = 0, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var articlesIds = await this.favouritesService.Mines();
+                var favouriteArticles = await this.articleService.Favourites(new SearchFavouritesRequestModel()
+                {
+                    ArticlesIds = articlesIds,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                });
+
+                return this.Ok(favouriteArticles);
             }
             catch (ApiException ex)
             {

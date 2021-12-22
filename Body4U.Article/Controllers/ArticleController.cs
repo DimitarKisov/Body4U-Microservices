@@ -5,6 +5,7 @@
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Models.Article.Requests;
+    using Body4U.Common.Models.Favourites.Requests;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
@@ -95,7 +96,7 @@
         [HttpPost]
         [AllowAnonymous]
         [Route(nameof(Search))]
-        public async Task<ActionResult> Search(SearchArticlesRequestModel request)
+        public async Task<ActionResult> Search([FromQuery] SearchArticlesRequestModel request)
         {
             var result = await this.articleService.Search(request);
             if (!result.Succeeded)
@@ -127,6 +128,25 @@
             var result = await this.articleService.ArticleExists(id);
             if (!result.Succeeded)
             {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpPost]
+        [Route(nameof(Favourites))]
+        public async Task<ActionResult> Favourites(SearchFavouritesRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.articleService.Favourites(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
                 return this.BadRequest(result.Errors);
             }
 

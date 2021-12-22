@@ -4,6 +4,8 @@
     using Body4U.Common;
     using Body4U.Common.Models.Article.Requests;
     using Body4U.Common.Models.Article.Responses;
+    using Body4U.Common.Models.Favourites.Requests;
+    using Body4U.Identity.Models.Favourites.Responses;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
@@ -22,5 +24,7 @@
         Task<Result<List<string>>> AutocompleteArticleTitle(string term);
 
         Task<Result<bool>> ArticleExists(int id);
+
+        Task<Result<SearchFavouritesResponseModel>> Favourites(SearchFavouritesRequestModel request);
     }
 }
