@@ -119,5 +119,18 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpGet]
+        [Route(nameof(ArticleExists) + PathSeparator + Id)]
+        public async Task<ActionResult> ArticleExists(int id)
+        {
+            var result = await this.articleService.ArticleExists(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }

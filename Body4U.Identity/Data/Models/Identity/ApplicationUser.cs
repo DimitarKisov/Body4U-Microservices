@@ -1,5 +1,6 @@
 ﻿namespace Body4U.Identity.Data.Models.Identity
 {
+    using Body4U.Identity.Data.Models.Favourites;
     using Microsoft.AspNetCore.Identity;
     using System;
     using System.Collections.Generic;
@@ -13,6 +14,7 @@
         public ApplicationUser()
         {
             this.Id = Guid.NewGuid().ToString();
+            this.Favourites = new HashSet<Favourite>();
             this.Roles = new HashSet<IdentityUserRole<string>>();
             this.Claims = new HashSet<IdentityUserClaim<string>>();
             this.Logins = new HashSet<IdentityUserLogin<string>>();
@@ -48,6 +50,8 @@
         public string ModifiedBy { get; set; }
 
         public UserImageData UserImageData { get; set; }
+
+        public ICollection<Favourite> Favourites { get; set; }
 
         public ICollection<IdentityUserRole<string>> Roles { get; set; }
 

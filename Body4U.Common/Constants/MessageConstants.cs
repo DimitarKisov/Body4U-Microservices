@@ -32,9 +32,11 @@
 
         public class ApplicationUser
         {
+            public const string AlreadyInFavourites = "Article is already in favourites.";
             public const string EmailNotConfirmed = "Email is not confirmed.";
             public const string Locked = "Account is locked.";
             public const string LoginFailed = "Login failed.";
+            public const string NotInFavourites = "Article is not in favourites.";
             public const string ProfilePictureNotFound = "No profile picture found to change.";
             public const string TrainerNotFound = "User with ID '{0}' is not a trainer.";
             public const string UserNotFound = "There is not such user with Id '{0}'";

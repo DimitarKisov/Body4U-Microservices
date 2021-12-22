@@ -1,5 +1,6 @@
 ﻿namespace Body4U.Identity.Data
 {
+    using Body4U.Identity.Data.Models.Favourites;
     using Body4U.Identity.Data.Models.Identity;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,6 +14,8 @@
         }
 
         public DbSet<UserImageData> UserImageDatas { get; set; }
+
+        public DbSet<Favourite> Favourites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -56,6 +59,17 @@
                 .HasOne(x => x.UserImageData)
                 .WithOne(y => y.ApplicationUser)
                 .HasForeignKey<UserImageData>(y => y.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Favourite
+            builder.Entity<Favourite>()
+                .HasKey(x => new { x.ArticleId, x.ApplicationUserId });
+
+            builder.Entity<Favourite>()
+                .HasOne(x => x.ApplicationUser)
+                .WithMany(y => y.Favourites)
+                .HasForeignKey(x => x.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict);
             #endregion
         }

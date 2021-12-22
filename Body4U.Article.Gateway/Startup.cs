@@ -32,6 +32,10 @@ namespace Body4U.Article.Gateway
                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Identity"]);
 
             services
+                .AddRefitClient<IFavouritesService>()
+                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Identity"]);
+
+            services
                .AddRefitClient<IArticleService>()
                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Article"]);
         }

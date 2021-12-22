@@ -3,6 +3,8 @@
     using Body4U.Article.Gateway.Models.Responses;
     using Body4U.Article.Gateway.Services;
     using Body4U.Common.Controllers;
+    using Body4U.Common.Models.Favourites.Requests;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Newtonsoft.Json;
     using Refit;
@@ -10,22 +12,28 @@
     using System.Net;
     using System.Threading.Tasks;
 
+    using static Body4U.Common.Constants.MessageConstants.Article;
     using static Body4U.Common.Constants.MessageConstants.Common;
 
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class ArticleController : ApiController
     {
         private readonly IArticleService articleService;
         private readonly IIdentityService identityService;
+        private readonly IFavouritesService favouritesService;
 
         public ArticleController(
             IArticleService articleService,
-            IIdentityService identityService)
+            IIdentityService identityService,
+            IFavouritesService favouritesService)
         {
             this.articleService = articleService;
             this.identityService = identityService;
+            this.favouritesService = favouritesService;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route(Id)]
         public async Task<ActionResult<GetArticleResultResponseModel>> Get(int id)
         {
@@ -49,6 +57,62 @@
                     TrainerFullName = trainerInfo.FullName,
                     TrainerAge = trainerInfo.Age
                 });
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
+        [HttpPost]
+        [Route(nameof(AddToFavourites))]
+        public async Task<ActionResult> AddToFavourites(AddToFavouritesRequestModel request)
+        {
+            try
+            {
+                if (!this.ModelState.IsValid)
+                {
+                    return this.BadRequest(this.ModelState);
+                }
+
+                var articleExists = await this.articleService.ArticleExists(request.ArticleId);
+                if (!articleExists)
+                {
+                    this.ModelState.Clear();
+                    return this.BadRequest(ArticleMissing);
+                }
+
+                await this.favouritesService.Add(request);
+
+                return this.Ok();
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
+        [HttpDelete]
+        [Route(nameof(RemoveFromFavourites))]
+        public async Task<ActionResult> RemoveFromFavourites(RemoveFromFavouritesRequestModel request)
+        {
+            try
+            {
+                if (!this.ModelState.IsValid)
+                {
+                    return this.BadRequest(this.ModelState);
+                }
+
+                var articleExists = await this.articleService.ArticleExists(request.ArticleId);
+                if (!articleExists)
+                {
+                    this.ModelState.Clear();
+                    return this.BadRequest(ArticleMissing);
+                }
+
+                await this.favouritesService.Remove(request);
+
+                return this.Ok();
             }
             catch (ApiException ex)
             {

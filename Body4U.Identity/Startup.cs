@@ -6,6 +6,7 @@
     using Body4U.Identity.Data.Seeders;
     using Body4U.Identity.Infrastructure;
     using Body4U.Identity.Services;
+    using Body4U.Identity.Services.Favourites;
     using Body4U.Identity.Services.Identity;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -28,6 +29,7 @@
                 .AddCloudinary(this.Configuration)
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()
                 .AddTransient<IIdentityService, IdentityService>()
+                .AddTransient<IFavouritesService, FavouritesService>()
                 .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

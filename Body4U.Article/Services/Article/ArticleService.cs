@@ -451,5 +451,22 @@
                 return Result<List<string>>.Failure(string.Format(Wrong, nameof(Search)));
             }
         }
+
+        public async Task<Result<bool>> ArticleExists(int id)
+        {
+            try
+            {
+                var exists = await this.dbContext
+                    .Articles
+                    .AnyAsync(x => x.Id == id);
+
+                return Result<bool>.SuccessWith(exists);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ArticleService)}.{nameof(ArticleExists)}");
+                return Result<bool>.Failure(string.Format(Wrong, nameof(ArticleExists)));
+            }
+        }
     }
 }

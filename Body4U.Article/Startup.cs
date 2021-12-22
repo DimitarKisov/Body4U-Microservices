@@ -24,7 +24,9 @@ namespace Body4U.Article
                 .AddCloudinary(this.Configuration)
                 .AddTransient<ITrainerService, TrainerService>()
                 .AddTransient<IArticleService, ArticleService>()
-                .AddMessaging(typeof(CreateTrainerConsumer), typeof(DeleteTrainerConsumer));
+                .AddMessaging(typeof(CreateTrainerConsumer),
+                              typeof(DeleteTrainerConsumer),
+                              typeof(EdiTrainerNamesConsumer));
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app

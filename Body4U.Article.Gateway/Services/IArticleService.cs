@@ -8,5 +8,8 @@
     {
         [Get("/Article/{id}")]
         Task<GetArticleResponseModel> Get(int id);
+
+        [Get("/Article/ArticleExists/{id}")]
+        Task<bool> ArticleExists(int id);
     }
 }

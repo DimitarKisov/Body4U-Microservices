@@ -13,6 +13,8 @@
     <Compile Remove="Data\Migrations\20211221143947_AddedFullNameInTrainer.Designer.cs" />
     <Compile Remove="Data\Migrations\20211221144250_AddedFullNameInTrainer1.cs" />
     <Compile Remove="Data\Migrations\20211221144250_AddedFullNameInTrainer1.Designer.cs" />
+    <Compile Remove="Data\Migrations\20211222100316_AddedFavouriteEntity.cs" />
+    <Compile Remove="Data\Migrations\20211222100316_AddedFavouriteEntity.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
