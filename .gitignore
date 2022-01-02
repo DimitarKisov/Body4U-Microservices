@@ -356,4 +356,7 @@ MigrationBackup/
 *.min.css
 *.min.js
 appsettings.Development.json
-appsettings.json
+
+# Docker files
+*.development.env
+docker-compose.development.yaml

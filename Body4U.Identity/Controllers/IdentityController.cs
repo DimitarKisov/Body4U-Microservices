@@ -35,7 +35,7 @@
         [HttpPost]
         [RequestSizeLimit(10 * 1024 * 1024)]
         [Route(nameof(Register))]
-        public async Task<ActionResult> Register([FromForm] RegisterUserRequestModel request) //TODO: Ако е с атрибут [FromForm] в слагер можем да изберем снимка, но в Postman не можем да го пуснем, защото не байндва нито едно пропърти. Ако е без атрибуте [FromForm] в постман работи, но в слагер не можем да изберем файл. Виж дали има начин да се направи да работи и с двете
+        public async Task<ActionResult> Register([FromForm] RegisterUserRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {

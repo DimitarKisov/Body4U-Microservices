@@ -2,11 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>cfbacd22-18c2-4da2-b343-080ba270df22</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MassTransit.AspNetCore" Version="7.2.4" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="7.2.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
@@ -15,6 +18,36 @@
   <ItemGroup>
     <ProjectReference Include="..\Body4U.Common\Body4U.Common.csproj" />
   </ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Release'">
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<Target Name="CustomTarget" AfterTargets="_PublishNoBuildAlternative" Condition="'$(Configuration)'=='Debug'">
+		<Delete Files="$(PublishDir)\appsettings.json"/>
+	</Target>
+
+	<Target Name="RenameAppsettings" Condition="'$(Configuration)'=='Debug'" AfterTargets="Publish">
+		<Move SourceFiles="$(PublishDir)\appsettings.Development.json" DestinationFiles="$(PublishDir)\appsettings.json" Condition="Exists('$(PublishDir)\appsettings.Development.json')" />
+	</Target>
 
 
 </Project>

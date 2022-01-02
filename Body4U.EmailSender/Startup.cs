@@ -19,7 +19,8 @@ namespace Body4U.EmailSender
         public void ConfigureServices(IServiceCollection services)
             => services
                 .AddTransient<IEmailService, EmailService>()
-                .AddMessaging(typeof(SendEmailConsumer));
+                .AddMessaging(this.Configuration,
+                              typeof(SendEmailConsumer));
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

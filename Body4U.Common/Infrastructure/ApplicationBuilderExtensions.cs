@@ -21,7 +21,7 @@
             }
 
             app
-                .UseHttpsRedirection()
+                //.UseHttpsRedirection()
                 .UseRouting()
                 .UseAuthentication()
                 .UseAuthorization()

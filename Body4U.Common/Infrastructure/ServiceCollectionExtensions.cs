@@ -81,6 +81,7 @@
 
         public static IServiceCollection AddMessaging(
             this IServiceCollection services,
+            IConfiguration configuration,
             params Type[] consumers)
         {
             services
@@ -90,7 +91,11 @@
 
                     mt.AddBus(bus => Bus.Factory.CreateUsingRabbitMq(rmq =>
                     {
-                        rmq.Host("localhost");
+                        rmq.Host(configuration.GetSection("RabbitMQ")["Host"], host =>
+                        {
+                            host.Username(configuration.GetSection("RabbitMQ")["Username"]);
+                            host.Password(configuration.GetSection("RabbitMQ")["Password"]);
+                        });
                         
                         consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
                         {

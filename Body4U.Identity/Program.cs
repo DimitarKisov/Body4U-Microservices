@@ -10,8 +10,11 @@ namespace Body4U.Identity
     {
         public static void Main(string[] args)
         {
+            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var environment = envVariable != null ? $".{envVariable}" : null;
+
             var configuration = new ConfigurationBuilder()
-               .AddJsonFile("appsettings.json")
+               .AddJsonFile($"appsettings{environment}.json")
                .Build();
 
             Log.Logger = new LoggerConfiguration()

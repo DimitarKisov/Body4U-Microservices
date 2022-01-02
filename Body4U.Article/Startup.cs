@@ -24,7 +24,8 @@ namespace Body4U.Article
                 .AddCloudinary(this.Configuration)
                 .AddTransient<ITrainerService, TrainerService>()
                 .AddTransient<IArticleService, ArticleService>()
-                .AddMessaging(typeof(CreateTrainerConsumer),
+                .AddMessaging(this.Configuration,
+                              typeof(CreateTrainerConsumer),
                               typeof(DeleteTrainerConsumer),
                               typeof(EdiTrainerNamesConsumer));
 

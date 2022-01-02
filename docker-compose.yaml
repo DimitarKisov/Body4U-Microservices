@@ -1,0 +1,115 @@
+version: "3.8"
+
+services:
+
+    data:
+        container_name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        ports:
+            - "1433:1433"
+        env_file: common.env
+        restart: on-failure
+        volumes:
+            - sqldata:/var/opt/mssql
+        networks:
+            - body4u-network
+            
+    messages:
+        container_name: rabbitmq
+        image: rabbitmq:3-management
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        hostname: rabbitmq
+        env_file: common.env
+        restart: on-failure
+        # volumes:
+            # - rabbitmq:/var/lib/rabbitmq/mnesia
+        networks:
+            - body4u-network
+            
+    identity:
+        container_name: identity
+        build:
+            context: ./
+            dockerfile: ./Body4U.Identity/Dockerfile
+        ports:
+            - "5001:80"
+        env_file: ./Body4U.Identity/identity.env
+        restart: on-failure
+        # volumes:
+            # - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
+            
+    admin:
+        container_name: admin
+        build:
+            context: ./
+            dockerfile: ./Body4U.Admin/Dockerfile
+        ports:
+            - "5007:80"
+        env_file: ./Body4U.Admin/admin.env
+        restart: on-failure
+        # volumes:
+            # - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
+            
+    emailsender:
+        container_name: emailsender
+        build:
+            context: ./
+            dockerfile: ./Body4U.EmailSender/Dockerfile
+        ports:
+            - "5003:80"
+        env_file: ./Body4U.EmailSender/emailSender.env
+        restart: on-failure
+        # volumes:
+            # - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
+            
+    article:
+        container_name: article
+        build:
+            context: ./
+            dockerfile: ./Body4U.Article/Dockerfile
+        ports:
+            - "5005:80"
+        env_file: ./Body4U.Article/article.env
+        restart: on-failure
+        # volumes:
+            # - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
+            
+    articlegateway:
+        container_name: articlegateway
+        build:
+            context: ./
+            dockerfile: ./Body4U.Article.Gateway/Dockerfile
+        ports:
+            - "5009:80"
+        env_file: ./Body4U.Article.Gateway/articleGateway.env
+        restart: on-failure
+        # volumes:
+            # - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
+
+networks:
+    body4u-network:
+    
+volumes:
+    sqldata:

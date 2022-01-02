@@ -1,13 +1,25 @@
-﻿{
+{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Body4U.EmailSender": {
+    "Body4U.EmailSender (Deploy)": {
       "commandName": "Project",
-      "launchUrl": "",
-      "applicationUrl": "https://localhost:5003;http://localhost:5002",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": ""
+      },
+      "applicationUrl": "https://localhost:5003;http://localhost:5002"
+    },
+    "Body4U.EmailSender (Dev)": {
+      "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "https://localhost:5003;http://localhost:5002"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "publishAllPorts": true,
+      "useSSL": true
     }
   }
 }

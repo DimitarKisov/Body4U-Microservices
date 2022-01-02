@@ -2,6 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<UserSecretsId>190855fe-e11e-4663-8eec-efa646afb36e</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -38,6 +40,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
@@ -48,6 +51,36 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Body4U.Common\Body4U.Common.csproj" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Release'">
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</Content>
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<Target Name="CustomTarget" AfterTargets="_PublishNoBuildAlternative" Condition="'$(Configuration)'=='Debug'">
+		<Delete Files="$(PublishDir)\appsettings.json"/>
+	</Target>
+
+	<Target Name="RenameAppsettings" Condition="'$(Configuration)'=='Debug'" AfterTargets="Publish">
+		<Move SourceFiles="$(PublishDir)\appsettings.Development.json" DestinationFiles="$(PublishDir)\appsettings.json" Condition="Exists('$(PublishDir)\appsettings.Development.json')" />
+	</Target>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <NoWarn>1701;1702;1591</NoWarn>

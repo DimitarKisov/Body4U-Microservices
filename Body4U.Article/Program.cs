@@ -10,8 +10,11 @@ namespace Body4U.Article
     {
         public static void Main(string[] args)
         {
+            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var environment = envVariable != null ? $".{envVariable}" : null;
+
             var configuration = new ConfigurationBuilder()
-               .AddJsonFile("appsettings.json")
+               .AddJsonFile($"appsettings{environment}.json")
                .Build();
 
             Log.Logger = new LoggerConfiguration()
@@ -20,6 +23,7 @@ namespace Body4U.Article
 
             try
             {
+                Log.Information("Starting Body4U.Article...");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
