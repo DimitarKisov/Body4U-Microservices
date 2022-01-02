@@ -1,12 +1,18 @@
 ﻿namespace Body4U.Article.Data.Models
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
 
     using static Body4U.Common.Constants.DataConstants.Article;
 
     public class Article
     {
+        public Article()
+        {
+            this.Comments = new HashSet<Comment>();
+        }
+
         [Required]
         public int Id { get; set; }
 
@@ -38,5 +44,7 @@
 
         [Required]
         public int TrainerId { get; set; }
+
+        public ICollection<Comment> Comments { get; set; }
     }
 }

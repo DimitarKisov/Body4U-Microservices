@@ -20,6 +20,8 @@
 
         public DbSet<TrainerVideo> TrainerVideos { get; set; }
 
+        public DbSet<Comment> Comments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -50,6 +52,13 @@
                 .HasOne(x => x.Trainer)
                 .WithMany(y => y.TrainerVideos)
                 .HasForeignKey(x => x.TrainerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder
+                .Entity<Comment>()
+                .HasOne(x => x.Article)
+                .WithMany(y => y.Comments)
+                .HasForeignKey(x => x.ArticleId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

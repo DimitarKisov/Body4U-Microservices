@@ -50,5 +50,11 @@
             public const string TrainerRoleName = "Trainer";
             public const string Desc = "desc";
         }
+
+        public class Comment
+        {
+            public const int MinContentLength = 1;
+            public const int MaxContentLength = 4000;
+        }
     }
 }
