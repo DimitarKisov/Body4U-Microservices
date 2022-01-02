@@ -3,6 +3,7 @@ namespace Body4U.Article
     using Body4U.Article.Data;
     using Body4U.Article.Messages;
     using Body4U.Article.Services.Article;
+    using Body4U.Article.Services.Comment;
     using Body4U.Article.Services.Trainer;
     using Body4U.Common.Infrastructure;
     using Microsoft.AspNetCore.Builder;
@@ -24,6 +25,7 @@ namespace Body4U.Article
                 .AddCloudinary(this.Configuration)
                 .AddTransient<ITrainerService, TrainerService>()
                 .AddTransient<IArticleService, ArticleService>()
+                .AddTransient<ICommentService, CommentService>()
                 .AddMessaging(this.Configuration,
                               typeof(CreateTrainerConsumer),
                               typeof(DeleteTrainerConsumer),
