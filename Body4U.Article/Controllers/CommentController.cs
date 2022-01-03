@@ -53,5 +53,24 @@
 
             return this.Ok();
         }
+
+        [HttpDelete]
+        [Route(nameof(Delete))]
+        public async Task<ActionResult> Delete(DeleteCommentRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.commentService.Delete(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok();
+        }
     }
 }

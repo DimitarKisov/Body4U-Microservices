@@ -10,5 +10,7 @@
         Task<Result> Create(CreateCommentRequestModel request);
 
         Task<Result> Edit(EditCommentRequestModel request);
+
+        Task<Result> Delete(DeleteCommentRequestModel request);
     }
 }

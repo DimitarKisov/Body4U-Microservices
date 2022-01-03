@@ -91,5 +91,35 @@
                 return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
+
+        public async Task<Result> Delete(DeleteCommentRequestModel request)
+        {
+            try
+            {
+                var comment = await this.dbContext
+                    .Comments
+                    .FindAsync(new object[] { request.Id });
+
+                if (comment == null)
+                {
+                    return Result.Failure(CommentMissing);
+                }
+
+                if (comment.ApplicationUserId != request.UserId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                this.dbContext.Comments.Remove(comment);
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(CommentService)}.{nameof(Delete)}");
+                return Result.Failure(string.Format(Wrong, nameof(Delete)));
+            }
+        }
     }
 }
