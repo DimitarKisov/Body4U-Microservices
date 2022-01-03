@@ -51,5 +51,10 @@
             public const string TooManyImages = "The max allowed images is {0}. You can upload {1} more images.";
             public const string TrainerNotFound = "User is not a trainer.";
         }
+
+        public class Comment
+        {
+            public const string CommentMissing = "There is no such comment.";
+        }
     }
 }

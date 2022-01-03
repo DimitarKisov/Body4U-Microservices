@@ -62,7 +62,7 @@
 	</ItemGroup>
 
 	<Target Name="CustomTarget" AfterTargets="_PublishNoBuildAlternative" Condition="'$(Configuration)'=='Debug'">
-		<Delete Files="$(PublishDir)\appsettings.json"/>
+		<Delete Files="$(PublishDir)\appsettings.json" />
 	</Target>
 
 	<Target Name="RenameAppsettings" Condition="'$(Configuration)'=='Debug'" AfterTargets="Publish">

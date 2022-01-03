@@ -1,4 +1,4 @@
-﻿namespace Body4U.Common.Models.Comment.Requests
+﻿namespace Body4U.Article.Models.Requests.Comment
 {
     using System.ComponentModel.DataAnnotations;
 

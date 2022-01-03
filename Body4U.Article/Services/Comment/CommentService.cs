@@ -2,17 +2,19 @@
 {
     using Body4U.Article.Data;
     using Body4U.Common;
-    using Body4U.Common.Models.Comment.Requests;
+    using Body4U.Article.Models.Requests.Comment;
     using Body4U.Common.Services.Identity;
+    using Body4U.Common.Models.Comment.Requests;
     using Data.Models;
     using Microsoft.EntityFrameworkCore;
     using System.Threading.Tasks;
     using Serilog;
     using System;
 
-    using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Article;
-    
+    using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.Comment;
+
     public class CommentService : ICommentService
     {
         private readonly ArticleDbContext dbContext;
@@ -56,6 +58,37 @@
             {
                 Log.Error(ex, $"{nameof(CommentService)}.{nameof(Create)}");
                 return Result.Failure(string.Format(Wrong, nameof(Create)));
+            }
+        }
+
+        public async Task<Result> Edit(EditCommentRequestModel request)
+        {
+            try
+            {
+                var comment = await this.dbContext
+                    .Comments
+                    .FindAsync(new object[] { request.Id });
+
+                if (comment == null)
+                {
+                    return Result.Failure(CommentMissing);
+                }
+
+                if (comment.ApplicationUserId != request.UserId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                comment.Content = request.Content;
+
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(CommentService)}.{nameof(Edit)}");
+                return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
     }

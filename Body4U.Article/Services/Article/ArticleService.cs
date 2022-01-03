@@ -178,7 +178,7 @@
                     .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
                     .Id;
 
-                if (article.TrainerId != authorId)
+                if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
                 {
                     return Result.Failure(WrongWrights);
                 }
