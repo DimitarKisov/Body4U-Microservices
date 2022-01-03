@@ -72,5 +72,25 @@
 
             return this.Ok();
         }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(Search))]
+        public async Task<ActionResult> Search(SearchCommentsRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.commentService.Search(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }

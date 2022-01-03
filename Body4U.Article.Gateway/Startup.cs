@@ -38,6 +38,10 @@ namespace Body4U.Article.Gateway
             services
                .AddRefitClient<IArticleService>()
                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Article"]);
+
+            services
+                .AddRefitClient<ICommentService>()
+                .WithConfiguration(this.Configuration.GetSection("ServiceEndpoints")["Article"]);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

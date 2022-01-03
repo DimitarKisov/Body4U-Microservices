@@ -12,6 +12,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -320,6 +321,19 @@
         public async Task<ActionResult> GetUserInfo(string id)
         {
             var result = await this.identityService.GetUserInfo(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpGet]
+        [Route(nameof(GetUsersInfo))]
+        public async Task<ActionResult> GetUsersInfo([FromBody] List<string> ids)
+        {
+            var result = await this.identityService.GetUsersInfo(ids);
             if (!result.Succeeded)
             {
                 return this.BadRequest(result.Errors);

@@ -3,6 +3,8 @@
     using Body4U.Article.Gateway.Models.Responses;
     using Body4U.Article.Gateway.Services;
     using Body4U.Common.Controllers;
+    using Body4U.Common.Models.Article.Responses;
+    using Body4U.Common.Models.Comment.Requests;
     using Body4U.Common.Models.Favourites.Requests;
     using Body4U.Identity.Models.Favourites.Responses;
     using Microsoft.AspNetCore.Authorization;
@@ -10,6 +12,7 @@
     using Newtonsoft.Json;
     using Refit;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
 
@@ -22,15 +25,18 @@
         private readonly IArticleService articleService;
         private readonly IIdentityService identityService;
         private readonly IFavouritesService favouritesService;
+        private readonly ICommentService commentService;
 
         public ArticleController(
             IArticleService articleService,
             IIdentityService identityService,
-            IFavouritesService favouritesService)
+            IFavouritesService favouritesService,
+            ICommentService commentService)
         {
             this.articleService = articleService;
             this.identityService = identityService;
             this.favouritesService = favouritesService;
+            this.commentService = commentService;
         }
 
         [HttpGet]
@@ -58,6 +64,30 @@
                     TrainerFullName = trainerInfo.FullName,
                     TrainerAge = trainerInfo.Age
                 });
+            }
+            catch (ApiException ex)
+            {
+                return this.ProccessErrors(ex);
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(Comments))]
+        public async Task<ActionResult<List<SearchCommentsResponseModel>>> Comments(SearchCommentsRequestModel request)
+        {
+            try
+            {
+                var comments = await this.commentService.Search(request);
+                var users = await this.identityService.GetUsersInfo(comments.Select(x => x.ApplicationUserId).ToList());
+
+                foreach (var comment in comments)
+                {
+                    var userFullName = users.First(x => x.Id == comment.ApplicationUserId).FullName;
+                    comment.AuthorName = userFullName;
+                }
+
+                return this.Ok(comments);
             }
             catch (ApiException ex)
             {

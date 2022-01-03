@@ -690,7 +690,7 @@
             {
                 var user = await this.dbContext
                     .Users
-                    .Select(x => new
+                    .Select(x => new GetUserInfoResponseModel()
                     {
                         Id = x.Id,
                         FullName = x.FirstName + " " + x.LastName,
@@ -703,18 +703,37 @@
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
                     .Url;
 
-                return Result<GetUserInfoResponseModel>.SuccessWith(new GetUserInfoResponseModel()
-                {
-                    FullName = user.FullName,
-                    Age = user.Age,
-                    ProfileImageUrl = profileImageUrl
-                });
+                user.ProfileImageUrl = profileImageUrl;
 
+                return Result<GetUserInfoResponseModel>.SuccessWith(user);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(IdentityService)}.{nameof(GetUserInfo)}");
                 return Result<GetUserInfoResponseModel>.Failure(string.Format(Wrong, nameof(GetUserInfo)));
+            }
+        }
+
+        public async Task<Result<List<GetUserInfoResponseModel>>> GetUsersInfo(List<string> ids)
+        {
+            try
+            {
+                var users = await this.dbContext
+                    .Users
+                    .Select(x => new GetUserInfoResponseModel()
+                    {
+                        Id = x.Id,
+                        FullName = x.FirstName + " " + x.LastName,
+                        ProfileImageUrl = this.dbContext.UserImageDatas.FirstOrDefault(x => x.ApplicationUserId == x.Id).Url
+                    })
+                    .ToListAsync();
+
+                return Result<List<GetUserInfoResponseModel>>.SuccessWith(users);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(GetUsersInfo)}");
+                return Result<List<GetUserInfoResponseModel>>.Failure(string.Format(Wrong, nameof(GetUsersInfo)));
             }
         }
 

@@ -1,19 +1,21 @@
 ﻿namespace Body4U.Article.Services.Comment
 {
     using Body4U.Article.Data;
-    using Body4U.Common;
+    using Body4U.Article.Data.Models;
     using Body4U.Article.Models.Requests.Comment;
-    using Body4U.Common.Services.Identity;
+    using Body4U.Common;
     using Body4U.Common.Models.Comment.Requests;
-    using Data.Models;
+    using Body4U.Common.Services.Identity;
     using Microsoft.EntityFrameworkCore;
-    using System.Threading.Tasks;
     using Serilog;
     using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Article;
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Comment;
+    using System.Linq;
 
     public class CommentService : ICommentService
     {
@@ -119,6 +121,44 @@
             {
                 Log.Error(ex, $"{nameof(CommentService)}.{nameof(Delete)}");
                 return Result.Failure(string.Format(Wrong, nameof(Delete)));
+            }
+        }
+
+        public async Task<Result<List<SearchCommentsResponseModel>>> Search(SearchCommentsRequestModel request)
+        {
+            try
+            {
+                var articleExists = await this.dbContext
+                    .Articles
+                    .AnyAsync(x => x.Id == request.ArticleId);
+
+                if (!articleExists)
+                {
+                    return Result<List<SearchCommentsResponseModel>>.Failure(ArticleMissing);
+                }
+
+                var pageIndex = request.PageIndex;
+                var pageSize = request.PageSize;
+
+                var comments = await this.dbContext
+                    .Comments
+                    .Select(x=> new SearchCommentsResponseModel()
+                    {
+                        Id = x.Id,
+                        Content = x.Content,
+                        ApplicationUserId = x.ApplicationUserId,
+                        DatePosted = x.CreatedOn
+                    })
+                    .Skip(pageIndex * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return Result<List<SearchCommentsResponseModel>>.SuccessWith(comments);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(CommentService)}.{nameof(Search)}");
+                return Result<List<SearchCommentsResponseModel>>.Failure(string.Format(Wrong, nameof(Search)));
             }
         }
     }
