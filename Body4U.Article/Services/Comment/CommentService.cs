@@ -142,6 +142,7 @@
 
                 var comments = await this.dbContext
                     .Comments
+                    .Where(x => x.ArticleId == request.ArticleId)
                     .Select(x=> new SearchCommentsResponseModel()
                     {
                         Id = x.Id,
