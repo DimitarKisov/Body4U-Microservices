@@ -10,6 +10,7 @@
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Models.Favourites.Responses;
+    using Ganss.XSS;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using SixLabors.ImageSharp;
@@ -342,10 +343,13 @@
                     })
                     .FirstOrDefaultAsync(x => x.Id == article.TrainerId);
 
+                var sanitizedContent = new HtmlSanitizer()
+                    .Sanitize(article.Content);
+
                 return Result<GetArticleResponseModel>.SuccessWith(new GetArticleResponseModel()
                 {
                     Title = article.Title,
-                    Content = article.Content,
+                    Content = sanitizedContent,
                     ImageUrl = articleImageUrl,
                     CreatedOn = article.CreatedOn,
                     ArticleType = (int)article.ArticleType,
