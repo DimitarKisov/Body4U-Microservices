@@ -3,6 +3,7 @@
     using Body4U.Article.Models.Requests.Service;
     using Body4U.Article.Models.Responses.Services;
     using Body4U.Common;
+    using Body4U.Common.Models.Service;
     using System.Threading.Tasks;
 
     public interface IServiceService
@@ -10,5 +11,7 @@
         Task<Result<int>> Create(CreateServiceRequestModel request);
 
         Task<Result<GetServiceResponseModel>> Get(int id);
+
+        Task<Result> Edit(EditServiceRequestModel request);
     }
 }

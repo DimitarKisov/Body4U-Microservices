@@ -4,6 +4,7 @@
     using Body4U.Article.Models.Requests.Service;
     using Body4U.Article.Models.Responses.Services;
     using Body4U.Common;
+    using Body4U.Common.Models.Service;
     using Body4U.Common.Services.Identity;
     using Data.Models;
     using Microsoft.EntityFrameworkCore;
@@ -104,6 +105,47 @@
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Get)}");
                 return Result<GetServiceResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
+            }
+        }
+
+        public async Task<Result> Edit(EditServiceRequestModel request)
+        {
+            try
+            {
+                var service = await this.dbContext
+                    .Services
+                    .FindAsync(new object[] { request.Id });
+
+                if (service == null)
+                {
+                    return Result.Failure(ServiceMissing);
+                }
+
+                var trainerId = (await this.dbContext
+                    .Trainers
+                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .Id;
+
+                if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                service.Name = request.Name;
+                service.Description = request.Description;
+                service.ServiceType = (ServiceType)request.ServiceType;
+                service.ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty;
+                service.Price = request.Price;
+
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Edit)}");
+                return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
     }
