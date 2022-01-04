@@ -4,6 +4,7 @@ namespace Body4U.Article
     using Body4U.Article.Messages;
     using Body4U.Article.Services.Article;
     using Body4U.Article.Services.Comment;
+    using Body4U.Article.Services.Service;
     using Body4U.Article.Services.Trainer;
     using Body4U.Common.Infrastructure;
     using Microsoft.AspNetCore.Builder;
@@ -26,6 +27,7 @@ namespace Body4U.Article
                 .AddTransient<ITrainerService, TrainerService>()
                 .AddTransient<IArticleService, ArticleService>()
                 .AddTransient<ICommentService, CommentService>()
+                .AddTransient<IServiceService, ServiceService>()
                 .AddMessaging(this.Configuration,
                               typeof(CreateTrainerConsumer),
                               typeof(DeleteTrainerConsumer),
@@ -34,6 +36,7 @@ namespace Body4U.Article
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
                 .UseWebService(env)
-                .Initialize();
+                .UseCustomStaticFiles()
+                .Initialize(); 
     }
 }

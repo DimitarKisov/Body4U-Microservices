@@ -5,7 +5,9 @@
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Hosting;
+    using System.IO;
 
     public static class ApplicationBuilderExtensions
     {
@@ -67,5 +69,15 @@
 
             return app;
         }
+
+        public static IApplicationBuilder UseCustomStaticFiles(this IApplicationBuilder app)
+            => app
+                .UseFileServer(new FileServerOptions
+                {
+                    FileProvider = new PhysicalFileProvider(
+                            Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles")),
+                    RequestPath = "/StaticFiles",
+                    EnableDefaultFiles = true
+                });
     }
 }

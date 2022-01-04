@@ -56,5 +56,11 @@
         {
             public const string CommentMissing = "There is no such comment.";
         }
+
+        public class Service
+        {
+            public const string NameTaken = "This name is already taken.";
+            public const string WrongServiceType = "Wrong service type.";
+        }
     }
 }
