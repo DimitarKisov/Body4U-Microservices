@@ -17,6 +17,8 @@
 		<Compile Remove="Data\Migrations\20211221144250_AddedFullNameInTrainer1.Designer.cs" />
 		<Compile Remove="Data\Migrations\20211222100316_AddedFavouriteEntity.cs" />
 		<Compile Remove="Data\Migrations\20211222100316_AddedFavouriteEntity.Designer.cs" />
+		<Compile Remove="Data\Migrations\20220104102733_AddedServicesEntityForTrainers.cs" />
+		<Compile Remove="Data\Migrations\20220104102733_AddedServicesEntityForTrainers.Designer.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

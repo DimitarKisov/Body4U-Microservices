@@ -22,6 +22,8 @@
 
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<Service> Services { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -60,6 +62,18 @@
                 .WithMany(y => y.Comments)
                 .HasForeignKey(x => x.ArticleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder
+                .Entity<Service>()
+                .HasOne(x => x.Trainer)
+                .WithMany(y => y.Services)
+                .HasForeignKey(x => x.TrainerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder
+                .Entity<Service>()
+                .Property(x => x.Price)
+                .HasColumnType("decimal(18, 6)");
         }
     }
 }

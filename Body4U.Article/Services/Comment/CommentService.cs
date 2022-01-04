@@ -11,12 +11,12 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using System.Linq;
 
     using static Body4U.Common.Constants.MessageConstants.Article;
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Comment;
-    using System.Linq;
-
+    
     public class CommentService : ICommentService
     {
         private readonly ArticleDbContext dbContext;

@@ -56,5 +56,13 @@
             public const int MinContentLength = 1;
             public const int MaxContentLength = 4000;
         }
+
+        public class Service
+        {
+            public const int MinNameLength = 4;
+            public const int MaxNameLength = 80;
+            public const int MinDescriptionLength = 10;
+            public const int MaxDescriptionLength = 2000;
+        }
     }
 }

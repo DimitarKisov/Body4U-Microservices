@@ -15,6 +15,7 @@
             this.Articles = new HashSet<Article>();
             this.TrainerImagesDatas = new HashSet<TrainerImageData>();
             this.TrainerVideos = new HashSet<TrainerVideo>();
+            this.Services = new HashSet<Service>();
         }
 
         public int Id { get; set; }
@@ -80,5 +81,7 @@
         public ICollection<TrainerImageData> TrainerImagesDatas { get; set; }
 
         public ICollection<TrainerVideo> TrainerVideos { get; set; }
+
+        public ICollection<Service> Services { get; set; }
     }
 }
