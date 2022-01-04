@@ -22,5 +22,8 @@
 
         [Required]
         public int ServiceType { get; set; }
+
+        [Required]
+        public int ServiceDifficulty { get; set; }
     }
 }

@@ -61,6 +61,8 @@
         {
             public const string NameTaken = "This name is already taken.";
             public const string WrongServiceType = "Wrong service type.";
+            public const string WrongServiceDifficulty = "Wrong service difficulty.";
+            public const string ServiceMissing = "There is no such service.";
         }
     }
 }

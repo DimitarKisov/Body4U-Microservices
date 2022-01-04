@@ -2,5 +2,9 @@
 {
     public enum ServiceType
     {
+        TrainingProgram = 0,
+        Diet = 1,
+        EmailConsult = 2,
+        LiveChatConsult = 3
     }
 }

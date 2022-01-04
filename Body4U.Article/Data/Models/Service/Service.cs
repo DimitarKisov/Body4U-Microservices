@@ -27,6 +27,9 @@
         public ServiceType ServiceType { get; set; }
 
         [Required]
+        public ServiceDifficulty ServiceDifficulty { get; set; }
+
+        [Required]
         public int TrainerId { get; set; }
 
         public virtual Trainer Trainer { get; set; }

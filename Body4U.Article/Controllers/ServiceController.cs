@@ -33,5 +33,18 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpGet]
+        [Route(nameof(Get))]
+        public async Task<ActionResult> Get(int id)
+        {
+            var result = await this.serviceService.Get(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
     }
 }
