@@ -19,8 +19,7 @@
         [MaxLength(MaxDescriptionLength)]
         public string Description { get; set; }
 
-        [Required]
-        [MinLength(0)]
+        [Range(typeof(decimal), MinPrice, MaxPrice)]
         public decimal Price { get; set; }
 
         [Required]

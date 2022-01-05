@@ -63,6 +63,8 @@
             public const int MaxNameLength = 80;
             public const int MinDescriptionLength = 10;
             public const int MaxDescriptionLength = 2000;
+            public const string MinPrice = "0";
+            public const string MaxPrice = "5000";
         }
     }
 }
