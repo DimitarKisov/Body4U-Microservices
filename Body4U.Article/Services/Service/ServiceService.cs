@@ -10,6 +10,7 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -76,6 +77,31 @@
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Create)}");
                 return Result<int>.Failure(string.Format(Wrong, nameof(Create)));
+            }
+        }
+
+        public async Task<Result<List<AllServicesResponseModel>>> All(int trainerId)
+        {
+            try
+            {
+                var services = await this.dbContext
+                    .Services
+                    .Where(x => x.TrainerId == trainerId)
+                    .Select(x => new AllServicesResponseModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        ServiceType = (int)x.ServiceType,
+                        ServiceDifficulty = (int)x.ServiceDifficulty
+                    })
+                    .ToListAsync();
+
+                return Result<List<AllServicesResponseModel>>.SuccessWith(services);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(All)}");
+                return Result<List<AllServicesResponseModel>>.Failure(string.Format(Wrong, nameof(All)));
             }
         }
 

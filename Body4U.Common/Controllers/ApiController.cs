@@ -8,6 +8,7 @@
     {
         protected const string PathSeparator = "/";
         protected const string Id = "{id}";
+        protected const string TrainerId = "{trainerId}";
         protected const string Term = "{term}";
     }
 }

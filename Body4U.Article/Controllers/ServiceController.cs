@@ -5,6 +5,7 @@
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Models.Service;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
@@ -36,6 +37,21 @@
         }
 
         [HttpGet]
+        [AllowAnonymous]
+        [Route(nameof(All) + PathSeparator + TrainerId)]
+        public async Task<ActionResult> All(int trainerId)
+        {
+            var result = await this.serviceService.All(trainerId);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
         [Route(Id)]
         public async Task<ActionResult> Get(int id)
         {
