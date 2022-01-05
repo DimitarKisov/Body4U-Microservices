@@ -45,10 +45,10 @@
                     .Trainers
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
 
-                //if (trainer == null)
-                //{
-                //    return Result<MyTrainerProfileResponseModel>.Failure(TrainerNotFound);
-                //}
+                if (trainer == null)
+                {
+                    return Result<MyTrainerProfileResponseModel>.Failure(TrainerNotFound);
+                }
 
                 var result = new MyTrainerProfileResponseModel
                 {
@@ -78,10 +78,10 @@
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
                     .Id;
 
-                //if (trainerId == null)
-                //{
-                //    return Result<List<string>>.Failure(TrainerNotFound);
-                //}
+                if (trainerId == null)
+                {
+                    return Result<List<string>>.Failure(TrainerNotFound);
+                }
 
                 var result = await this.dbContext
                 .TrainerImagesDatas
@@ -107,10 +107,10 @@
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
                     .Id;
 
-                //if (trainerId == null)
-                //{
-                //    return Result<List<string>>.Failure(TrainerNotFound);
-                //}
+                if (trainerId == null)
+                {
+                    return Result<List<string>>.Failure(TrainerNotFound);
+                }
 
                 var result = await this.dbContext
                     .TrainerVideos
@@ -133,14 +133,14 @@
             {
                 var trainer = await this.dbContext.Trainers.FindAsync(new object[] { request.Id });
 
-                if (request.Id != trainer.Id && !this.currentUserService.IsAdministrator)
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
                 if (trainer == null)
                 {
                     return Result.Failure(TrainerNotFound);
+                }
+
+                if (request.Id != trainer.Id && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
                 }
 
                 if (!string.IsNullOrWhiteSpace(request.Bio))

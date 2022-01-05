@@ -21,15 +21,17 @@
         {
             try
             {
-                await this.dbContext
-                .Trainers
-                .AddAsync(new Trainer
+                var trainer = new Trainer()
                 {
                     ApplicationUserId = context.Message.ApplicationUserId,
                     CreatedOn = context.Message.CreatedOn,
                     FirstName = context.Message.FirstName,
                     LastName = context.Message.Lastname
-                });
+                };
+
+                await this.dbContext
+                .Trainers
+                .AddAsync(trainer);
 
                 await this.dbContext.SaveChangesAsync();
             }

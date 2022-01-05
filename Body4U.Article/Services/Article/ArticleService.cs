@@ -56,10 +56,10 @@
                     })
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
 
-                //if (trainer == null)
-                //{
-                //    return Result<int>.Failure(TrainerNotFound);
-                //}
+                if (trainer == null)
+                {
+                    return Result<int>.Failure(TrainerNotFound);
+                }
 
                 if (trainer.IsReadyToWrite == false)
                 {
@@ -176,8 +176,13 @@
 
                 var authorId = (await this.dbContext
                     .Trainers
-                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
                     .Id;
+
+                if (authorId == null)
+                {
+                    return Result.Failure(TrainerNotFound);
+                }
 
                 if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
                 {
@@ -282,8 +287,13 @@
 
                 var authorId = (await this.dbContext
                     .Trainers
-                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
                     .Id;
+
+                if (authorId == null)
+                {
+                    return Result.Failure(TrainerNotFound);
+                }
 
                 if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
                 {

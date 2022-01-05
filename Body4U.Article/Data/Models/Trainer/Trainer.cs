@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
-
+    using System.ComponentModel.DataAnnotations.Schema;
     using static Body4U.Common.Constants.DataConstants.ApplicationUser;
     using static Body4U.Common.Constants.DataConstants.Trainer;
 
@@ -63,18 +63,8 @@
         [MaxLength(LastNameMaxLength)]
         public string LastName { get; set; }
 
-        [Required]
-        public string FullName
-        {
-            get
-            {
-                return this.FullName;
-            }
-            private set
-            {
-                this.FullName = this.FirstName + " " + this.LastName;
-            }
-        }
+        [NotMapped]
+        public string FullName => this.FirstName + " " + this.LastName;
 
         public ICollection<Article> Articles { get; set; }
 
