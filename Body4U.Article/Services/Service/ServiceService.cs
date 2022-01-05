@@ -174,5 +174,40 @@
                 return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
+
+        public async Task<Result> Delete(int id)
+        {
+            try
+            {
+                var service = await this.dbContext
+                    .Services
+                    .FindAsync(new object[] { id });
+
+                if (service == null)
+                {
+                    return Result.Failure(ServiceMissing);
+                }
+
+                var trainerId = (await this.dbContext
+                    .Trainers
+                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .Id;
+
+                if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
+                {
+                    return Result.Failure(WrongWrights);
+                }
+
+                this.dbContext.Services.Remove(service);
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Delete)}");
+                return Result.Failure(string.Format(Wrong, nameof(Delete)));
+            }
+        }
     }
 }

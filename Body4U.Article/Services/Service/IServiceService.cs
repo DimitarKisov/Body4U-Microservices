@@ -16,5 +16,7 @@
         Task<Result<GetServiceResponseModel>> Get(int id);
 
         Task<Result> Edit(EditServiceRequestModel request);
+
+        Task<Result> Delete(int id);
     }
 }

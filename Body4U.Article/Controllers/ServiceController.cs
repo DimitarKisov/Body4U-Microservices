@@ -82,5 +82,18 @@
 
             return this.Ok();
         }
+
+        [HttpDelete]
+        [Route(nameof(Delete))]
+        public async Task<ActionResult> Delete([FromBody] int id)
+        {
+            var result = await this.serviceService.Delete(id);
+            if (!result.Succeeded)
+            {
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok();
+        }
     }
 }
