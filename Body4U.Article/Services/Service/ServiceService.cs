@@ -15,6 +15,7 @@
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.Trainer;
     using static Body4U.Common.Constants.MessageConstants.Service;
 
     public class ServiceService : IServiceService
@@ -55,8 +56,13 @@
 
                 var trainerId = (await this.dbContext
                     .Trainers
-                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
                     .Id;
+
+                if (trainerId == null)
+                {
+                    return Result<int>.Failure(TrainerNotFound);
+                }
 
                 var service = new Service
                 {
@@ -65,7 +71,7 @@
                     Price = request.Price,
                     ServiceType = (ServiceType)request.ServiceType,
                     ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty,
-                    TrainerId = trainerId
+                    TrainerId = (int)trainerId
                 };
 
                 await this.dbContext.Services.AddAsync(service);
@@ -120,6 +126,7 @@
 
                 return Result<GetServiceResponseModel>.SuccessWith(new GetServiceResponseModel
                 {
+                    Id = service.Id,
                     Name = service.Name,
                     Description = service.Description,
                     Price = service.Price,
