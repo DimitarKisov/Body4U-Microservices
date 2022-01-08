@@ -3,14 +3,12 @@
     using Body4U.Common;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
-    using Body4U.Common.Services;
-    using Body4U.Identity.Data.Models.Identity;
     using Body4U.Identity.Models.Requests.Identity;
     using Body4U.Identity.Models.Responses.Identity;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IIdentityService //: IDataService<ApplicationUser>
+    public interface IIdentityService
     {
         Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request);
 

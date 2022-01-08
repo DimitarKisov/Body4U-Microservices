@@ -85,21 +85,6 @@
                         .Publish(messageData);
 
                     await this.MarkMessageAsPublished(message.Id);
-
-                    //await this.dbContext
-                    //    .Messages
-                    //    .AddAsync(message);
-
-                    //await this.publisher
-                    //    .Publish(messageData);
-
-                    //var findMessage = await this.dbContext
-                    //    .Messages
-                    //    .FindAsync(message.Id);
-
-                    //findMessage.MarkAsPublished();
-
-                    //await this.dbContext.SaveChangesAsync();
                 })
                 .GetAwaiter()
                 .GetResult();

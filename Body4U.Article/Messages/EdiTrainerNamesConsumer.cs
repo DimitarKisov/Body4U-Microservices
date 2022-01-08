@@ -31,6 +31,8 @@
                 {
                     trainer.FirstName = context.Message.FirstName;
                     trainer.LastName = context.Message.LastName;
+                    trainer.ModifiedBy = context.Message.ModifiedBy;
+                    trainer.ModifiedOn = DateTime.Now;
 
                     await this.dbContext.SaveChangesAsync();
                 }

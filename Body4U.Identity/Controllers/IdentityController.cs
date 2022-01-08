@@ -99,7 +99,7 @@
         [HttpPut]
         [Authorize]
         [Route(nameof(Edit))]
-        public async Task<ActionResult> Edit([FromForm] EditMyProfileRequestModel request)
+        public async Task<ActionResult> Edit(EditMyProfileRequestModel request)
         {
             if (!this.ModelState.IsValid)
             {

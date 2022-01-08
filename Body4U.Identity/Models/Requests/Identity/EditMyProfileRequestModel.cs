@@ -7,6 +7,7 @@
 
     public class EditMyProfileRequestModel
     {
+        [Required]
         public string Id { get; set; }
 
         [RegularExpression(PhoneNumberRegex)]
@@ -22,7 +23,7 @@
         [MaxLength(LastNameMaxLength)]
         public string LastName { get; set; }
 
-        public int Age { get; set; }
+        public int? Age { get; set; }
 
         public Gender Gender { get; set; }
     }

@@ -1,6 +1,7 @@
 ﻿namespace Body4U.Identity.Services.Identity
 {
     using Body4U.Common;
+    using Body4U.Common.Messages;
     using Body4U.Common.Messages.Article;
     using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models.Identity.Requests;
@@ -274,12 +275,6 @@
                     return Result.Failure(WrongGender);
                 }
 
-                var sendEditMessage = false;
-                if (user.FirstName != request.FirstName || user.LastName != request.LastName)
-                {
-                    sendEditMessage = true;
-                }
-
                 user.PhoneNumber = request.PhoneNumber;
                 user.FirstName = request.FirstName;
                 user.LastName = request.LastName;
@@ -288,15 +283,22 @@
                 user.ModifiedOn = DateTime.Now;
                 user.ModifiedBy = this.currentUserService.UserId;
 
-                if (sendEditMessage)
+                var messageData = new EditUserNamesMessage()
                 {
-                    await this.publisher.Publish(new EditUserNamesMessage()
-                    {
-                        ApplicationUserId = user.Id,
-                        FirstName = request.FirstName,
-                        LastName = request.LastName
-                    });
-                }
+                    ApplicationUserId = user.Id,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    ModifiedBy = this.currentUserService.UserId
+                };
+
+                var message = new Message(messageData);
+
+                await this.Save(user, message);
+
+                await this.publisher
+                    .Publish(messageData);
+
+                await this.MarkMessageAsPublished(message.Id);
 
                 return Result.Success;
             }
