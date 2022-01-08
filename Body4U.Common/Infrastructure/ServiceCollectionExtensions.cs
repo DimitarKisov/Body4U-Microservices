@@ -3,6 +3,7 @@
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using CloudinaryDotNet;
+    using GreenPipes;
     using MassTransit;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.EntityFrameworkCore;
@@ -99,6 +100,8 @@
                         
                         consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
                         {
+                            endpoint.PrefetchCount = 6;
+                            endpoint.UseMessageRetry(retry => retry.Interval(10, 1000)); // try 10 times every 1 second
                             endpoint.ConfigureConsumer(bus, consumer);
                         }));
                     }));
