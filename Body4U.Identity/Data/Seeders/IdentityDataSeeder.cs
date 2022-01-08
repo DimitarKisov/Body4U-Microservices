@@ -1,5 +1,6 @@
 ﻿namespace Body4U.Identity.Data.Seeders
 {
+    using Body4U.Common.Messages;
     using Body4U.Common.Messages.Article;
     using Body4U.Common.Services;
     using Body4U.Identity.Data.Models.Identity;
@@ -12,7 +13,8 @@
 
     using static Body4U.Common.Constants.DataConstants.Common;
 
-    public class IdentityDataSeeder : IDataSeeder
+    //ApplicationUser is passed because the service needs it but we are not going to use the userManager for creating a user
+    public class IdentityDataSeeder : DataService<ApplicationUser>, IDataSeeder
     {
         private readonly IConfiguration configuration;
         private readonly UserManager<ApplicationUser> userManager;
@@ -26,6 +28,7 @@
             RoleManager<IdentityRole> roleManager,
             IdentityDbContext dbContext,
             IBus publisher)
+            : base(dbContext)
         {
             this.configuration = configuration;
             this.userManager = userManager;
@@ -62,18 +65,41 @@
                         CreateOn = DateTime.Now
                     };
 
-                    await userManager.CreateAsync(user, passsword);
-
-                    await userManager.AddToRoleAsync(user, AdministratorRoleName);
-                    await userManager.AddToRoleAsync(user, TrainerRoleName);
-
-                    await this.publisher.Publish(new CreateTrainerMessage()
+                    var messageData = new CreateTrainerMessage()
                     {
                         ApplicationUserId = user.Id,
                         CreatedOn = DateTime.Now,
                         FirstName = user.FirstName,
                         Lastname = user.LastName
-                    });
+                    };
+
+                    var message = new Message(messageData);
+
+                    await userManager.CreateAsync(user, passsword);
+                    await userManager.AddToRoleAsync(user, AdministratorRoleName);
+                    await userManager.AddToRoleAsync(user, TrainerRoleName);
+
+                    await this.Save(null, message);
+
+                    await this.publisher
+                        .Publish(messageData);
+
+                    await this.MarkMessageAsPublished(message.Id);
+
+                    //await this.dbContext
+                    //    .Messages
+                    //    .AddAsync(message);
+
+                    //await this.publisher
+                    //    .Publish(messageData);
+
+                    //var findMessage = await this.dbContext
+                    //    .Messages
+                    //    .FindAsync(message.Id);
+
+                    //findMessage.MarkAsPublished();
+
+                    //await this.dbContext.SaveChangesAsync();
                 })
                 .GetAwaiter()
                 .GetResult();

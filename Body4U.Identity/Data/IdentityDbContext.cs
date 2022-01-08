@@ -1,10 +1,12 @@
 ﻿namespace Body4U.Identity.Data
 {
+    using Body4U.Common.Messages;
     using Body4U.Identity.Data.Models.Favourites;
     using Body4U.Identity.Data.Models.Identity;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
+    using System;
 
     public class IdentityDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
@@ -16,6 +18,8 @@
         public DbSet<UserImageData> UserImageDatas { get; set; }
 
         public DbSet<Favourite> Favourites { get; set; }
+
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -71,6 +75,14 @@
                 .WithMany(y => y.Favourites)
                 .HasForeignKey(x => x.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region Message
+            builder.Entity<Message>()
+                .Property(m => m.Type)
+                .HasConversion(
+                    t => t.AssemblyQualifiedName,
+                    t => Type.GetType(t));
             #endregion
         }
     }

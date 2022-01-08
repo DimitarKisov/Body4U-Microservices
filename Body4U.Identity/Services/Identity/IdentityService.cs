@@ -5,6 +5,7 @@
     using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models.Identity.Requests;
     using Body4U.Common.Models.Identity.Responses;
+    using Body4U.Common.Services;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Data;
@@ -33,7 +34,7 @@
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
 
-    public class IdentityService : IIdentityService
+    public class IdentityService : DataService<ApplicationUser>, IIdentityService
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
@@ -55,6 +56,7 @@
             IdentityDbContext dbContext,
             IConfiguration configuration,
             IBus publisher)
+            : base(dbContext)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
