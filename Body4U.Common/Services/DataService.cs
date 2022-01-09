@@ -4,7 +4,7 @@
     using Microsoft.EntityFrameworkCore;
     using System.Threading.Tasks;
 
-    public abstract class DataService<TEntity> : IDataService<TEntity>
+    public class DataService<TEntity> //: IDataService<TEntity>
         where TEntity : class
     {
         protected DataService(DbContext dbContext)

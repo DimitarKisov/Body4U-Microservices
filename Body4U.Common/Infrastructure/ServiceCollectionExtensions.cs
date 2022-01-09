@@ -101,7 +101,7 @@
                         consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
                         {
                             endpoint.PrefetchCount = 6;
-                            endpoint.UseMessageRetry(retry => retry.Interval(10, 1000)); // try 10 times every 1 second
+                            endpoint.UseMessageRetry(retry => retry.Interval(10, 1000)); // try 10 times every 1 second to send the messages
                             endpoint.ConfigureConsumer(bus, consumer);
                         }));
                     }));
