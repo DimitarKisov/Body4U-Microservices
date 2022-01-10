@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Body4U.Identity.Data.Migrations
+namespace Body4U.EmailSender.Data.Migrations
 {
-    public partial class AddedMessageEntity : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -10,7 +10,8 @@ namespace Body4U.Identity.Data.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Data = table.Column<string>(nullable: false),
                     Type = table.Column<string>(nullable: false),
                     Published = table.Column<bool>(nullable: false)

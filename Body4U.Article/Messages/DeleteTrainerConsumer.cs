@@ -1,6 +1,7 @@
 ﻿namespace Body4U.Article.Messages
 {
     using Body4U.Article.Data;
+    using Body4U.Common.Messages;
     using Body4U.Common.Messages.Article;
     using MassTransit;
     using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,26 @@
         {
             try
             {
+                var messageType = context.Message.GetType();
+                var propertyFilter = nameof(DeleteTrainerMessage.Identifier);
+                var identifier = context.Message.Identifier;
+
+                var isDublicated = await this.dbContext
+                    .Messages
+                    .FromSqlRaw($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
+                    .AnyAsync();
+
+                if (isDublicated)
+                {
+                    return;
+                }
+
+                var message = new Message(context.Message);
+
+                message.MarkAsPublished();
+
+                await this.dbContext.Messages.AddAsync(message);
+
                 var trainer = await this.dbContext
                     .Trainers
                     .FirstOrDefaultAsync(x => x.ApplicationUserId == context.Message.ApplicationUserId);

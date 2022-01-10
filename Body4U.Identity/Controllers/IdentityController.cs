@@ -2,9 +2,11 @@
 {
     using Body4U.Common.Controllers;
     using Body4U.Common.Infrastructure;
+    using Body4U.Common.Messages;
     using Body4U.Common.Messages.Identity;
     using Body4U.Common.Models;
     using Body4U.Common.Models.Identity.Requests;
+    using Body4U.Identity.Data;
     using Body4U.Identity.Models.Requests.Identity;
     using Body4U.Identity.Services;
     using Body4U.Identity.Services.Identity;
@@ -12,7 +14,9 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -22,15 +26,18 @@
         private readonly IIdentityService identityService;
         private readonly IJwtTokenGeneratorService jwtTokenGeneratorService;
         private readonly IBus publisher;
+        private readonly IdentityDbContext dbContext;
 
         public IdentityController(
             IIdentityService identityService,
             IJwtTokenGeneratorService jwtTokenGeneratorService,
-            IBus publisher)
+            IBus publisher,
+            IdentityDbContext dbContext)
         {
             this.identityService = identityService;
             this.jwtTokenGeneratorService = jwtTokenGeneratorService;
             this.publisher = publisher;
+            this.dbContext = dbContext;
         }
 
         [HttpPost]
@@ -53,12 +60,27 @@
             var confirmationLink = Url.Action(nameof(VerifyEmail), "Identity",
                    new { UserId = result.Data.UserId, Token = result.Data.Token }, Request.Scheme, Request.Host.ToString());
 
-            await this.publisher.Publish(new SendEmailMessage()
+            var messageData = new SendEmailMessage()
             {
                 To = result.Data.Email,
                 Subject = EmailConfirmSubject,
                 HtmlContent = string.Format(EmailConfirmHtmlContent, confirmationLink)
-            });
+            };
+
+            //Create the message
+            var message = new Message(messageData);
+
+            //Save it in database
+            await this.identityService.Save(null, message);
+
+            //Publish the message
+            await this.publisher.Publish(messageData);
+
+            //Mark it as published
+            message.MarkAsPublished();
+
+            //And save the changes
+            await this.dbContext.SaveChangesAsync();
 
             return this.Ok(result.Data.ErrorsInImageUploading);
         }

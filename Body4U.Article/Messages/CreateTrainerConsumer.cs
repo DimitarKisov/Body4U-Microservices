@@ -2,8 +2,10 @@
 {
     using Body4U.Article.Data;
     using Body4U.Article.Data.Models;
+    using Body4U.Common.Messages;
     using Body4U.Common.Messages.Article;
     using MassTransit;
+    using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
     using System.Threading.Tasks;
@@ -21,6 +23,27 @@
         {
             try
             {
+                
+                var messageType = context.Message.GetType();
+                var propertyFilter = nameof(CreateTrainerMessage.Identifier);
+                var identifier = context.Message.Identifier;
+
+                var isDublicated = await this.dbContext
+                    .Messages
+                    .FromSqlRaw($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
+                    .AnyAsync();
+
+                if (isDublicated)
+                {
+                    return;
+                }
+
+                var message = new Message(context.Message);
+
+                message.MarkAsPublished();
+
+                await this.dbContext.Messages.AddAsync(message);
+
                 var trainer = new Trainer()
                 {
                     ApplicationUserId = context.Message.ApplicationUserId,
@@ -29,9 +52,7 @@
                     LastName = context.Message.Lastname
                 };
 
-                await this.dbContext
-                .Trainers
-                .AddAsync(trainer);
+                await this.dbContext.Trainers.AddAsync(trainer);
 
                 await this.dbContext.SaveChangesAsync();
             }

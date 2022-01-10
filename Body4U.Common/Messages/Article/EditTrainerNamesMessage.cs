@@ -1,6 +1,6 @@
-﻿namespace Body4U.Common.Messages.Identity
+﻿namespace Body4U.Common.Messages.Article
 {
-    public class EditUserNamesMessage
+    public class EditTrainerNamesMessage : Sender
     {
         public string ApplicationUserId { get; set; }
 

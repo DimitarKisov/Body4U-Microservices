@@ -2,7 +2,7 @@
 {
     using System;
 
-    public class CreateTrainerMessage
+    public class CreateTrainerMessage : Sender
     {
         public string ApplicationUserId { get; set; }
         

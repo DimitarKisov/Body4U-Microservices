@@ -1,6 +1,8 @@
 ﻿namespace Body4U.Common.Messages.Article
 {
-    public class DeleteTrainerMessage
+    using System;
+
+    public class DeleteTrainerMessage : Sender
     {
         public string ApplicationUserId { get; set; }
     }

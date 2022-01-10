@@ -1,6 +1,7 @@
 namespace Body4U.EmailSender
 {
     using Body4U.Common.Infrastructure;
+    using Body4U.EmailSender.Data;
     using Body4U.EmailSender.Messages;
     using Body4U.EmailSender.Services;
     using Microsoft.AspNetCore.Builder;
@@ -18,8 +19,10 @@ namespace Body4U.EmailSender
 
         public void ConfigureServices(IServiceCollection services)
             => services
+                .AddWebService<EmailSenderDbContext>(this.Configuration)
                 .AddTransient<IEmailService, EmailService>()
                 .AddMessaging(this.Configuration,
+                              false,
                               typeof(SendEmailConsumer));
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

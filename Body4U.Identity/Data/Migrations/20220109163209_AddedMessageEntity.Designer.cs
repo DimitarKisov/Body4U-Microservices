@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Body4U.Identity.Data.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20220108165455_AddedMessageEntity")]
+    [Migration("20220109163209_AddedMessageEntity")]
     partial class AddedMessageEntity
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,8 +23,10 @@ namespace Body4U.Identity.Data.Migrations
 
             modelBuilder.Entity("Body4U.Common.Messages.Message", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Data")
                         .IsRequired()

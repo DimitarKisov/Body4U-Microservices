@@ -24,7 +24,6 @@
     using SixLabors.ImageSharp.Processing;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Web;
@@ -283,7 +282,7 @@
                 user.ModifiedOn = DateTime.Now;
                 user.ModifiedBy = this.currentUserService.UserId;
 
-                var messageData = new EditUserNamesMessage()
+                var messageData = new EditTrainerNamesMessage()
                 {
                     ApplicationUserId = user.Id,
                     FirstName = request.FirstName,
@@ -295,10 +294,11 @@
 
                 await this.Save(user, message);
 
-                await this.publisher
-                    .Publish(messageData);
+                await this.publisher.Publish(messageData);
 
-                await this.MarkMessageAsPublished(message.Id);
+                message.MarkAsPublished();
+
+                await this.dbContext.SaveChangesAsync();
 
                 return Result.Success;
             }
@@ -634,13 +634,23 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                await this.publisher.Publish(new CreateTrainerMessage()
+                                var messageData = new CreateTrainerMessage()
                                 {
                                     ApplicationUserId = user.Id,
                                     CreatedOn = DateTime.Now,
                                     FirstName = user.FirstName,
                                     Lastname = user.LastName
-                                });
+                                };
+
+                                var message = new Message(messageData);
+
+                                await this.Save(null, message);
+
+                                await this.publisher.Publish(message);
+
+                                message.MarkAsPublished();
+
+                                await this.dbContext.SaveChangesAsync();
                             }
                             else
                             {
@@ -664,10 +674,20 @@
 
                             if (identityResult.Succeeded && roleName == TrainerRoleName)
                             {
-                                await this.publisher.Publish(new DeleteTrainerMessage()
+                                var messageData = new DeleteTrainerMessage()
                                 {
                                     ApplicationUserId = user.Id
-                                });
+                                };
+
+                                var message = new Message(messageData);
+
+                                await this.Save(null, message);
+
+                                await this.publisher.Publish(messageData);
+
+                                message.MarkAsPublished();
+
+                                await this.dbContext.SaveChangesAsync();
                             }
                             else
                             {

@@ -13,7 +13,7 @@
 
     using static Body4U.Common.Constants.DataConstants.Common;
 
-    //ApplicationUser is passed because the service needs it but we are not going to use the userManager for creating a user
+    //ApplicationUser is passed because the service needs it but we are going to use the userManager for creating a user
     public class IdentityDataSeeder : DataService<ApplicationUser>, IDataSeeder
     {
         private readonly IConfiguration configuration;
@@ -81,10 +81,11 @@
 
                     await this.Save(null, message);
 
-                    await this.publisher
-                        .Publish(messageData);
+                    await this.publisher.Publish(messageData);
 
-                    await this.MarkMessageAsPublished(message.Id);
+                    message.MarkAsPublished();
+                    
+                    await this.dbContext.SaveChangesAsync();
                 })
                 .GetAwaiter()
                 .GetResult();

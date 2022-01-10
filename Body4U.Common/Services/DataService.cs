@@ -4,7 +4,7 @@
     using Microsoft.EntityFrameworkCore;
     using System.Threading.Tasks;
 
-    public class DataService<TEntity> //: IDataService<TEntity>
+    public class DataService<TEntity> : IDataService<TEntity>
         where TEntity : class
     {
         protected DataService(DbContext dbContext)
@@ -12,7 +12,7 @@
 
         protected DbContext DbContext { get; }
 
-        public async Task MarkMessageAsPublished(string id)
+        public async Task MarkMessageAsPublished(int id)
         {
             var message = await this.DbContext
                 .FindAsync<Message>(new object[] { id });
@@ -24,16 +24,14 @@
 
         public async Task Save(TEntity entity = null, params Message[] messages)
         {
-            foreach (var message in messages)
-            {
-                await this.DbContext
-                    .AddAsync(message);
-            }
-
             if (entity != null)
             {
-                this.DbContext
-                .Update(entity);
+                this.DbContext.Update(entity);
+            }
+
+            foreach (var message in messages)
+            {
+                await this.DbContext.AddAsync(message);
             }
 
             await this.DbContext.SaveChangesAsync();

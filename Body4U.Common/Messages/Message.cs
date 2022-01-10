@@ -6,20 +6,16 @@
 
     public class Message
     {
-        public string serializedData;
-
         public Message()
         {
-            this.Id = Guid.NewGuid().ToString();
         }
 
         public Message(object data)
         {
-            this.Id = Guid.NewGuid().ToString();
             this.SerializeData(data);
         }
 
-        public string Id { get; private set; }
+        public int Id { get; private set; }
 
         [Required]
         public string Data { get; private set; }

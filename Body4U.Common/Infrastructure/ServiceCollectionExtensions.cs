@@ -1,9 +1,11 @@
 ﻿namespace Body4U.Common.Infrastructure
 {
+    using Body4U.Common.Messages;
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using CloudinaryDotNet;
     using GreenPipes;
+    using Hangfire;
     using MassTransit;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.OpenApi.Models;
     using System;
+    using System.Data.SqlClient;
     using System.IO;
     using System.Reflection;
     using System.Text;
@@ -83,6 +86,7 @@
         public static IServiceCollection AddMessaging(
             this IServiceCollection services,
             IConfiguration configuration,
+            bool useHangFire,
             params Type[] consumers)
         {
             services
@@ -107,6 +111,22 @@
                     }));
                 })
                 .AddMassTransitHostedService();
+
+            if (useHangFire)
+            {
+                CreateHangfireDatabase(configuration);
+
+                services
+                    .AddHangfire(config => config
+                        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+                        .UseSimpleAssemblyNameTypeSerializer()
+                        .UseRecommendedSerializerSettings()
+                        .UseSqlServerStorage(configuration.GetSection("ConnectionStrings")["CronJobsConnection"]));
+
+                services.AddHangfireServer();
+
+                services.AddHostedService<MessagesHostedService>();
+            }
 
             return services;
         }
@@ -180,6 +200,28 @@
             services.AddTransient<ICloudinaryService, CloudinaryService>();
 
             return services;
+        }
+
+        private static void CreateHangfireDatabase(IConfiguration configuration)
+        {
+            var connectionString = configuration.GetSection("ConnectionStrings")["CronJobsConnection"];
+
+            var dbName = connectionString
+                .Split(";")[1]
+                .Split("=")[1];
+
+            var masterConnString = connectionString.Replace(dbName, "master");
+            using (var connection = new SqlConnection(masterConnString))
+            {
+                connection.Open();
+
+                var query = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'{dbName}') create database [{dbName}];";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.ExecuteNonQuery();
+                };
+            }
         }
     }
 }

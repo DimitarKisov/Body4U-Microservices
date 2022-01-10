@@ -10,7 +10,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IIdentityService
+    public interface IIdentityService : IDataService<ApplicationUser>
     {
         Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request);
 
