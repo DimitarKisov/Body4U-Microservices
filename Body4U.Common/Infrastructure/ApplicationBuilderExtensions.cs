@@ -28,6 +28,7 @@
                 .UseAuthentication()
                 .UseAuthorization()
                 .UseEndpoints(endpoints => endpoints
+                    .MapHealthChecks()
                     .MapControllers());
 
             return app;

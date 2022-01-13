@@ -21,6 +21,9 @@ namespace Body4U.Article.Gateway
         {
             services
                 .AddTokenAuthentication(this.Configuration)
+                .AddHealth(this.Configuration,
+                           addDbHealthCheck: false,
+                           addMessegingHealthCheck: false)
                 .AddScoped<ICurrentTokenService, CurrentTokenService>()
                 .AddTransient<JwtHeaderAuthenticationMiddleware>()
                 .AddTransient<ExceptionMiddleware>()
@@ -59,6 +62,7 @@ namespace Body4U.Article.Gateway
                 .UseJwtHeaderAuthentication()
                 .UseAuthorization()
                 .UseEndpoints(endpoints => endpoints
+                    .MapHealthChecks()
                     .MapControllers());
         }
     }

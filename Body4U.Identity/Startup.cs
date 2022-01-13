@@ -24,7 +24,7 @@
             => services
                 .AddUserStorage()
                 .AddWebService<IdentityDbContext>(this.Configuration)
-                .AddMessaging(this.Configuration, true)
+                .AddMessaging(this.Configuration)
                 .AddTransient<ExceptionMiddleware>()
                 .AddCloudinary(this.Configuration)
                 .AddTransient<IDataSeeder, IdentityDataSeeder>()

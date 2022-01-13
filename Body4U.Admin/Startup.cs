@@ -3,7 +3,9 @@ namespace Body4U.Admin
     using Body4U.Admin.Services.Identity;
     using Body4U.Common.Infrastructure;
     using Body4U.Common.Services.Identity;
+    using HealthChecks.UI.Client;
     using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +23,9 @@ namespace Body4U.Admin
         {
             services
                 .AddTokenAuthentication(this.Configuration)
+                .AddHealth(this.Configuration,
+                           addDbHealthCheck: false,
+                           addMessegingHealthCheck: false)
                 .AddScoped<ICurrentTokenService, CurrentTokenService>()
                 .AddTransient<JwtHeaderAuthenticationMiddleware>()
                 .AddTransient<ExceptionMiddleware>()
@@ -47,6 +52,7 @@ namespace Body4U.Admin
                 .UseJwtHeaderAuthentication()
                 .UseAuthorization()
                 .UseEndpoints(endpoints => endpoints
+                    .MapHealthChecks()
                     .MapControllers());
         }
     }

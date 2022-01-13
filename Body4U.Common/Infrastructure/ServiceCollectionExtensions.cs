@@ -23,13 +23,16 @@
     {
         public static IServiceCollection AddWebService<TDbContext>(
             this IServiceCollection services,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            bool addDbHealthCheck = true,
+            bool addMessagingHealthCheck = true)
             where TDbContext : DbContext
         {
             services
                 .AddDatabase<TDbContext>(configuration)
                 .AddTokenAuthentication(configuration)
                 .AddSwagger()
+                .AddHealth(configuration, addDbHealthCheck, addMessagingHealthCheck)
                 .AddControllers();
 
             return services;
@@ -39,7 +42,8 @@
             this IServiceCollection services,
             IConfiguration configuration)
             where TDbContext : DbContext
-            => services
+        {
+            services
                 .AddScoped<DbContext, TDbContext>()
                 .AddDbContext<TDbContext>(options => options
                     .UseSqlServer(
@@ -49,6 +53,9 @@
                             maxRetryCount: 10,
                             maxRetryDelay: TimeSpan.FromSeconds(30),
                             errorNumbersToAdd: null)));
+
+            return services;
+        }
 
         public static IServiceCollection AddTokenAuthentication(
             this IServiceCollection services,
@@ -86,7 +93,7 @@
         public static IServiceCollection AddMessaging(
             this IServiceCollection services,
             IConfiguration configuration,
-            bool useHangFire,
+            bool useHangFire = true,
             params Type[] consumers)
         {
             services
@@ -101,7 +108,7 @@
                             host.Username(configuration.GetSection("RabbitMQ")["Username"]);
                             host.Password(configuration.GetSection("RabbitMQ")["Password"]);
                         });
-                        
+
                         consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
                         {
                             endpoint.PrefetchCount = 6;
@@ -199,6 +206,33 @@
             services.AddSingleton(cloudinary);
             services.AddTransient<ICloudinaryService, CloudinaryService>();
 
+            return services;
+        }
+
+        public static IServiceCollection AddHealth(
+            this IServiceCollection services,
+            IConfiguration configuration,
+            bool addDbHealthCheck = true,
+            bool addMessegingHealthCheck = true)
+        {
+            var healthChecks = services.AddHealthChecks();
+
+            if (addDbHealthCheck)
+            {
+                healthChecks
+                .AddSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            }
+
+            if (addMessegingHealthCheck)
+            {
+                var rabbitMqHost = configuration.GetSection("RabbitMQ")["Host"];
+                var rabbitMqUser = configuration.GetSection("RabbitMQ")["Username"];
+                var rabbitMqPassword = configuration.GetSection("RabbitMQ")["Password"];
+
+                healthChecks
+                    .AddRabbitMQ(rabbitConnectionString: $"amqp://{rabbitMqUser}:{rabbitMqPassword}@{rabbitMqHost}/");
+            }
+            
             return services;
         }
 

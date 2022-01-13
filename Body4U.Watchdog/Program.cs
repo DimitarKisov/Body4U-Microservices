@@ -1,4 +1,4 @@
-namespace Body4U.Identity
+namespace Body4U.Watchdog
 {
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -10,11 +10,8 @@ namespace Body4U.Identity
     {
         public static void Main(string[] args)
         {
-            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var environment = envVariable != null ? $".{envVariable}" : null;
-
             var configuration = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings{environment}.json")
+               .AddJsonFile($"appsettings.json")
                .Build();
 
             Log.Logger = new LoggerConfiguration()
@@ -23,12 +20,12 @@ namespace Body4U.Identity
 
             try
             {
-                Log.Information("Starting Body4U.Identity...");
+                Log.Information("Starting Body4U.Watchdog...");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Body4U.Identity failed to start!");
+                Log.Fatal(ex, "Body4U.Watchdog failed to start!");
                 throw;
             }
             finally
@@ -39,7 +36,7 @@ namespace Body4U.Identity
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+                .ConfigureWebHostDefaults(webBuilder => 
                     webBuilder.UseStartup<Startup>());
     }
 }

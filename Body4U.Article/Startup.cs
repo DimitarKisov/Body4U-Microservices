@@ -29,7 +29,7 @@ namespace Body4U.Article
                 .AddTransient<ICommentService, CommentService>()
                 .AddTransient<IServiceService, ServiceService>()
                 .AddMessaging(this.Configuration,
-                              false,
+                              useHangFire: false,
                               typeof(CreateTrainerConsumer),
                               typeof(DeleteTrainerConsumer),
                               typeof(EdiTrainerNamesConsumer));

@@ -20,6 +20,7 @@ namespace Body4U.EmailSender
         public void ConfigureServices(IServiceCollection services)
             => services
                 .AddDatabase<EmailSenderDbContext>(this.Configuration)
+                .AddHealth(this.Configuration)
                 .AddTransient<IEmailService, EmailService>()
                 .AddMessaging(this.Configuration,
                               false,
@@ -32,7 +33,11 @@ namespace Body4U.EmailSender
                 app.UseDeveloperExceptionPage();
             }
 
-            app.Initialize();
+            app
+                .UseRouting()
+                .UseEndpoints(endpoints => endpoints
+                    .MapHealthChecks())
+                .Initialize();
         }
     }
 }

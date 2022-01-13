@@ -1,0 +1,20 @@
+﻿namespace Body4U.Common.Infrastructure
+{
+    using HealthChecks.UI.Client;
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+    using Microsoft.AspNetCore.Routing;
+
+    public static class EndpointRouteBuilderExtension
+    {
+        public static IEndpointRouteBuilder MapHealthChecks(this IEndpointRouteBuilder endpoints)
+        {
+            endpoints.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+
+            return endpoints;
+        }
+    }
+}
