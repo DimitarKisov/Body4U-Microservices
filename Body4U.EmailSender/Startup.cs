@@ -19,7 +19,7 @@ namespace Body4U.EmailSender
 
         public void ConfigureServices(IServiceCollection services)
             => services
-                .AddWebService<EmailSenderDbContext>(this.Configuration)
+                .AddDatabase<EmailSenderDbContext>(this.Configuration)
                 .AddTransient<IEmailService, EmailService>()
                 .AddMessaging(this.Configuration,
                               false,
@@ -32,9 +32,7 @@ namespace Body4U.EmailSender
                 app.UseDeveloperExceptionPage();
             }
 
-            app
-                .UseHttpsRedirection()
-                .UseRouting();
+            app.Initialize();
         }
     }
 }
