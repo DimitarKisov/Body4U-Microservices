@@ -70,15 +70,5 @@
 
             return app;
         }
-
-        public static IApplicationBuilder UseCustomStaticFiles(this IApplicationBuilder app)
-            => app
-                .UseFileServer(new FileServerOptions
-                {
-                    FileProvider = new PhysicalFileProvider(
-                            Path.Combine(Directory.GetCurrentDirectory(), "StaticFiles")),
-                    RequestPath = "/StaticFiles",
-                    EnableDefaultFiles = true
-                });
     }
 }

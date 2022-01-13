@@ -37,7 +37,6 @@ namespace Body4U.Article
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
                 .UseWebService(env)
-                .UseCustomStaticFiles()
                 .Initialize(); 
     }
 }
