@@ -56,5 +56,47 @@
                 return Result<CreateExerciseResponseModel>.Failure(string.Format(Wrong, nameof(Create)));
             }
         }
+
+        public async Task<Result> Edit(EditExerciseRequestModel request)
+        {
+            try
+            {
+                var exercise = await this.dbContext
+                    .Exercises
+                    .FindAsync(new object[] { request.Id });
+
+                if (exercise == null)
+                {
+                    return Result.Failure(ExerciseMissing);
+                }
+
+                var nameExists = await this.dbContext
+                    .Exercises
+                    .AnyAsync(x => x.Name == request.Name);
+
+                if (nameExists)
+                {
+                    return Result.Failure(NameTaken);
+                }
+
+                if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
+                {
+                    return Result.Failure(WrongExerciseType);
+                }
+
+                exercise.Name = request.Name;
+                exercise.Description = request.Description;
+                exercise.ExerciseType = (ExerciseType)request.ExerciseType;
+
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Edit)}");
+                return Result.Failure(string.Format(Wrong, nameof(Edit)));
+            }
+        }
     }
 }

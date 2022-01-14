@@ -33,5 +33,24 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpPut]
+        [Route(nameof(Edit))]
+        public async Task<ActionResult> Edit(EditExerciseRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.exerciseService.Edit(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok();
+        }
     }
 }

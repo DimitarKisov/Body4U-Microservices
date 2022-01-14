@@ -8,5 +8,7 @@
     public interface IExerciseService
     {
         Task<Result<CreateExerciseResponseModel>> Create(CreateExerciseRequestModel request);
+
+        Task<Result> Edit(EditExerciseRequestModel request);
     }
 }

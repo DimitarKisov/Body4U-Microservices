@@ -69,6 +69,7 @@
         {
             public const string NameTaken = "This name is already taken.";
             public const string WrongExerciseType = "Wrong exercise type.";
+            public const string ExerciseMissing = "There is no such exercise.";
         }
     }
 }
