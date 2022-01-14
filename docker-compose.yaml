@@ -23,8 +23,8 @@ services:
         hostname: rabbitmq
         env_file: common.env
         restart: on-failure
-        # volumes:
-            # - rabbitmq:/var/lib/rabbitmq/mnesia
+        volumes:
+            - rabbitmq:/var/lib/rabbitmq/mnesia
         networks:
             - body4u-network
             
@@ -37,8 +37,8 @@ services:
             - "5001:80"
         env_file: ./Body4U.Identity/identity.env
         restart: on-failure
-        # volumes:
-            # - data-protection:/root/.aspnet/DataProtection-Keys
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
         networks:
             - body4u-network
         depends_on:
@@ -53,8 +53,8 @@ services:
             - "5007:80"
         env_file: ./Body4U.Admin/admin.env
         restart: on-failure
-        # volumes:
-            # - data-protection:/root/.aspnet/DataProtection-Keys
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
         networks:
             - body4u-network
         depends_on:
@@ -69,8 +69,8 @@ services:
             - "5003:80"
         env_file: ./Body4U.EmailSender/emailSender.env
         restart: on-failure
-        # volumes:
-            # - data-protection:/root/.aspnet/DataProtection-Keys
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
         networks:
             - body4u-network
         depends_on:
@@ -85,8 +85,8 @@ services:
             - "5005:80"
         env_file: ./Body4U.Article/article.env
         restart: on-failure
-        # volumes:
-            # - data-protection:/root/.aspnet/DataProtection-Keys
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
         networks:
             - body4u-network
         depends_on:
@@ -101,15 +101,34 @@ services:
             - "5009:80"
         env_file: ./Body4U.Article.Gateway/articleGateway.env
         restart: on-failure
-        # volumes:
-            # - data-protection:/root/.aspnet/DataProtection-Keys
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
         networks:
             - body4u-network
         depends_on:
             - data
 
+    watchdog:
+        container_name: watchdog
+        build:
+            context: ./
+            dockerfile: ./Body4U.Watchdog/Dockerfile
+        ports:
+            - "5011:80"
+        env_file: ./Body4U.Watchdog/watchdog.env
+        restart: on-failure
+        networks:
+            - body4u-network
+        depends_on:
+            - identity
+            - emailsender
+            - article
+            - articlegateway
+            - admin
 networks:
     body4u-network:
     
 volumes:
     sqldata:
+    data-protection:
+    rabbitmq:
