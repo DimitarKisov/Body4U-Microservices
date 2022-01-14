@@ -9,6 +9,8 @@
     {
         Task<Result<CreateExerciseResponseModel>> Create(CreateExerciseRequestModel request);
 
+        Task<Result<GetExerciceResponseModel>> Get(int id);
+
         Task<Result> Edit(EditExerciseRequestModel request);
     }
 }

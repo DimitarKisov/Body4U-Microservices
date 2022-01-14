@@ -8,6 +8,7 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -54,6 +55,35 @@
             {
                 Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Create)}");
                 return Result<CreateExerciseResponseModel>.Failure(string.Format(Wrong, nameof(Create)));
+            }
+        }
+
+        public async Task<Result<GetExerciceResponseModel>> Get(int id)
+        {
+            try
+            {
+                var exercise = await this.dbContext
+                    .Exercises
+                    .Select(x => new GetExerciceResponseModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Description = x.Description,
+                        ExerciseType = (int)x.ExerciseType
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (exercise == null)
+                {
+                    return Result<GetExerciceResponseModel>.Failure(ExerciseMissing);
+                }
+
+                return Result<GetExerciceResponseModel>.SuccessWith(exercise);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Get)}");
+                return Result<GetExerciceResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
             }
         }
 

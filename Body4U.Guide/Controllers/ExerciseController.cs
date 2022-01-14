@@ -4,6 +4,7 @@
     using Body4U.Common.Infrastructure;
     using Body4U.Guide.Models.Requests.Exercise;
     using Body4U.Guide.Services.Exercise;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Threading.Tasks;
 
@@ -28,6 +29,20 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route(Id)]
+        public async Task<ActionResult> Get(int id)
+        {
+            var result = await this.exerciseService.Get(id);
+            if (!result.Succeeded)
+            {
                 return this.BadRequest(result.Errors);
             }
 
