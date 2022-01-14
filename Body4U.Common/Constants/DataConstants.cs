@@ -66,5 +66,12 @@
             public const string MinPrice = "0";
             public const string MaxPrice = "5000";
         }
+
+        public class Exercise
+        {
+            public const int MinNameLength = 3;
+            public const int MaxNameLength = 50;
+            public const int MaxDescriptionLength = 500;
+        }
     }
 }

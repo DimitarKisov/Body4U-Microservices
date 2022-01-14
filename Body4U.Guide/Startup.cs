@@ -1,10 +1,11 @@
 namespace Body4U.Guide
 {
+    using Body4U.Common.Infrastructure;
+    using Body4U.Guide.Data;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Hosting;
 
     public class Startup
     {
@@ -14,27 +15,14 @@ namespace Body4U.Guide
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddControllers();
-        }
+            => services
+                .AddWebService<GuideDbContext>(this.Configuration,
+                               addDbHealthCheck: true,
+                               addMessagingHealthCheck: false);
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
+            => app
+                .UseWebService(env)
+                .Initialize();
     }
 }
