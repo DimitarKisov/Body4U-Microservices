@@ -2,6 +2,7 @@ namespace Body4U.Guide
 {
     using Body4U.Common.Infrastructure;
     using Body4U.Guide.Data;
+    using Body4U.Guide.Services.Exercise;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -17,7 +18,8 @@ namespace Body4U.Guide
         public void ConfigureServices(IServiceCollection services)
             => services
                 .AddWebService<GuideDbContext>(this.Configuration,
-                               addMessagingHealthCheck: false);
+                               addMessagingHealthCheck: false)
+                .AddTransient<IExerciseService, ExerciseService>();
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app

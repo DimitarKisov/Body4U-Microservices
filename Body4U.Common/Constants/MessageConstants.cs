@@ -64,5 +64,11 @@
             public const string WrongServiceDifficulty = "Wrong service difficulty.";
             public const string ServiceMissing = "There is no such service.";
         }
+
+        public class Exercise
+        {
+            public const string NameTaken = "This name is already taken.";
+            public const string WrongExerciseType = "Wrong exercise type.";
+        }
     }
 }
