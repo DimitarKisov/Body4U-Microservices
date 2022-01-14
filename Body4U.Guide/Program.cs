@@ -1,4 +1,4 @@
-namespace Body4U.EmailSender
+namespace Body4U.Guide
 {
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -23,12 +23,12 @@ namespace Body4U.EmailSender
 
             try
             {
-                Log.Information("Starting Body4U.EmailSender...");
+                Log.Information("Starting Body4U.Guide...");
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Body4U.EmailSender failed to start!");
+                Log.Fatal(ex, "Body4U.Guide failed to start!");
                 throw;
             }
             finally
