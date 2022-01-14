@@ -11,13 +11,19 @@
     {
         public static IApplicationBuilder UseWebService(
             this IApplicationBuilder app,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            bool userExceptionMiddleware = true)
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage()
-                    .UseExceptionMiddleware() // TODO: След време ако не е нужно от други апита, да го премахна и сложа само в Startup-ите на тези, които ще го ползват, тъй като не всички ще имат снимки
+                app
+                    .UseDeveloperExceptionPage()
                     .UseSwagger();
+
+                if (userExceptionMiddleware)
+                {
+                    app.UseExceptionMiddleware();
+                }
             }
 
             app

@@ -17,12 +17,12 @@ namespace Body4U.Guide
         public void ConfigureServices(IServiceCollection services)
             => services
                 .AddWebService<GuideDbContext>(this.Configuration,
-                               addDbHealthCheck: true,
                                addMessagingHealthCheck: false);
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             => app
-                .UseWebService(env)
+                .UseWebService(env,
+                               userExceptionMiddleware: false)
                 .Initialize();
     }
 }
