@@ -49,6 +49,26 @@
             return this.Ok(result.Data);
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(Search))]
+        public async Task<ActionResult> Search([FromQuery] SearchExercisesRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.exerciseService.Search(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.BadRequest(result.Errors);
+            }
+
+            return this.Ok(result.Data);
+        }
+
         [HttpPut]
         [Route(nameof(Edit))]
         public async Task<ActionResult> Edit(EditExerciseRequestModel request)

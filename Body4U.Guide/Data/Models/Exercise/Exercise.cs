@@ -18,5 +18,8 @@
 
         [Required]
         public ExerciseType ExerciseType { get; set; }
+
+        [Required]
+        public ExerciseDifficulty ExerciseDifficulty { get; set; }
     }
 }

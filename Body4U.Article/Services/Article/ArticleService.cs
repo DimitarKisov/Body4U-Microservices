@@ -431,9 +431,9 @@
                 }
 
                 var data = await articles
-                 .Skip(pageIndex * pageSize)
-                 .Take(pageSize)
-                 .ToListAsync();
+                    .Skip(pageIndex * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
 
                 return Result<SearchArticlesResponseModel>.SuccessWith(new SearchArticlesResponseModel { Data = data, TotalRecords = totalRecords });
             }
@@ -459,7 +459,7 @@
                 }
 
                 return Result<List<string>>.SuccessWith(new List<string>());
-                
+
             }
             catch (Exception ex)
             {

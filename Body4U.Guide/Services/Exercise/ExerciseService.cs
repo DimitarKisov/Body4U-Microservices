@@ -11,6 +11,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    using static Body4U.Common.Constants.DataConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Exercise;
 
@@ -43,7 +44,8 @@
                 {
                     Name = request.Name,
                     Description = request.Description,
-                    ExerciseType = (ExerciseType)request.ExerciseType
+                    ExerciseType = (ExerciseType)request.ExerciseType,
+                    ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty
                 };
 
                 await this.dbContext.AddAsync(exercise);
@@ -69,7 +71,8 @@
                         Id = x.Id,
                         Name = x.Name,
                         Description = x.Description,
-                        ExerciseType = (int)x.ExerciseType
+                        ExerciseType = (int)x.ExerciseType,
+                        ExerciseDifficulty = (int)x.ExerciseDifficulty
                     })
                     .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -84,6 +87,65 @@
             {
                 Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Get)}");
                 return Result<GetExerciceResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
+            }
+        }
+
+        public async Task<Result<SearchExercisesResponseModel>> Search(SearchExercisesRequestModel request)
+        {
+            try
+            {
+                var exercises = this.dbContext
+                    .Exercises
+                    .Select(x => new ExerciseResponseModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        ExerciseDifficulty = (int)x.ExerciseDifficulty
+                    })
+                    .AsQueryable();
+
+                var totalRecords = await exercises.CountAsync();
+
+                var pageIndex = request.PageIndex;
+                var pageSize = request.PageSize;
+                var sortingOrder = request.OrderBy!;
+                var sortingField = request.SortBy!;
+
+                var orderBy = "Id";
+
+                if (!string.IsNullOrWhiteSpace(sortingField))
+                {
+                    if (sortingField.ToLower() == "name")
+                    {
+                        orderBy = nameof(request.Name);
+                    }
+                    else if (sortingField.ToLower() == "exercisedifficulty")
+                    {
+                        orderBy = nameof(request.ExerciseDifficulty);
+                    }
+                }
+
+                if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+                {
+                    exercises = exercises.OrderByDescending(x => orderBy);
+                }
+                else
+                {
+                    exercises = exercises.OrderBy(x => orderBy);
+                }
+
+                var data = await exercises
+                    .Skip(pageIndex * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return Result<SearchExercisesResponseModel>.SuccessWith(new SearchExercisesResponseModel() { Data = data, TotalRecords = totalRecords });
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Search)}");
+                return Result<SearchExercisesResponseModel>.Failure(string.Format(Wrong, nameof(Search)));
             }
         }
 
@@ -117,6 +179,7 @@
                 exercise.Name = request.Name;
                 exercise.Description = request.Description;
                 exercise.ExerciseType = (ExerciseType)request.ExerciseType;
+                exercise.ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty;
 
                 await this.dbContext.SaveChangesAsync();
 
