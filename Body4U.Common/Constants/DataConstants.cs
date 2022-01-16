@@ -73,5 +73,11 @@
             public const int MaxNameLength = 50;
             public const int MaxDescriptionLength = 500;
         }
+
+        public class Food
+        {
+            public const int MinNameLength = 3;
+            public const int MaxNameLength = 100;
+        }
     }
 }

@@ -9,6 +9,10 @@
   <ItemGroup>
     <Compile Remove="Data\Migrations\20220114211201_AddedExerciseDifficulty.cs" />
     <Compile Remove="Data\Migrations\20220114211201_AddedExerciseDifficulty.Designer.cs" />
+    <Compile Remove="Data\Migrations\20220116195132_AddedFoodEntity.cs" />
+    <Compile Remove="Data\Migrations\20220116195132_AddedFoodEntity.Designer.cs" />
+    <Compile Remove="Data\Migrations\20220116201052_Test.cs" />
+    <Compile Remove="Data\Migrations\20220116201052_Test.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

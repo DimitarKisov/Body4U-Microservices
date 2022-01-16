@@ -11,5 +11,21 @@
         }
 
         public DbSet<Exercise> Exercises { get; set; }
+
+        public DbSet<Food> Foods { get; set; }
+
+        public DbSet<OtherFoodValues> OtherFoodValues { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder
+                .Entity<OtherFoodValues>()
+                .HasOne(x => x.Food)
+                .WithOne(y => y.OtherValues)
+                .HasForeignKey<OtherFoodValues>(y => y.FoodId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
