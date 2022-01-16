@@ -212,7 +212,7 @@
             }
             else
             {
-                errors.Add(InternalServerError);
+                errors.Add(ServerError);
             }
 
             return this.BadRequest(errors);

@@ -14,5 +14,7 @@
         Task<Result<SearchExercisesResponseModel>> Search(SearchExercisesRequestModel request);
 
         Task<Result> Edit(EditExerciseRequestModel request);
+
+        Task<Result> Delete(int id);
     }
 }

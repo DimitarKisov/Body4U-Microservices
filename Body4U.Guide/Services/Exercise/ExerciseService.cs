@@ -191,5 +191,30 @@
                 return Result.Failure(string.Format(Wrong, nameof(Edit)));
             }
         }
+
+        public async Task<Result> Delete(int id)
+        {
+            try
+            {
+                var exercise = await this.dbContext
+                    .Exercises
+                    .FindAsync(new object[] { id });
+
+                if (exercise == null)
+                {
+                    return Result.Failure(ExerciseMissing);
+                }
+
+                this.dbContext.Exercises.Remove(exercise);
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Delete)}");
+                return Result.Failure(string.Format(Wrong, nameof(Delete)));
+            }
+        }
     }
 }

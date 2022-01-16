@@ -1,4 +1,6 @@
-﻿namespace Body4U.Common.Constants
+﻿using System.Net;
+
+namespace Body4U.Common.Constants
 {
     public class MessageConstants
     {
@@ -12,7 +14,7 @@
             public const string ForgotPasswordHtmlContent = "<p>To reset your password, please click <a href=\"{0}\">HERE</a></p>";
             public const string ForgotPasswordSubject = "Password Reset";
             public const string ImageNotFound = "Image not found.";
-            public const string InternalServerError = "Internal server error.";
+            public const string ServerError = "Internal server error.";
             public const string MultipleNoImagesChosen = "There isn't any images chosen.";
             public const string MultipleWrongImageFormats = "There is a unsupported format in your images.";
             public const string MultipleWrongWidthOrHeight = "There are images with width under {0} or height under {1} pixels.";
@@ -70,6 +72,20 @@
             public const string NameTaken = "This name is already taken.";
             public const string WrongExerciseType = "Wrong exercise type.";
             public const string ExerciseMissing = "There is no such exercise.";
+        }
+
+        public class StatusCodes
+        {
+            public const HttpStatusCode Ok = HttpStatusCode.OK;
+            public const HttpStatusCode Created = HttpStatusCode.Created;
+            public const HttpStatusCode NoContent = HttpStatusCode.NoContent;
+
+            public const HttpStatusCode BadRequest = HttpStatusCode.BadRequest;
+            public const HttpStatusCode Forbidden = HttpStatusCode.Forbidden;
+            public const HttpStatusCode NotFound = HttpStatusCode.NotFound;
+            public const HttpStatusCode Conflict = HttpStatusCode.Conflict;
+
+            public const HttpStatusCode InternalServerError = HttpStatusCode.InternalServerError;
         }
     }
 }
