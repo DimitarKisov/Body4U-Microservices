@@ -20,6 +20,7 @@
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
 
     public class JwtTokenGeneratorService : IJwtTokenGeneratorService
     {
@@ -42,66 +43,60 @@
 
         public Result<string> GenerateToken(ApplicationUser user, IEnumerable<string> roles = null)
         {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = string.Empty;
             try
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var encodedKey = Encoding.ASCII.GetBytes(this.configuration.GetSection("JwtSettings")["Secret"]);
+                key = this.configuration.GetSection("JwtSettings")["Secret"];
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, string.Format(Wrong, $"{nameof(JwtTokenGeneratorService)}/{nameof(GenerateToken)}"));
+                return Result<string>.Failure(InternalServerError);
+            }
 
-                var claims = new List<Claim>
+            var encodedKey = Encoding.ASCII.GetBytes(key);
+            var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(ClaimTypes.Email, user.Email)
                 };
 
-                if (roles != null)
-                {
-                    claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
-                }
-                
-                //TODO: Намали валидността на токена
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddDays(7),
-                    SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(encodedKey),
-                    SecurityAlgorithms.HmacSha256Signature)
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var encryptedToken = tokenHandler.WriteToken(token);
-
-                return Result<string>.SuccessWith(encryptedToken);
-            }
-            catch (Exception ex)
+            if (roles != null)
             {
-                Log.Error($"{nameof(JwtTokenGeneratorService)}.{nameof(this.GenerateToken)}", ex);
-                return Result<string>.Failure(string.Format(Wrong, nameof(this.GenerateToken)));
+                claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             }
+
+            //TODO: Намали валидността на токена
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(encodedKey),
+                SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var encryptedToken = tokenHandler.WriteToken(token);
+
+            return Result<string>.SuccessWith(encryptedToken);
         }
 
         public async Task<Result<string>> GenerateRefreshToken()
         {
-            try
+            var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
+            if (user == null)
             {
-                var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
-                if (user == null)
-                {
-                    return Result<string>.Failure(string.Format(UserNotFound, currentUserService.UserId));
-                }
-
-                if (user.IsDisabled || user.LockoutEnd != null)
-                {
-                    return Result<string>.Failure(Locked);
-                }
-
-                return this.GenerateToken(user);
+                return Result<string>.Failure(NotFound, string.Format(UserNotFound, currentUserService.UserId));
             }
-            catch (Exception ex)
+
+            if (user.IsDisabled || user.LockoutEnd != null)
             {
-                Log.Error($"{nameof(JwtTokenGeneratorService)}.{nameof(this.GenerateRefreshToken)}", ex);
-                return Result<string>.Failure(string.Format(Wrong, nameof(this.GenerateRefreshToken)));
+                return Result<string>.Failure(Conflict, Locked); //TODO: 409???
             }
+
+            return this.GenerateToken(user);
         }
     }
 }

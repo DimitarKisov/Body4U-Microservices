@@ -142,7 +142,7 @@
                         }
                         catch (NotImplementedException ex) //TODO: NotImplementedException ???
                         {
-                            Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(Register)}"));
+                            Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(Register)}"));
                             return Result<RegisterUserResponseModel>.Failure(InternalServerError);
                         }
                     }
@@ -351,7 +351,7 @@
                     }
                     catch (NotImplementedException ex) //TODO: NotImplementedException ???
                     {
-                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)}"));
+                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(AddProfilePicture)}"));
                         return Result.Failure(InternalServerError);
                     }
 
@@ -368,7 +368,7 @@
         {
             if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden, WrongWrights);
+                return Result.Failure(Forbidden);
             }
 
             var userProfilePicture = await this.dbContext
@@ -383,8 +383,16 @@
             var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id, userProfilePicture.Folder);
             if (result.Succeeded)
             {
-                this.dbContext.UserImageDatas.Remove(userProfilePicture);
-                await this.dbContext.SaveChangesAsync();
+                try
+                {
+                    this.dbContext.UserImageDatas.Remove(userProfilePicture);
+                    await this.dbContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(DeleteProfilePicture)}"));
+                    return Result.Failure(InternalServerError);
+                }
 
                 return Result.Success;
             }
