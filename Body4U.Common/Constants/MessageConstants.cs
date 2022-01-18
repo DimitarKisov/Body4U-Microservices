@@ -23,6 +23,12 @@ namespace Body4U.Common.Constants
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
             public const string WrongWidthOrHeight = "Please upload a image with min width: {0} and min height: {1}.";
             public const string WrongWrights = "You don't have the rights for this action!";
+            public const string UnhandledError = "Unhandled Error";
+
+            public const string UpdatingDbEntities = "Updating and saving db entities in database.";
+            public const string AddingDbEntities = "Adding and saving db entities in database.";
+            public const string SavingDbEntities = "Saving db entities in database.";
+            public const string Publish = "publishing messages.";
         }
 
         public class Article

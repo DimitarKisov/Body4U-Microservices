@@ -14,6 +14,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Serilog;
     using System;
     using System.Collections.Generic;
     using System.Threading;
@@ -54,7 +55,7 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             var confirmationLink = Url.Action(nameof(VerifyEmail), "Identity",
@@ -73,16 +74,28 @@
             //Save it in database
             await this.identityService.Save(null, message);
 
-            //Publish the message
-            await this.publisher.Publish(messageData);
+            try
+            {
+                //Publish the message
+                await this.publisher.Publish(messageData);
 
-            //Mark it as published
-            message.MarkAsPublished();
+                //Mark it as published
+                message.MarkAsPublished();
 
-            //And save the changes
-            await this.dbContext.SaveChangesAsync();
+                //And save the changes
+                await this.dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(IdentityController)}/{nameof(Register)} when {Publish}");
+            }
 
-            return this.Ok(result.Data.ErrorsInImageUploading);
+            if (result.Data.ErrorsInImageUploading != null)
+            {
+                return this.Ok(result.Data.ErrorsInImageUploading);
+            }
+
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -98,7 +111,7 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return Ok(result.Data);
@@ -112,7 +125,7 @@
             var result = await this.identityService.MyProfile();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -132,10 +145,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -153,10 +166,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return this.NoContent();
         }
 
         [HttpDelete]
@@ -173,10 +186,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return this.NoContent();
         }
 
         [HttpPut]
@@ -193,10 +206,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -212,12 +225,12 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             if (result.Data.Email == null && result.Data.Token == null && result.Data.UserId == null)
             {
-                return Ok();
+                return this.NoContent();
             }
 
             var confirmationLink = Url.Action(nameof(ResetPassword), "Identity",
@@ -230,7 +243,7 @@
                 HtmlContent = string.Format(ForgotPasswordHtmlContent, confirmationLink)
             });
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -251,10 +264,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -270,10 +283,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -284,7 +297,7 @@
             var result = await this.jwtTokenGeneratorService.GenerateRefreshToken();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return Ok(result.Data);
@@ -298,7 +311,7 @@
             var result = await this.identityService.Users(request);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return Ok(result.Data);
@@ -312,7 +325,7 @@
             var result = await this.identityService.Roles();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -332,10 +345,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return this.NoContent();
         }
 
         [HttpGet]
@@ -345,7 +358,7 @@
             var result = await this.identityService.GetUserInfo(id);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -358,7 +371,7 @@
             var result = await this.identityService.GetUsersInfo(ids);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);

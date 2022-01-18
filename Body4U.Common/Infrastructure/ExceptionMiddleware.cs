@@ -2,7 +2,9 @@
 {
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Http.Features;
     using Microsoft.AspNetCore.Server.IIS;
+    using Serilog;
     using System;
     using System.Net;
     using System.Threading.Tasks;
@@ -12,6 +14,8 @@
     /// </summary>
     public class ExceptionMiddleware : IMiddleware
     {
+        private const string MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded with status code {StatusCode}.";
+
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             try
@@ -21,6 +25,7 @@
             catch (Exception ex)
             {
                 HandleExceptionAsync(context, ex);
+                Log.Error(ex, MessageTemplate, context.Request.Method, GetPath(context), context.Response.StatusCode);
             }
         }
 
@@ -30,6 +35,26 @@
             {
                 context.Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
             }
+            else
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+                context.Response.WriteAsync(new
+                {
+                    context.Response.StatusCode,
+                    Message = "Something went wrong"
+                }
+                .ToString());
+            }
+        }
+
+        private static string GetPath(HttpContext httpContext)
+        {
+            return httpContext
+                    .Features
+                    .Get<IHttpRequestFeature>()?
+                    .RawTarget ??
+                        httpContext.Request.Path.ToString();
         }
     }
 

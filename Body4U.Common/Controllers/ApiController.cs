@@ -13,7 +13,35 @@
         protected const string TrainerId = "{trainerId}";
         protected const string Term = "{term}";
 
-        protected ActionResult ProcessErrors(Result<object> result)
+        protected ActionResult ProcessErrors<T>(Result<T> result)
+        {
+            this.ModelState.Clear();
+
+            if (result.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return this.BadRequest(result.Errors);
+            }
+            else if (result.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return this.Forbid();
+            }
+            else if (result.StatusCode == HttpStatusCode.NotFound)
+            {
+                return this.NotFound(result.Errors);
+            }
+            else if (result.StatusCode == HttpStatusCode.Conflict)
+            {
+                return this.Conflict(result.Errors);
+            }
+            else if (result.StatusCode == HttpStatusCode.InternalServerError)
+            {
+                return this.Problem(result.Errors.First());
+            }
+
+            return this.BadRequest(result.Errors);
+        }
+
+        protected ActionResult ProcessErrors(Result result)
         {
             this.ModelState.Clear();
 

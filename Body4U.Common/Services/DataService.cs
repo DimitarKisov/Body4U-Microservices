@@ -2,6 +2,8 @@
 {
     using Body4U.Common.Messages;
     using Microsoft.EntityFrameworkCore;
+    using Serilog;
+    using System;
     using System.Threading.Tasks;
 
     public class DataService<TEntity> : IDataService<TEntity>
@@ -24,17 +26,24 @@
 
         public async Task Save(TEntity entity = null, params Message[] messages)
         {
-            if (entity != null)
+            try
             {
-                this.DbContext.Update(entity);
-            }
+                if (entity != null)
+                {
+                    this.DbContext.Update(entity);
+                }
 
-            foreach (var message in messages)
+                foreach (var message in messages)
+                {
+                    await this.DbContext.AddAsync(message);
+                }
+
+                await this.DbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
             {
-                await this.DbContext.AddAsync(message);
+                Log.Error(ex, $"{nameof(DataService<TEntity>)}/{nameof(Save)}");
             }
-
-            await this.DbContext.SaveChangesAsync();
         }
     }
 }

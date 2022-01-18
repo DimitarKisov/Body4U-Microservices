@@ -33,6 +33,7 @@
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
 
     public class IdentityService : DataService<ApplicationUser>, IIdentityService
     {
@@ -71,147 +72,143 @@
 
         public async Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request)
         {
-            try
+            var addImage = false;
+
+            if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
             {
-                var addImage = false;
-
-                if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
+                if (request.ProfilePicture.ContentType != "image/jpeg" &&
+                    request.ProfilePicture.ContentType != "image/jpg" &&
+                    request.ProfilePicture.ContentType != "image/png" &&
+                    request.ProfilePicture.ContentType != "image/bmp")
                 {
-                    if (request.ProfilePicture.ContentType != "image/jpeg" &&
-                        request.ProfilePicture.ContentType != "image/jpg" &&
-                        request.ProfilePicture.ContentType != "image/png" &&
-                        request.ProfilePicture.ContentType != "image/bmp")
-                    {
-                        return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
-                    }
-
-                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
-                    {
-                        if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
-                        {
-                            return Result<RegisterUserResponseModel>.Failure(string.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
-                        }
-
-                        addImage = true;
-                    }
+                    return Result<RegisterUserResponseModel>.Failure(BadRequest, WrongImageFormat);
                 }
 
-                if (!Enum.IsDefined(typeof(Gender), request.Gender))
+                using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
                 {
-                    return Result<RegisterUserResponseModel>.Failure(WrongGender);
-                }
-
-                var user = new ApplicationUser
-                {
-                    Email = request.Email,
-                    UserName = request.Email,
-                    PhoneNumber = request.PhoneNumber,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Age = request.Age,
-                    Gender = request.Gender,
-                    CreateOn = DateTime.Now
-                };
-
-                var createUserResult = await this.userManager.CreateAsync(user, request.Password);
-                List<string> errosInImageUploading = null;
-
-                if (createUserResult.Succeeded)
-                {
-                    if (addImage)
+                    if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
                     {
-                        var id = Guid.NewGuid().ToString();
-                        var totalImages = await this.dbContext.UserImageDatas.CountAsync();
-                        var folder = $"Identity/Profile/{totalImages % 1000}";
+                        return Result<RegisterUserResponseModel>.Failure(BadRequest, string.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
+                    }
 
-                        var uploadImageResult = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
-                        if (uploadImageResult.Succeeded)
+                    addImage = true;
+                }
+            }
+
+            if (!Enum.IsDefined(typeof(Gender), request.Gender))
+            {
+                return Result<RegisterUserResponseModel>.Failure(BadRequest, WrongGender);
+            }
+
+            var user = new ApplicationUser
+            {
+                Email = request.Email,
+                UserName = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Age = request.Age,
+                Gender = request.Gender,
+                CreateOn = DateTime.Now
+            };
+
+            List<string> errosInImageUploading = null;
+
+            var createUserResult = await this.userManager.CreateAsync(user, request.Password);
+
+            if (createUserResult.Succeeded)
+            {
+                if (addImage)
+                {
+                    var id = Guid.NewGuid().ToString();
+                    var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                    var folder = $"Identity/Profile/{totalImages % 1000}";
+
+                    var uploadImageResult = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
+                    if (uploadImageResult.Succeeded)
+                    {
+                        var userImageData = new UserImageData
                         {
-                            var userImageData = new UserImageData
-                            {
-                                Id = uploadImageResult.Data.PublicId,
-                                Url = uploadImageResult.Data.Url,
-                                Folder = folder,
-                                ApplicationUserId = user.Id
-                            };
+                            Id = uploadImageResult.Data.PublicId,
+                            Url = uploadImageResult.Data.Url,
+                            Folder = folder,
+                            ApplicationUserId = user.Id
+                        };
 
+                        try
+                        {
                             await this.dbContext.UserImageDatas.AddAsync(userImageData);
                             await this.dbContext.SaveChangesAsync();
                         }
-                        else
+                        catch (NotImplementedException ex) //TODO: NotImplementedException ???
                         {
-                            errosInImageUploading = new List<string>();
-                            errosInImageUploading.AddRange(uploadImageResult.Errors);
+                            Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(Register)} when {AddingDbEntities}"));
+                            return Result<RegisterUserResponseModel>.Failure(InternalServerError);
                         }
                     }
-
-                    var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
-
-                    return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel { Email = user.Email, UserId = user.Id, Token = token, ErrorsInImageUploading = errosInImageUploading });
+                    else
+                    {
+                        errosInImageUploading = new List<string>();
+                        errosInImageUploading.AddRange(uploadImageResult.Errors);
+                    }
                 }
 
-                return Result<RegisterUserResponseModel>.Failure(createUserResult.Errors.Select(x => x.Description));
+                var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
 
+                return Result<RegisterUserResponseModel>.SuccessWith(new RegisterUserResponseModel()
+                { 
+                    Email = user.Email,
+                    UserId = user.Id,
+                    Token = token,
+                    ErrorsInImageUploading = errosInImageUploading
+                });
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Register)}");
-                return Result<RegisterUserResponseModel>.Failure(string.Format(Wrong, nameof(Register)));
-            }
+
+            return Result<RegisterUserResponseModel>.Failure(InternalServerError, createUserResult.Errors.Select(x => x.Description)); //TODO: 500?
         }
 
         public async Task<Result<string>> Login(LoginUserRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByEmailAsync(request.Email);
+
+            if (user == null)
             {
-                var user = await this.userManager.FindByEmailAsync(request.Email);
-
-                if (user == null)
-                {
-                    return Result<string>.Failure(WrongUsernameOrPassword);
-                }
-
-                var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
-                if (!emailConfirmed)
-                {
-                    return Result<string>.Failure(EmailNotConfirmed);
-                }
-
-                var userLocked = await this.userManager.IsLockedOutAsync(user);
-                if (userLocked)
-                {
-                    return Result<string>.Failure(Locked);
-                }
-
-                var passwordValid = await this.userManager.CheckPasswordAsync(user, request.Password);
-                if (!passwordValid)
-                {
-                    return Result<string>.Failure(WrongUsernameOrPassword);
-                }
-
-                var roles = await this.userManager.GetRolesAsync(user);
-
-                var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
-
-                if (tokenResult.Succeeded)
-                {
-                    return Result<string>.SuccessWith(tokenResult.Data);
-                }
-
-                return Result<string>.Failure(LoginFailed);
+                return Result<string>.Failure(NotFound, WrongUsernameOrPassword);
             }
-            catch (Exception ex)
+
+            var passwordValid = await this.userManager.CheckPasswordAsync(user, request.Password);
+            if (!passwordValid)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Login)}");
-                return Result<string>.Failure(string.Format(Wrong, nameof(Login)));
+                return Result<string>.Failure(BadRequest, WrongUsernameOrPassword);
             }
+
+            var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
+            if (!emailConfirmed)
+            {
+                return Result<string>.Failure(BadRequest, EmailNotConfirmed); //TODO: 400?
+            }
+
+            var userLocked = await this.userManager.IsLockedOutAsync(user);
+            if (userLocked)
+            {
+                return Result<string>.Failure(BadRequest, Locked); //TODO: 400?
+            }
+
+            var roles = await this.userManager.GetRolesAsync(user);
+
+            var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
+
+            if (tokenResult.Succeeded)
+            {
+                return Result<string>.SuccessWith(tokenResult.Data);
+            }
+
+            return Result<string>.Failure(InternalServerError, LoginFailed); //TODO: 500?
         }
 
         public async Task<Result<MyProfileResponseModel>> MyProfile()
         {
-            try
-            {
-                var user = await this.dbContext
+            var user = await this.dbContext
                     .Users
                     .Select(x => new
                     {
@@ -225,296 +222,248 @@
                     })
                     .FirstOrDefaultAsync(x => x.Id == currentUserService.UserId);
 
-                if (user == null)
-                {
-                    return Result<MyProfileResponseModel>.Failure(string.Format(UserNotFound, currentUserService.UserId));
-                }
-
-                var profilePicturePath = (await this.dbContext
-                    .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?.Url;
-
-                return Result<MyProfileResponseModel>.SuccessWith(
-                    new MyProfileResponseModel
-                    {
-                        Id = user.Id,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Email = user.Email,
-                        ProfilePictureUrl = profilePicturePath,
-                        Age = user.Age,
-                        PhoneNumber = user.PhoneNumber,
-                        Gender = user.Gender
-                    });
-            }
-            catch (Exception ex)
+            if (user == null)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(MyProfile)}");
-                return Result<MyProfileResponseModel>.Failure(string.Format(Wrong, nameof(MyProfile)));
+                return Result<MyProfileResponseModel>.Failure(NotFound, string.Format(UserNotFound, currentUserService.UserId));
             }
+
+            var profilePicturePath = (await this.dbContext
+                .UserImageDatas
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
+                .Url;
+
+            return Result<MyProfileResponseModel>.SuccessWith(
+                new MyProfileResponseModel
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    ProfilePictureUrl = profilePicturePath,
+                    Age = user.Age,
+                    PhoneNumber = user.PhoneNumber,
+                    Gender = user.Gender
+                });
         }
 
         public async Task<Result> Edit(EditMyProfileRequestModel request)
         {
+            if (request.Id != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
+            {
+                return Result.Failure(Forbidden);
+            }
+
+            if (!Enum.IsDefined(typeof(Gender), request.Gender))
+            {
+                return Result.Failure(BadRequest, WrongGender);
+            }
+
+            var user = await this.userManager.FindByIdAsync(request.Id);
+            if (user == null)
+            {
+                return Result.Failure(NotFound, string.Format(UserNotFound, request.Id));
+            }
+
+            user.PhoneNumber = request.PhoneNumber;
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.Age = request.Age;
+            user.Gender = request.Gender;
+            user.ModifiedOn = DateTime.Now;
+            user.ModifiedBy = this.currentUserService.UserId;
+
+            var messageData = new EditTrainerNamesMessage()
+            {
+                ApplicationUserId = user.Id,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                ModifiedBy = this.currentUserService.UserId
+            };
+
+            var message = new Message(messageData);
+
+            await this.Save(user, message);
+
             try
             {
-                if (request.Id != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
-                var user = await this.userManager.FindByIdAsync(request.Id);
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, request.Id));
-                }
-
-                if (!Enum.IsDefined(typeof(Gender), request.Gender))
-                {
-                    return Result.Failure(WrongGender);
-                }
-
-                user.PhoneNumber = request.PhoneNumber;
-                user.FirstName = request.FirstName;
-                user.LastName = request.LastName;
-                user.Age = request.Age;
-                user.Gender = request.Gender;
-                user.ModifiedOn = DateTime.Now;
-                user.ModifiedBy = this.currentUserService.UserId;
-
-                var messageData = new EditTrainerNamesMessage()
-                {
-                    ApplicationUserId = user.Id,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    ModifiedBy = this.currentUserService.UserId
-                };
-
-                var message = new Message(messageData);
-
-                await this.Save(user, message);
-
                 await this.publisher.Publish(messageData);
 
                 message.MarkAsPublished();
 
                 await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Edit)}");
-                return Result.Failure(string.Format(Wrong, nameof(Edit)));
+                Log.Error(ex, $"{nameof(IdentityService)}/{nameof(Edit)} when {Publish}");
             }
+
+            return Result.Success;
         }
 
         public async Task<Result> AddProfilePicture(AddProfilePictureRequestModel request)
         {
-            try
+            if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
             {
-                if (request.ProfilePicture != null && request.ProfilePicture?.Length > 0)
+                if (request.ProfilePicture.ContentType != "image/jpeg" &&
+                    request.ProfilePicture.ContentType != "image/jpg" &&
+                    request.ProfilePicture.ContentType != "image/png" &&
+                    request.ProfilePicture.ContentType != "image/bmp")
                 {
-                    if (request.ProfilePicture.ContentType != "image/jpeg" &&
-                        request.ProfilePicture.ContentType != "image/jpg" &&
-                        request.ProfilePicture.ContentType != "image/png" &&
-                        request.ProfilePicture.ContentType != "image/bmp")
-                    {
-                        return Result<RegisterUserResponseModel>.Failure(WrongImageFormat);
-                    }
-
-                    using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
-                    {
-                        if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
-                        {
-                            return Result.Failure(String.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
-                        }
-                    }
-
-                    var userProfilePicture = await this.dbContext
-                    .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
-
-                    var id = Guid.NewGuid().ToString();
-                    var totalImages = await this.dbContext.UserImageDatas.CountAsync();
-                    var folder = $"Identity/Profile/{totalImages % 1000}";
-
-                    if (userProfilePicture != null)
-                    {
-                        return Result.Failure(ChangeProfilePictureDeny);
-                    }
-
-                    var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
-                    if (result.Succeeded)
-                    {
-                        var userImageData = new UserImageData
-                        {
-                            Id = result.Data.PublicId,
-                            Url = result.Data.Url,
-                            Folder = folder,
-                            ApplicationUserId = this.currentUserService.UserId
-                        };
-
-                        await this.dbContext.UserImageDatas.AddAsync(userImageData);
-                        await this.dbContext.SaveChangesAsync();
-
-                        return Result.Success;
-                    }
-
-                    return Result.Failure(result.Errors);
+                    return Result<RegisterUserResponseModel>.Failure(BadRequest, WrongImageFormat);
                 }
 
-                return Result.Failure(NoImage);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)}");
-                return Result.Failure(string.Format(Wrong, nameof(AddProfilePicture)));
-            }
-        }
-
-        public async Task<Result> DeleteProfilePicture(DeleteProfilePictureRequestModel request)
-        {
-            try
-            {
-                if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
+                using (var imageResult = Image.Load(request.ProfilePicture.OpenReadStream()))
                 {
-                    return Result.Failure(WrongWrights);
+                    if (imageResult.Width < ProfilePictureInProfileWidth || imageResult.Height < ProfilePictureInProfileHeight)
+                    {
+                        return Result.Failure(BadRequest, string.Format(WrongWidthOrHeight, ProfilePictureInProfileWidth, ProfilePictureInProfileHeight));
+                    }
                 }
 
                 var userProfilePicture = await this.dbContext
                 .UserImageDatas
-                .FirstOrDefaultAsync(x => x.ApplicationUserId == request.UserId);
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
 
-                if (userProfilePicture == null)
+                if (userProfilePicture != null)
                 {
-                    return Result.Failure(ProfilePictureNotFound);
+                    return Result.Failure(Conflict, ChangeProfilePictureDeny); //TODO: 409?
                 }
 
-                var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id, userProfilePicture.Folder);
+                var id = Guid.NewGuid().ToString();
+                var totalImages = await this.dbContext.UserImageDatas.CountAsync();
+                var folder = $"Identity/Profile/{totalImages % 1000}";
+
+                var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
                 if (result.Succeeded)
                 {
-                    this.dbContext.UserImageDatas.Remove(userProfilePicture);
-                    await this.dbContext.SaveChangesAsync();
+                    var userImageData = new UserImageData
+                    {
+                        Id = result.Data.PublicId,
+                        Url = result.Data.Url,
+                        Folder = folder,
+                        ApplicationUserId = this.currentUserService.UserId
+                    };
+
+                    try
+                    {
+                        await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                        await this.dbContext.SaveChangesAsync();
+                    }
+                    catch (NotImplementedException ex) //TODO: NotImplementedException ???
+                    {
+                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)} when {AddingDbEntities}"));
+                        return Result.Failure(InternalServerError);
+                    }
 
                     return Result.Success;
                 }
 
-                return Result<RegisterUserResponseModel>.Failure(result.Errors);
+                return Result.Failure(InternalServerError, result.Errors);
             }
-            catch (Exception ex)
+
+            return Result.Failure(BadRequest, NoImage);
+        }
+
+        public async Task<Result> DeleteProfilePicture(DeleteProfilePictureRequestModel request)
+        {
+            if (request.UserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(DeleteProfilePicture)}");
-                return Result.Failure(string.Format(Wrong, nameof(DeleteProfilePicture)));
+                return Result.Failure(Forbidden, WrongWrights);
             }
+
+            var userProfilePicture = await this.dbContext
+            .UserImageDatas
+            .FirstOrDefaultAsync(x => x.ApplicationUserId == request.UserId);
+
+            if (userProfilePicture == null)
+            {
+                return Result.Failure(NotFound, ProfilePictureNotFound);
+            }
+
+            var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id, userProfilePicture.Folder);
+            if (result.Succeeded)
+            {
+                this.dbContext.UserImageDatas.Remove(userProfilePicture);
+                await this.dbContext.SaveChangesAsync();
+
+                return Result.Success;
+            }
+
+            return Result<RegisterUserResponseModel>.Failure(InternalServerError, result.Errors);
         }
 
         public async Task<Result> ChangePassword(ChangePasswordRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
+            if (user == null)
             {
-                var user = await this.userManager.FindByIdAsync(currentUserService.UserId);
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, currentUserService.UserId));
-                }
-
-                var result = await this.userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
-
-                if (result.Succeeded)
-                {
-                    return Result.Success;
-                }
-
-                var errors = result.Errors.Select(e => e.Description);
-                return Result.Failure(errors);
+                return Result.Failure(NotFound, string.Format(UserNotFound, currentUserService.UserId));
             }
-            catch (Exception ex)
+
+            var result = await this.userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+
+            if (result.Succeeded)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ChangePassword)}");
-                return Result.Failure(string.Format(Wrong, nameof(ChangePassword)));
+                return Result.Success;
             }
+
+            var errors = result.Errors.Select(e => e.Description);
+            return Result.Failure(InternalServerError, errors); //TODO: 500?
         }
 
         public async Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByEmailAsync(request.Email);
+            if (user != null && await this.userManager.IsEmailConfirmedAsync(user))
             {
-                var user = await this.userManager.FindByEmailAsync(request.Email);
-                if (user != null && await this.userManager.IsEmailConfirmedAsync(user))
-                {
-                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                    return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = user.Email, UserId = user.Id, Token = token });
-                }
+                var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = user.Email, UserId = user.Id, Token = token });
+            }
 
-                return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = null, UserId = null, Token = null });
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ForgotPassword)}");
-                return Result<ForgotPasswordResponseModel>.Failure(string.Format(Wrong, nameof(ForgotPassword)));
-            }
+            return Result<ForgotPasswordResponseModel>.SuccessWith(new ForgotPasswordResponseModel { Email = null, UserId = null, Token = null });
         }
 
         public async Task<Result> ResetPassword(string userId, string token, ResetPasswordRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByIdAsync(userId);
+            if (user == null)
             {
-                var user = await this.userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, userId));
-                }
-
-                var tokenDecoded = HttpUtility.UrlDecode(token);
-                var result = await this.userManager.ResetPasswordAsync(user, token, request.NewPassword);
-
-                if (!result.Succeeded)
-                {
-                    var errors = result.Errors.Select(x => x.Description);
-                    return Result.Failure(errors);
-                }
-
-                return Result.Success;
+                return Result.Failure(NotFound, string.Format(UserNotFound, userId));
             }
-            catch (Exception ex)
+
+            var tokenDecoded = HttpUtility.UrlDecode(token);
+            var result = await this.userManager.ResetPasswordAsync(user, token, request.NewPassword);
+
+            if (!result.Succeeded)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(ResetPassword)}");
-                return Result.Failure(string.Format(Wrong, nameof(ResetPassword)));
+                var errors = result.Errors.Select(x => x.Description);
+                return Result.Failure(InternalServerError, errors);
             }
+
+            return Result.Success;
         }
 
         public async Task<Result> VerifyEmail(VerifyEmailRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByIdAsync(request.UserId);
+            if (user == null)
             {
-                var user = await this.userManager.FindByIdAsync(request.UserId);
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, request.UserId));
-                }
-
-                var tokenDecoded = HttpUtility.UrlDecode(request.Token);
-                var result = await this.userManager.ConfirmEmailAsync(user, request.Token);
-                if (result.Succeeded)
-                {
-                    return Result.Success;
-                }
-
-                return Result.Failure(result.Errors.Select(x => x.Description));
+                return Result.Failure(NotFound, string.Format(UserNotFound, request.UserId));
             }
-            catch (Exception ex)
+
+            var tokenDecoded = HttpUtility.UrlDecode(request.Token);
+            var result = await this.userManager.ConfirmEmailAsync(user, request.Token);
+            if (result.Succeeded)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(VerifyEmail)}");
-                return Result.Failure(string.Format(Wrong, nameof(VerifyEmail)));
+                return Result.Success;
             }
+
+            return Result.Failure(InternalServerError, result.Errors.Select(x => x.Description));
         }
 
         public async Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request)
         {
-            try
-            {
-                var users = this.userManager
+            var users = this.userManager
                     .Users
                     .Select(x => new UserResponseModel
                     {
@@ -530,189 +479,189 @@
                     })
                 .AsQueryable();
 
-                var totalRecords = await users.CountAsync();
+            var totalRecords = await users.CountAsync();
 
-                var pageIndex = request.PageIndex;
-                var pageSize = request.PageSize;
-                var sortingOrder = request.OrderBy!;
-                var sortingField = request.SortBy!;
+            var pageIndex = request.PageIndex;
+            var pageSize = request.PageSize;
+            var sortingOrder = request.OrderBy!;
+            var sortingField = request.SortBy!;
 
-                var orderBy = "Id";
+            var orderBy = "Id";
 
-                if (!string.IsNullOrWhiteSpace(sortingField))
-                {
-                    if (sortingField.ToLower() == "firstname")
-                    {
-                        orderBy = nameof(request.FirstName);
-                    }
-                    else if (sortingField.ToLower() == "lastname")
-                    {
-                        orderBy = nameof(request.LastName);
-                    }
-                    else if (sortingField.ToLower() == "email")
-                    {
-                        orderBy = nameof(request.Email);
-                    }
-                    else if (sortingField.ToLower() == "phonenumber")
-                    {
-                        orderBy = nameof(request.PhoneNumber);
-                    }
-                }
-
-                if (sortingOrder != null && sortingOrder.ToLower() == Desc)
-                {
-                    users = users.OrderByDescending(x => orderBy);
-                }
-                else
-                {
-                    users = users.OrderBy(x => orderBy);
-                }
-
-                var data = await users
-                 .Skip(pageIndex * pageSize)
-                 .Take(pageSize)
-                 .ToListAsync();
-
-                return Result<SearchUsersResponseModel>.SuccessWith(new SearchUsersResponseModel { Data = data, TotalRecords = totalRecords });
-            }
-            catch (Exception ex)
+            if (!string.IsNullOrWhiteSpace(sortingField))
             {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Users)}");
-                return Result<SearchUsersResponseModel>.Failure(string.Format(Wrong, nameof(Users)));
+                if (sortingField.ToLower() == "firstname")
+                {
+                    orderBy = nameof(request.FirstName);
+                }
+                else if (sortingField.ToLower() == "lastname")
+                {
+                    orderBy = nameof(request.LastName);
+                }
+                else if (sortingField.ToLower() == "email")
+                {
+                    orderBy = nameof(request.Email);
+                }
+                else if (sortingField.ToLower() == "phonenumber")
+                {
+                    orderBy = nameof(request.PhoneNumber);
+                }
             }
+
+            if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+            {
+                users = users.OrderByDescending(x => orderBy);
+            }
+            else
+            {
+                users = users.OrderBy(x => orderBy);
+            }
+
+            var data = await users
+             .Skip(pageIndex * pageSize)
+             .Take(pageSize)
+             .ToListAsync();
+
+            return Result<SearchUsersResponseModel>.SuccessWith(new SearchUsersResponseModel { Data = data, TotalRecords = totalRecords });
         }
 
         public async Task<Result<List<RoleResponseModel>>> Roles()
         {
-            try
-            {
-                var roles = await this.dbContext.Roles.Select(x => new RoleResponseModel { Id = x.Id, Name = x.Name }).ToListAsync();
+            var roles = await this.dbContext
+                .Roles
+                .Select(x => new RoleResponseModel 
+                { 
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToListAsync();
 
-                return Result<List<RoleResponseModel>>.SuccessWith(roles);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(Roles)}");
-                return Result<List<RoleResponseModel>>.Failure(string.Format(Wrong, nameof(Roles)));
-            }
+            return Result<List<RoleResponseModel>>.SuccessWith(roles);
         }
 
         public async Task<Result> EditUserRoles(EditUserRolesRequestModel request)
         {
-            try
+            var user = await this.userManager.FindByEmailAsync(request.Email);
+
+            //Взимаме всички имена на роли за дадения потребител
+            var userRoleNames = await userManager.GetRolesAsync(user);
+            //Взимаме тези роли, които отговарят за съответния потребител
+            var roles = await roleManager.Roles
+                .Where(x => userRoleNames
+                    .Contains(x.Name))
+                .Select(x => x.Id)
+                .ToListAsync();
+
+            //Премахваме дублиранията ако има такива
+            var rolesDistincted = request.RolesIds.Distinct();
+
+            var rolesForAdd = rolesDistincted.Except(roles);
+            var rolesForRemove = roles.Except(request.RolesIds);
+
+            var errors = new List<string>();
+
+            foreach (var roleId in rolesForAdd)
             {
-                var user = await this.userManager.FindByEmailAsync(request.Email);
+                var roleName = (await this.roleManager
+                    .Roles
+                    .FirstOrDefaultAsync(x => x.Id == roleId))?
+                    .Name;
 
-                //Взимаме всички имена на роли за дадения потребител
-                var userRoleNames = await userManager.GetRolesAsync(user);
-                //Взимаме тези роли, които отговарят за съответния потребител
-                var roles = await roleManager.Roles
-                    .Where(x => userRoleNames
-                        .Contains(x.Name))
-                    .Select(x => x.Id)
-                    .ToListAsync();
+                IdentityResult identityResult;
 
-                //Премахваме дублиранията ако има такива
-                var rolesDistincted = request.RolesIds.Distinct();
-
-                var rolesForAdd = rolesDistincted.Except(roles);
-                var rolesForRemove = roles.Except(request.RolesIds);
-
-                var errors = new List<string>();
-
-                foreach (var roleId in rolesForAdd)
+                if (roleName != null)
                 {
-                    var roleName = (await this.roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleId))?.Name;
-
-                    IdentityResult identityResult;
-
-                    if (roleName != null)
+                    if (!await this.userManager.IsInRoleAsync(user, roleName))
                     {
-                        if (!await this.userManager.IsInRoleAsync(user, roleName))
+                        identityResult = await this.userManager.AddToRoleAsync(user, roleName);
+
+                        if (identityResult.Succeeded && roleName == TrainerRoleName)
                         {
-                            identityResult = await this.userManager.AddToRoleAsync(user, roleName);
-
-                            if (identityResult.Succeeded && roleName == TrainerRoleName)
+                            var messageData = new CreateTrainerMessage()
                             {
-                                var messageData = new CreateTrainerMessage()
-                                {
-                                    ApplicationUserId = user.Id,
-                                    CreatedOn = DateTime.Now,
-                                    FirstName = user.FirstName,
-                                    Lastname = user.LastName
-                                };
+                                ApplicationUserId = user.Id,
+                                CreatedOn = DateTime.Now,
+                                FirstName = user.FirstName,
+                                Lastname = user.LastName
+                            };
 
-                                var message = new Message(messageData);
+                            var message = new Message(messageData);
 
-                                await this.Save(null, message);
+                            await this.Save(null, message);
 
+                            try
+                            {
                                 await this.publisher.Publish(message);
 
                                 message.MarkAsPublished();
 
                                 await this.dbContext.SaveChangesAsync();
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                errors.AddRange(identityResult.Errors.Select(x => x.Description));
+                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in adding users in role when {Publish}");
                             }
+                        }
+                        else
+                        {
+                            errors.AddRange(identityResult.Errors.Select(x => x.Description));
                         }
                     }
                 }
+            }
 
-                foreach (var roleId in rolesForRemove)
+            foreach (var roleId in rolesForRemove)
+            {
+                var roleName = (await this.roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleId))?.Name;
+
+                IdentityResult identityResult;
+
+                if (roleName != null)
                 {
-                    var roleName = (await this.roleManager.Roles.FirstOrDefaultAsync(x => x.Id == roleId))?.Name;
-
-                    IdentityResult identityResult;
-
-                    if (roleName != null)
+                    if (await this.userManager.IsInRoleAsync(user, roleName))
                     {
-                        if (await this.userManager.IsInRoleAsync(user, roleName))
+                        identityResult = await this.userManager.RemoveFromRoleAsync(user, roleName);
+
+                        if (identityResult.Succeeded && roleName == TrainerRoleName)
                         {
-                            identityResult = await this.userManager.RemoveFromRoleAsync(user, roleName);
-
-                            if (identityResult.Succeeded && roleName == TrainerRoleName)
+                            var messageData = new DeleteTrainerMessage()
                             {
-                                var messageData = new DeleteTrainerMessage()
-                                {
-                                    ApplicationUserId = user.Id
-                                };
+                                ApplicationUserId = user.Id
+                            };
 
-                                var message = new Message(messageData);
+                            var message = new Message(messageData);
 
-                                await this.Save(null, message);
+                            await this.Save(null, message);
 
+                            try
+                            {
                                 await this.publisher.Publish(messageData);
 
                                 message.MarkAsPublished();
 
                                 await this.dbContext.SaveChangesAsync();
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                errors.AddRange(identityResult.Errors.Select(x => x.Description));
+                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in removing users from role when {Publish}");
                             }
+                        }
+                        else
+                        {
+                            errors.AddRange(identityResult.Errors.Select(x => x.Description));
                         }
                     }
                 }
+            }
 
-                return errors.Count() == 0
-                    ? Result.Success
-                    : Result.Failure(errors);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)}");
-                return Result.Failure(string.Format(Wrong, nameof(EditUserRoles)));
-            }
+            return errors.Count() == 0
+                ? Result.Success
+                : Result.Failure(InternalServerError, errors); //TODO: 500?
         }
 
         public async Task<Result<GetUserInfoResponseModel>> GetUserInfo(string id)
         {
-            try
-            {
-                var user = await this.dbContext
+            var user = await this.dbContext
                     .Users
                     .Select(x => new GetUserInfoResponseModel()
                     {
@@ -722,27 +671,19 @@
                     })
                     .FirstOrDefaultAsync(x => x.Id == id);
 
-                var profileImageUrl = (await this.dbContext
-                    .UserImageDatas
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
-                    .Url;
+            var profileImageUrl = (await this.dbContext
+                .UserImageDatas
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == user.Id))?
+                .Url;
 
-                user.ProfileImageUrl = profileImageUrl;
+            user.ProfileImageUrl = profileImageUrl;
 
-                return Result<GetUserInfoResponseModel>.SuccessWith(user);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(GetUserInfo)}");
-                return Result<GetUserInfoResponseModel>.Failure(string.Format(Wrong, nameof(GetUserInfo)));
-            }
+            return Result<GetUserInfoResponseModel>.SuccessWith(user);
         }
 
         public async Task<Result<List<GetUserInfoResponseModel>>> GetUsersInfo(List<string> ids)
         {
-            try
-            {
-                var users = await this.dbContext
+            var users = await this.dbContext
                     .Users
                     .Select(x => new GetUserInfoResponseModel()
                     {
@@ -752,13 +693,7 @@
                     })
                     .ToListAsync();
 
-                return Result<List<GetUserInfoResponseModel>>.SuccessWith(users);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(GetUsersInfo)}");
-                return Result<List<GetUserInfoResponseModel>>.Failure(string.Format(Wrong, nameof(GetUsersInfo)));
-            }
+            return Result<List<GetUserInfoResponseModel>>.SuccessWith(users);
         }
 
         #region Private methods
