@@ -16,6 +16,7 @@
 
     using static Body4U.Common.Constants.MessageConstants.ApplicationUser;
     using static Body4U.Common.Constants.MessageConstants.Common;
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
 
     public class FavouritesService : IFavouritesService
     {
@@ -35,98 +36,90 @@
 
         public async Task<Result> Add(AddToFavouritesRequestModel request)
         {
-            try
-            {
-                var user = await this.userManager
+            var user = await this.userManager
                     .FindByIdAsync(request.ApplicationUserId);
 
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, request.ApplicationUserId));
-                }
+            if (user == null)
+            {
+                return Result.Failure(NotFound, string.Format(UserNotFound, request.ApplicationUserId));
+            }
 
-                var alreadyInFavourites = await this.dbContext
-                    .Favourites
-                    .AnyAsync(x => x.ArticleId == request.ArticleId && x.ApplicationUserId == user.Id);
+            var alreadyInFavourites = await this.dbContext
+                .Favourites
+                .AnyAsync(x => x.ArticleId == request.ArticleId && x.ApplicationUserId == user.Id);
 
-                if (alreadyInFavourites)
-                {
-                    return Result.Failure(AlreadyInFavourites);
-                }
+            if (alreadyInFavourites)
+            {
+                return Result.Failure(Conflict, AlreadyInFavourites); //TODO: 409???
+            }
 
-                var favouriter = new Favourite()
-                {
-                    ApplicationUserId = user.Id,
-                    ArticleId = request.ArticleId,
-                    AddedIn = DateTime.Now
-                };
+            var favouriter = new Favourite()
+            {
+                ApplicationUserId = user.Id,
+                ArticleId = request.ArticleId,
+                AddedIn = DateTime.Now
+            };
 
-                user.Favourites.Add(favouriter);
+            user.Favourites.Add(favouriter);
+            try
+            {
                 await this.dbContext.Favourites.AddAsync(favouriter);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(FavouritesService)}.{nameof(Add)}");
-                return Result.Failure(string.Format(Wrong, nameof(Add)));
+                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}.{nameof(Add)}"));
+                return Result.Failure(InternalServerError);
             }
+
+            return Result.Success;
         }
 
         public async Task<Result> Remove(RemoveFromFavouritesRequestModel request)
         {
-            try
-            {
-                var user = await this.userManager
+            var user = await this.userManager
                        .FindByIdAsync(request.ApplicationUserId);
 
-                if (user == null)
-                {
-                    return Result.Failure(string.Format(UserNotFound, request.ApplicationUserId));
-                }
+            if (user == null)
+            {
+                return Result.Failure(NotFound, string.Format(UserNotFound, request.ApplicationUserId));
+            }
 
-                var favourite = await this.dbContext
-                    .Favourites
-                    .FirstOrDefaultAsync(x => x.ArticleId == request.ArticleId && x.ApplicationUserId == user.Id);
+            var favourite = await this.dbContext
+                .Favourites
+                .FirstOrDefaultAsync(x => x.ArticleId == request.ArticleId && x.ApplicationUserId == user.Id);
 
-                if (favourite == null)
-                {
-                    return Result.Failure(NotInFavourites);
-                }
+            if (favourite == null)
+            {
+                return Result.Failure(NotFound, NotInFavourites);
+            }
 
-                user.Favourites.Remove(favourite);
+            user.Favourites.Remove(favourite);
 
+            try
+            {
                 this.dbContext.Favourites.Remove(favourite);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(FavouritesService)}.{nameof(Remove)}");
-                return Result.Failure(string.Format(Wrong, nameof(Remove)));
+                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}.{nameof(Remove)}"));
+                return Result.Failure(InternalServerError);
             }
+
+            return Result.Success;
         }
 
         public async Task<Result<List<int>>> Mines()
         {
-            try
-            {
-                var favourites = await this.dbContext
+            var favourites = await this.dbContext
                     .Favourites
                     .Where(x => x.ApplicationUserId == this.currentUserService.UserId)
                     .OrderByDescending(x => x.AddedIn)
                     .Select(x => x.ArticleId)
                     .ToListAsync();
 
-                return Result<List<int>>.SuccessWith(favourites);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(FavouritesService)}.{nameof(Mines)}");
-                return Result<List<int>>.Failure(string.Format(Wrong, nameof(Mines)));
-            }
+            return Result<List<int>>.SuccessWith(favourites);
         }
     }
 }

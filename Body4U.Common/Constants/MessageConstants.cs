@@ -26,7 +26,7 @@ namespace Body4U.Common.Constants
             public const string UnhandledError = "Unhandled Error";
 
             public const string UpdatingDbEntities = "Updating and saving db entities in database.";
-            public const string AddingDbEntities = "Adding and saving db entities in database.";
+            public const string AddingDbEntities = "adding and saving db entities in database.";
             public const string SavingDbEntities = "Saving db entities in database.";
             public const string Publish = "publishing messages.";
         }

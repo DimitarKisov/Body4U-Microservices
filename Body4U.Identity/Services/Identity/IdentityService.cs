@@ -142,7 +142,7 @@
                         }
                         catch (NotImplementedException ex) //TODO: NotImplementedException ???
                         {
-                            Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(Register)} when {AddingDbEntities}"));
+                            Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(Register)}"));
                             return Result<RegisterUserResponseModel>.Failure(InternalServerError);
                         }
                     }
@@ -294,7 +294,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(IdentityService)}/{nameof(Edit)} when {Publish}");
+                Log.Error(ex, $"{nameof(IdentityService)}/{nameof(Edit)}");
             }
 
             return Result.Success;
@@ -351,7 +351,7 @@
                     }
                     catch (NotImplementedException ex) //TODO: NotImplementedException ???
                     {
-                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)} when {AddingDbEntities}"));
+                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}.{nameof(AddProfilePicture)}"));
                         return Result.Failure(InternalServerError);
                     }
 
@@ -599,7 +599,7 @@
                             }
                             catch (Exception ex)
                             {
-                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in adding users in role when {Publish}");
+                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in adding users in role.");
                             }
                         }
                         else
@@ -643,7 +643,7 @@
                             }
                             catch (Exception ex)
                             {
-                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in removing users from role when {Publish}");
+                                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(EditUserRoles)} in removing users from role.");
                             }
                         }
                         else
