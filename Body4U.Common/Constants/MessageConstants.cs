@@ -36,6 +36,7 @@ namespace Body4U.Common.Constants
             public const string ArticleMissing = "There is no such article.";
             public const string TitleTaken = "This title is already taken.";
             public const string WrongArticleType = "Wrong article type.";
+            public const string ImageMissing = "Image missing.";
         }
 
         public class ApplicationUser

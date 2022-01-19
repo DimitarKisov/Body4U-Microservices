@@ -34,10 +34,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok(result.Data);
+            return this.CreatedAtAction(nameof(Get), new { id = result.Data }, result.Data);
         }
 
         [HttpPut]
@@ -54,10 +54,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpDelete]
@@ -73,10 +73,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpGet]
@@ -87,7 +87,7 @@
             var result = await this.articleService.Get(id);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -101,7 +101,7 @@
             var result = await this.articleService.Search(request);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -113,10 +113,6 @@
         public async Task<ActionResult> AutocompleteArticleTitle(string term)
         {
             var result = await this.articleService.AutocompleteArticleTitle(term);
-            if (!result.Succeeded)
-            {
-                return this.BadRequest(result.Errors);
-            }
 
             return this.Ok(result.Data);
         }
@@ -126,10 +122,6 @@
         public async Task<ActionResult> ArticleExists(int id)
         {
             var result = await this.articleService.ArticleExists(id);
-            if (!result.Succeeded)
-            {
-                return this.BadRequest(result.Errors);
-            }
 
             return this.Ok(result.Data);
         }
@@ -144,11 +136,6 @@
             }
 
             var result = await this.articleService.Favourites(request);
-            if (!result.Succeeded)
-            {
-                this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
-            }
 
             return this.Ok(result.Data);
         }
