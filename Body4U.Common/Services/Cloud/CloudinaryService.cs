@@ -7,6 +7,8 @@
     using System.Net;
     using System.Threading.Tasks;
 
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
+
     public class CloudinaryService : ICloudinaryService
     {
         private readonly Cloudinary cloudinary;
@@ -29,7 +31,7 @@
             var uploadResult = await this.cloudinary.UploadAsync(uploadParams);
             if (uploadResult.StatusCode != HttpStatusCode.OK)
             {
-                return Result<UploadImageResponseModel>.Failure(uploadResult.Error.Message);
+                return Result<UploadImageResponseModel>.Failure(InternalServerError, uploadResult.Error.Message);
             }
 
             return Result<UploadImageResponseModel>.SuccessWith(new UploadImageResponseModel { PublicId = publicId, Url = uploadResult.Uri.AbsoluteUri });
@@ -42,7 +44,7 @@
             var result = await this.cloudinary.DestroyAsync(deleteParams);
             if (result.Result != "ok")
             {
-                return Result.Failure(result.Error.Message);
+                return Result.Failure(InternalServerError, result.Error.Message);
             }
 
             return Result.Success;
