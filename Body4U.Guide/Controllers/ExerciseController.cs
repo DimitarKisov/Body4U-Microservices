@@ -29,10 +29,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok(result.Data);
+            return this.CreatedAtAction(nameof(Get), new {id = result.Data.Id}, result.Data);
         }
 
         [HttpGet]
@@ -43,7 +43,7 @@
             var result = await this.exerciseService.Get(id);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -63,7 +63,7 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -82,10 +82,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpDelete]
@@ -96,10 +96,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
     }
 }

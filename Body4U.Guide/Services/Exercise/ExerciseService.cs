@@ -14,6 +14,7 @@
     using static Body4U.Common.Constants.DataConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Exercise;
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
 
     public class ExerciseService : IExerciseService
     {
@@ -24,47 +25,45 @@
 
         public async Task<Result<CreateExerciseResponseModel>> Create(CreateExerciseRequestModel request)
         {
-            try
+            if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
             {
-                var nameExists = await this.dbContext
+                return Result<CreateExerciseResponseModel>.Failure(BadRequest, WrongExerciseType);
+            }
+
+            var nameExists = await this.dbContext
                     .Exercises
                     .AnyAsync(x => x.Name == request.Name);
 
-                if (nameExists)
-                {
-                    return Result<CreateExerciseResponseModel>.Failure(NameTaken);
-                }
+            if (nameExists)
+            {
+                return Result<CreateExerciseResponseModel>.Failure(Conflict, NameTaken);
+            }
 
-                if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
-                {
-                    return Result<CreateExerciseResponseModel>.Failure(WrongExerciseType);
-                }
+            var exercise = new Exercise()
+            {
+                Name = request.Name,
+                Description = request.Description,
+                ExerciseType = (ExerciseType)request.ExerciseType,
+                ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty
+            };
 
-                var exercise = new Exercise()
-                {
-                    Name = request.Name,
-                    Description = request.Description,
-                    ExerciseType = (ExerciseType)request.ExerciseType,
-                    ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty
-                };
-
+            try
+            {
                 await this.dbContext.AddAsync(exercise);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result<CreateExerciseResponseModel>.SuccessWith(new CreateExerciseResponseModel { Id = exercise.Id });
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Create)}");
-                return Result<CreateExerciseResponseModel>.Failure(string.Format(Wrong, nameof(Create)));
+                return Result<CreateExerciseResponseModel>.Failure(InternalServerError, string.Format(Wrong, nameof(Search)));
             }
+
+            return Result<CreateExerciseResponseModel>.SuccessWith(new CreateExerciseResponseModel { Id = exercise.Id });
         }
 
         public async Task<Result<GetExerciceResponseModel>> Get(int id)
         {
-            try
-            {
-                var exercise = await this.dbContext
+            var exercise = await this.dbContext
                     .Exercises
                     .Select(x => new GetExerciceResponseModel()
                     {
@@ -76,25 +75,17 @@
                     })
                     .FirstOrDefaultAsync(x => x.Id == id);
 
-                if (exercise == null)
-                {
-                    return Result<GetExerciceResponseModel>.Failure(ExerciseMissing);
-                }
-
-                return Result<GetExerciceResponseModel>.SuccessWith(exercise);
-            }
-            catch (Exception ex)
+            if (exercise == null)
             {
-                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Get)}");
-                return Result<GetExerciceResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
+                return Result<GetExerciceResponseModel>.Failure(NotFound, ExerciseMissing);
             }
+
+            return Result<GetExerciceResponseModel>.SuccessWith(exercise);
         }
 
         public async Task<Result<SearchExercisesResponseModel>> Search(SearchExercisesRequestModel request)
         {
-            try
-            {
-                var exercises = this.dbContext
+            var exercises = this.dbContext
                     .Exercises
                     .Select(x => new ExerciseResponseModel()
                     {
@@ -104,117 +95,102 @@
                     })
                     .AsQueryable();
 
-                var totalRecords = await exercises.CountAsync();
+            var totalRecords = await exercises.CountAsync();
 
-                var pageIndex = request.PageIndex;
-                var pageSize = request.PageSize;
-                var sortingOrder = request.OrderBy!;
-                var sortingField = request.SortBy!;
+            var pageIndex = request.PageIndex;
+            var pageSize = request.PageSize;
+            var sortingOrder = request.OrderBy!;
+            var sortingField = request.SortBy!;
 
-                var orderBy = "Id";
+            var orderBy = "Id";
 
-                if (!string.IsNullOrWhiteSpace(sortingField))
-                {
-                    if (sortingField.ToLower() == "name")
-                    {
-                        orderBy = nameof(request.Name);
-                    }
-                    else if (sortingField.ToLower() == "exercisedifficulty")
-                    {
-                        orderBy = nameof(request.ExerciseDifficulty);
-                    }
-                }
-
-                if (sortingOrder != null && sortingOrder.ToLower() == Desc)
-                {
-                    exercises = exercises.OrderByDescending(x => orderBy);
-                }
-                else
-                {
-                    exercises = exercises.OrderBy(x => orderBy);
-                }
-
-                var data = await exercises
-                    .Skip(pageIndex * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
-
-                return Result<SearchExercisesResponseModel>.SuccessWith(new SearchExercisesResponseModel() { Data = data, TotalRecords = totalRecords });
-
-            }
-            catch (Exception ex)
+            if (!string.IsNullOrWhiteSpace(sortingField))
             {
-                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Search)}");
-                return Result<SearchExercisesResponseModel>.Failure(string.Format(Wrong, nameof(Search)));
+                if (sortingField.ToLower() == "name")
+                {
+                    orderBy = nameof(request.Name);
+                }
+                else if (sortingField.ToLower() == "exercisedifficulty")
+                {
+                    orderBy = nameof(request.ExerciseDifficulty);
+                }
             }
+
+            if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+            {
+                exercises = exercises.OrderByDescending(x => orderBy);
+            }
+            else
+            {
+                exercises = exercises.OrderBy(x => orderBy);
+            }
+
+            var data = await exercises
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Result<SearchExercisesResponseModel>.SuccessWith(new SearchExercisesResponseModel() { Data = data, TotalRecords = totalRecords });
         }
 
         public async Task<Result> Edit(EditExerciseRequestModel request)
         {
-            try
+            if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
             {
-                var exercise = await this.dbContext
+                return Result.Failure(BadRequest, WrongExerciseType);
+            }
+
+            var nameExists = await this.dbContext
+                .Exercises
+                .AnyAsync(x => x.Name == request.Name);
+
+            if (nameExists)
+            {
+                return Result.Failure(Conflict, NameTaken);
+            }
+
+            var exercise = await this.dbContext
                     .Exercises
                     .FindAsync(new object[] { request.Id });
 
-                if (exercise == null)
-                {
-                    return Result.Failure(ExerciseMissing);
-                }
-
-                var nameExists = await this.dbContext
-                    .Exercises
-                    .AnyAsync(x => x.Name == request.Name);
-
-                if (nameExists)
-                {
-                    return Result.Failure(NameTaken);
-                }
-
-                if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
-                {
-                    return Result.Failure(WrongExerciseType);
-                }
-
-                exercise.Name = request.Name;
-                exercise.Description = request.Description;
-                exercise.ExerciseType = (ExerciseType)request.ExerciseType;
-                exercise.ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty;
-
-                await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
-            }
-            catch (Exception ex)
+            if (exercise == null)
             {
-                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Edit)}");
-                return Result.Failure(string.Format(Wrong, nameof(Edit)));
+                return Result.Failure(NotFound, ExerciseMissing);
             }
+
+            exercise.Name = request.Name;
+            exercise.Description = request.Description;
+            exercise.ExerciseType = (ExerciseType)request.ExerciseType;
+            exercise.ExerciseDifficulty = (ExerciseDifficulty)request.ExerciseDifficulty;
+
+            await this.dbContext.SaveChangesAsync();
+
+            return Result.Success;
         }
 
         public async Task<Result> Delete(int id)
         {
-            try
-            {
-                var exercise = await this.dbContext
+            var exercise = await this.dbContext
                     .Exercises
                     .FindAsync(new object[] { id });
 
-                if (exercise == null)
-                {
-                    return Result.Failure(ExerciseMissing);
-                }
+            if (exercise == null)
+            {
+                return Result.Failure(NotFound, ExerciseMissing);
+            }
 
+            try
+            {
                 this.dbContext.Exercises.Remove(exercise);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Delete)}");
-                return Result.Failure(string.Format(Wrong, nameof(Delete)));
+                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Delete)));
             }
+
+            return Result.Success;
         }
     }
 }
