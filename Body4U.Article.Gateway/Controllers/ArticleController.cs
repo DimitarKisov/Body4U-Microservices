@@ -67,7 +67,7 @@
             }
             catch (ApiException ex)
             {
-                return this.ProccessErrors(ex);
+                return this.ProcessApiErrors(ex);
             }
         }
 
@@ -91,7 +91,7 @@
             }
             catch (ApiException ex)
             {
-                return this.ProccessErrors(ex);
+                return this.ProcessApiErrors(ex);
             }
         }
 
@@ -110,16 +110,16 @@
                 if (!articleExists)
                 {
                     this.ModelState.Clear();
-                    return this.BadRequest(ArticleMissing);
+                    return this.NotFound(ArticleMissing);
                 }
 
                 await this.favouritesService.Add(request);
 
-                return this.Ok();
+                return this.NoContent();
             }
             catch (ApiException ex)
             {
-                return this.ProccessErrors(ex);
+                return this.ProcessApiErrors(ex);
             }
         }
 
@@ -138,16 +138,16 @@
                 if (!articleExists)
                 {
                     this.ModelState.Clear();
-                    return this.BadRequest(ArticleMissing);
+                    return this.NotFound(ArticleMissing);
                 }
 
                 await this.favouritesService.Remove(request);
 
-                return this.Ok();
+                return this.NoContent();
             }
             catch (ApiException ex)
             {
-                return this.ProccessErrors(ex);
+                return this.ProcessApiErrors(ex);
             }
         }
 
@@ -169,11 +169,11 @@
             }
             catch (ApiException ex)
             {
-                return this.ProccessErrors(ex);
+                return this.ProcessApiErrors(ex);
             }
         }
 
-        private BadRequestObjectResult ProccessErrors(ApiException ex)
+        private BadRequestObjectResult ProcessApiErrors(ApiException ex)
         {
             var errors = new List<string>();
 
