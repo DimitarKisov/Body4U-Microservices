@@ -29,10 +29,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.Created(string.Empty, null); //TODO: Така ли ще бъде, тъй като ние добавяме коментар в статия, в която вече сме влезли? или да е NoContent?
         }
 
         [HttpPut]
@@ -48,10 +48,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpDelete]
@@ -67,10 +67,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -87,7 +87,7 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
