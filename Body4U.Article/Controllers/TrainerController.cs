@@ -22,7 +22,7 @@
             var result = await this.trainerService.MyProfile();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -35,7 +35,7 @@
             var result = await this.trainerService.MyImages();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -48,7 +48,7 @@
             var result = await this.trainerService.MyVideos();
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
             return this.Ok(result.Data);
@@ -67,10 +67,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpPost]
@@ -81,10 +81,10 @@
             var result = await this.trainerService.UploadTrainerImages(request);
             if (!result.Succeeded)
             {
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return this.Ok();
+            return this.NoContent();
         }
 
         [HttpDelete]
@@ -100,10 +100,10 @@
             if (!result.Succeeded)
             {
                 this.ModelState.Clear();
-                return this.BadRequest(result.Errors);
+                return this.ProcessErrors(result);
             }
 
-            return Ok();
+            return NoContent();
         }
     }
 }
