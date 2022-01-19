@@ -17,6 +17,7 @@
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Trainer;
     using static Body4U.Common.Constants.MessageConstants.Service;
+    using static Body4U.Common.Constants.MessageConstants.StatusCodes;
 
     public class ServiceService : IServiceService
     {
@@ -33,64 +34,62 @@
 
         public async Task<Result<int>> Create(CreateServiceRequestModel request)
         {
+            if (!Enum.IsDefined(typeof(ServiceType), request.ServiceType))
+            {
+                return Result<int>.Failure(BadRequest, WrongServiceType);
+            }
+
+            if (!Enum.IsDefined(typeof(ServiceDifficulty), request.ServiceDifficulty))
+            {
+                return Result<int>.Failure(BadRequest, WrongServiceDifficulty);
+            }
+
+            var nameExists = await this.dbContext
+                .Services
+                .AnyAsync(x => x.Name == request.Name);
+
+            if (nameExists)
+            {
+                return Result<int>.Failure(Conflict, NameTaken);
+            }
+
+            var trainerId = (await this.dbContext
+                .Trainers
+                .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
+                .Id;
+
+            if (trainerId == null)
+            {
+                return Result<int>.Failure(NotFound, TrainerNotFound);
+            }
+
+            var service = new Service
+            {
+                Name = request.Name,
+                Description = request.Description,
+                Price = request.Price,
+                ServiceType = (ServiceType)request.ServiceType,
+                ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty,
+                TrainerId = (int)trainerId
+            };
+
             try
             {
-                var nameExists = await this.dbContext
-                    .Services
-                    .AnyAsync(x => x.Name == request.Name);
-
-                if (nameExists)
-                {
-                    return Result<int>.Failure(NameTaken);
-                }
-
-                if (!Enum.IsDefined(typeof(ServiceType), request.ServiceType))
-                {
-                    return Result<int>.Failure(WrongServiceType);
-                }
-
-                if (!Enum.IsDefined(typeof(ServiceDifficulty), request.ServiceDifficulty))
-                {
-                    return Result<int>.Failure(WrongServiceDifficulty);
-                }
-
-                var trainerId = (await this.dbContext
-                    .Trainers
-                    .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId))?
-                    .Id;
-
-                if (trainerId == null)
-                {
-                    return Result<int>.Failure(TrainerNotFound);
-                }
-
-                var service = new Service
-                {
-                    Name = request.Name,
-                    Description = request.Description,
-                    Price = request.Price,
-                    ServiceType = (ServiceType)request.ServiceType,
-                    ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty,
-                    TrainerId = (int)trainerId
-                };
-
                 await this.dbContext.Services.AddAsync(service);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result<int>.SuccessWith(service.Id);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Create)}");
-                return Result<int>.Failure(string.Format(Wrong, nameof(Create)));
+                return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(All)));
             }
+
+            return Result<int>.SuccessWith(service.Id);
         }
 
         public async Task<Result<List<AllServicesResponseModel>>> All(int trainerId)
         {
-            try
-            {
-                var services = await this.dbContext
+            var services = await this.dbContext
                     .Services
                     .Where(x => x.TrainerId == trainerId)
                     .Select(x => new AllServicesResponseModel()
@@ -102,119 +101,106 @@
                     })
                     .ToListAsync();
 
-                return Result<List<AllServicesResponseModel>>.SuccessWith(services);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(All)}");
-                return Result<List<AllServicesResponseModel>>.Failure(string.Format(Wrong, nameof(All)));
-            }
+            return Result<List<AllServicesResponseModel>>.SuccessWith(services);
         }
 
         public async Task<Result<GetServiceResponseModel>> Get(int id)
         {
-            try
-            {
-                var service = await this.dbContext
+            var service = await this.dbContext
                     .Services
                     .FindAsync(new object[] { id });
 
-                if (service == null)
-                {
-                    return Result<GetServiceResponseModel>.Failure(ServiceMissing);
-                }
-
-                return Result<GetServiceResponseModel>.SuccessWith(new GetServiceResponseModel
-                {
-                    Id = service.Id,
-                    Name = service.Name,
-                    Description = service.Description,
-                    Price = service.Price,
-                    ServiceType = (int)service.ServiceType,
-                    ServiceDifficulty = (int)service.ServiceDifficulty
-                });
-            }
-            catch (Exception ex)
+            if (service == null)
             {
-                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Get)}");
-                return Result<GetServiceResponseModel>.Failure(string.Format(Wrong, nameof(Get)));
+                return Result<GetServiceResponseModel>.Failure(NotFound, ServiceMissing);
             }
+
+            return Result<GetServiceResponseModel>.SuccessWith(new GetServiceResponseModel
+            {
+                Id = service.Id,
+                Name = service.Name,
+                Description = service.Description,
+                Price = service.Price,
+                ServiceType = (int)service.ServiceType,
+                ServiceDifficulty = (int)service.ServiceDifficulty
+            });
         }
 
         public async Task<Result> Edit(EditServiceRequestModel request)
         {
-            try
+            if (!Enum.IsDefined(typeof(ServiceType), request.ServiceType))
             {
-                var service = await this.dbContext
-                    .Services
-                    .FindAsync(new object[] { request.Id });
-
-                if (service == null)
-                {
-                    return Result.Failure(ServiceMissing);
-                }
-
-                var trainerId = (await this.dbContext
-                    .Trainers
-                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
-                    .Id;
-
-                if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
-                {
-                    return Result.Failure(WrongWrights);
-                }
-
-                service.Name = request.Name;
-                service.Description = request.Description;
-                service.ServiceType = (ServiceType)request.ServiceType;
-                service.ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty;
-                service.Price = request.Price;
-
-                await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
-
+                return Result.Failure(BadRequest, WrongServiceType);
             }
-            catch (Exception ex)
+
+            if (!Enum.IsDefined(typeof(ServiceDifficulty), request.ServiceDifficulty))
             {
-                Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Edit)}");
-                return Result.Failure(string.Format(Wrong, nameof(Edit)));
+                return Result.Failure(BadRequest, WrongServiceDifficulty);
             }
+
+            var service = await this.dbContext
+                .Services
+                .FindAsync(new object[] { request.Id });
+
+            if (service == null)
+            {
+                return Result.Failure(NotFound, ServiceMissing);
+            }
+
+            var trainerId = (await this.dbContext
+                .Trainers
+                .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                .Id;
+
+            if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
+            {
+                return Result.Failure(Forbidden);
+            }
+
+            service.Name = request.Name;
+            service.Description = request.Description;
+            service.ServiceType = (ServiceType)request.ServiceType;
+            service.ServiceDifficulty = (ServiceDifficulty)request.ServiceDifficulty;
+            service.Price = request.Price;
+
+            await this.dbContext.SaveChangesAsync();
+
+            return Result.Success;
         }
 
         public async Task<Result> Delete(int id)
         {
-            try
-            {
-                var service = await this.dbContext
+            var service = await this.dbContext
                     .Services
                     .FindAsync(new object[] { id });
 
-                if (service == null)
-                {
-                    return Result.Failure(ServiceMissing);
-                }
+            if (service == null)
+            {
+                return Result.Failure(NotFound, ServiceMissing);
+            }
 
-                var trainerId = (await this.dbContext
-                    .Trainers
-                    .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
-                    .Id;
+            var trainerId = (await this.dbContext
+                .Trainers
+                .FirstAsync(x => x.ApplicationUserId == this.currentUserService.UserId))
+                .Id;
 
-                if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
-                {
-                    return Result.Failure(WrongWrights);
-                }
+            if (service.TrainerId != trainerId && !this.currentUserService.IsAdministrator)
+            {
+                return Result.Failure(Forbidden);
+            }
 
+            try
+            {
                 this.dbContext.Services.Remove(service);
                 await this.dbContext.SaveChangesAsync();
-
-                return Result.Success;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Delete)}");
-                return Result.Failure(string.Format(Wrong, nameof(Delete)));
+                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Delete)));
             }
+
+            return Result.Success;
         }
     }
 }
