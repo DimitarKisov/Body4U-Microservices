@@ -111,40 +111,50 @@
             {
                 var articleId = 0;
                 var strategy = this.dbContext.Database.CreateExecutionStrategy();
-                var result = await strategy.Execute(async () =>
+                var result = false;
+                
+                try
                 {
-                    using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
+                    result = await strategy.Execute(async () =>
                     {
-                        var article = new Article
+                        using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
                         {
-                            Title = request.Title.Trim(),
-                            Content = request.Content,
-                            ArticleType = (ArticleType)request.ArticleType,
-                            Sources = request.Sources,
-                            CreatedOn = DateTime.Now,
-                            TrainerId = trainer.Id
-                        };
+                            var article = new Article
+                            {
+                                Title = request.Title.Trim(),
+                                Content = request.Content,
+                                ArticleType = (ArticleType)request.ArticleType,
+                                Sources = request.Sources,
+                                CreatedOn = DateTime.Now,
+                                TrainerId = trainer.Id
+                            };
 
-                        await this.dbContext.Articles.AddAsync(article);
-                        await this.dbContext.SaveChangesAsync();
+                            await this.dbContext.Articles.AddAsync(article);
+                            await this.dbContext.SaveChangesAsync();
 
-                        articleId = article.Id;
+                            articleId = article.Id;
 
-                        var articleImageData = new ArticleImageData
-                        {
-                            Id = uploadImageResult.Data.PublicId,
-                            Url = uploadImageResult.Data.Url,
-                            Folder = folder,
-                            ArticleId = article.Id
-                        };
+                            var articleImageData = new ArticleImageData
+                            {
+                                Id = uploadImageResult.Data.PublicId,
+                                Url = uploadImageResult.Data.Url,
+                                Folder = folder,
+                                ArticleId = article.Id
+                            };
 
-                        await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
-                        await this.dbContext.SaveChangesAsync();
+                            await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
+                            await this.dbContext.SaveChangesAsync();
 
-                        await transaction.CommitAsync();
-                        return true;
-                    }
-                });
+                            await transaction.CommitAsync();
+                            return true;
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Create)} when trying to insert data in database.");
+                    return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(Create)));
+                }
 
                 if (result)
                 {
@@ -153,7 +163,7 @@
             }
 
             Log.Error($"{nameof(ArticleService)}.{nameof(Create)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
-            return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(Create)) + " when trying to upload image to clouadinary.");
+            return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(Create)));
         }
 
         public async Task<Result> Edit(EditArticleRequestModel request)
@@ -264,11 +274,11 @@
                 }
 
                 Log.Error($"{nameof(ArticleService)}.{nameof(Edit)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)) + " when trying to upload image to clouadinary.");
+                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
             }
 
             Log.Error($"{nameof(ArticleService)}.{nameof(Edit)} when deleting image from cloudinary service with errors:" + string.Join(Environment.NewLine, deleteImageResult.Errors));
-            return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)) + " when trying to delete image from clouadinary.");
+            return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
         }
 
         public async Task<Result> Delete(DeleteArticleRequestModel request)
