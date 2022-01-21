@@ -72,15 +72,17 @@
             var message = new Message(messageData);
 
             //Save it in database
-            await this.identityService.Save(null, message);
-
+            var saveInDbSuccess = await this.identityService.Save(null, message);
             try
             {
                 //Publish the message
                 await this.publisher.Publish(messageData);
 
-                //Mark it as published
-                message.MarkAsPublished();
+                if (saveInDbSuccess)
+                {
+                    //Mark it as published
+                    message.MarkAsPublished();
+                }
 
                 //And save the changes
                 await this.dbContext.SaveChangesAsync();

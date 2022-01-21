@@ -24,7 +24,7 @@
             await this.DbContext.SaveChangesAsync();
         }
 
-        public async Task Save(TEntity entity = null, params Message[] messages)
+        public async Task<bool> Save(TEntity entity = null, params Message[] messages)
         {
             try
             {
@@ -39,10 +39,13 @@
                 }
 
                 await this.DbContext.SaveChangesAsync();
+
+                return true;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(DataService<TEntity>)}/{nameof(Save)}");
+                return false;
             }
         }
     }

@@ -140,7 +140,7 @@
                             await this.dbContext.UserImageDatas.AddAsync(userImageData);
                             await this.dbContext.SaveChangesAsync();
                         }
-                        catch (NotImplementedException ex) //TODO: NotImplementedException ???
+                        catch (Exception ex)
                         {
                             Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(Register)}"));
                             return Result<RegisterUserResponseModel>.Failure(InternalServerError);
@@ -164,7 +164,7 @@
                 });
             }
 
-            return Result<RegisterUserResponseModel>.Failure(InternalServerError, createUserResult.Errors.Select(x => x.Description)); //TODO: 500?
+            return Result<RegisterUserResponseModel>.Failure(InternalServerError, createUserResult.Errors.Select(x => x.Description));
         }
 
         public async Task<Result<string>> Login(LoginUserRequestModel request)
@@ -185,13 +185,13 @@
             var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
             if (!emailConfirmed)
             {
-                return Result<string>.Failure(BadRequest, EmailNotConfirmed); //TODO: 400?
+                return Result<string>.Failure(Unauthorized, EmailNotConfirmed);
             }
 
             var userLocked = await this.userManager.IsLockedOutAsync(user);
             if (userLocked)
             {
-                return Result<string>.Failure(BadRequest, Locked); //TODO: 400?
+                return Result<string>.Failure(Unauthorized, Locked);
             }
 
             var roles = await this.userManager.GetRolesAsync(user);
@@ -203,7 +203,7 @@
                 return Result<string>.SuccessWith(tokenResult.Data);
             }
 
-            return Result<string>.Failure(InternalServerError, LoginFailed); //TODO: 500?
+            return Result<string>.Failure(InternalServerError, LoginFailed);
         }
 
         public async Task<Result<MyProfileResponseModel>> MyProfile()
@@ -282,7 +282,11 @@
 
             var message = new Message(messageData);
 
-            await this.Save(user, message);
+            var result = await this.Save(user, message);
+            if (!result)
+            {
+                return Result.Failure(InternalServerError, UnhandledError);
+            }
 
             try
             {
@@ -323,10 +327,10 @@
                 var userProfilePicture = await this.dbContext
                 .UserImageDatas
                 .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
-
+                //TODO: da nqma proverka i da se trie starata
                 if (userProfilePicture != null)
                 {
-                    return Result.Failure(Conflict, ChangeProfilePictureDeny); //TODO: 409?
+                    return Result.Failure(Conflict, ChangeProfilePictureDeny);
                 }
 
                 var id = Guid.NewGuid().ToString();
@@ -334,31 +338,33 @@
                 var folder = $"Identity/Profile/{totalImages % 1000}";
 
                 var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
-                if (result.Succeeded)
+                if (!result.Succeeded)
                 {
-                    var userImageData = new UserImageData
-                    {
-                        Id = result.Data.PublicId,
-                        Url = result.Data.Url,
-                        Folder = folder,
-                        ApplicationUserId = this.currentUserService.UserId
-                    };
-
-                    try
-                    {
-                        await this.dbContext.UserImageDatas.AddAsync(userImageData);
-                        await this.dbContext.SaveChangesAsync();
-                    }
-                    catch (NotImplementedException ex) //TODO: NotImplementedException ???
-                    {
-                        Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(AddProfilePicture)}"));
-                        return Result.Failure(InternalServerError);
-                    }
-
-                    return Result.Success;
+                    return Result.Failure(InternalServerError, result.Errors);
                 }
 
-                return Result.Failure(InternalServerError, result.Errors);
+                var userImageData = new UserImageData
+                {
+                    Id = result.Data.PublicId,
+                    Url = result.Data.Url,
+                    Folder = folder,
+                    ApplicationUserId = this.currentUserService.UserId
+                };
+
+                try
+                {
+                    await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                    await this.dbContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    await this.cloudinaryService.DeleteImage(id, folder);
+
+                    Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(AddProfilePicture)}"));
+                    return Result.Failure(InternalServerError, UnhandledError);
+                }
+
+                return Result.Success;
             }
 
             return Result.Failure(BadRequest, NoImage);
@@ -381,23 +387,23 @@
             }
 
             var result = await this.cloudinaryService.DeleteImage(userProfilePicture.Id, userProfilePicture.Folder);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                try
-                {
-                    this.dbContext.UserImageDatas.Remove(userProfilePicture);
-                    await this.dbContext.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(DeleteProfilePicture)}"));
-                    return Result.Failure(InternalServerError);
-                }
-
-                return Result.Success;
+                return Result<RegisterUserResponseModel>.Failure(InternalServerError, result.Errors);
             }
 
-            return Result<RegisterUserResponseModel>.Failure(InternalServerError, result.Errors);
+            try
+            {
+                this.dbContext.UserImageDatas.Remove(userProfilePicture);
+                await this.dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(DeleteProfilePicture)}"));
+                return Result.Failure(InternalServerError, UnhandledError);
+            }
+
+            return Result.Success;
         }
 
         public async Task<Result> ChangePassword(ChangePasswordRequestModel request)
@@ -412,11 +418,13 @@
 
             if (result.Succeeded)
             {
-                return Result.Success;
+                var errors = result.Errors.Select(e => e.Description);
+
+                Log.Error(string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(ChangePassword)} when changing password with errors:" + string.Join(Environment.NewLine, errors)));
+                return Result.Failure(InternalServerError, errors);
             }
 
-            var errors = result.Errors.Select(e => e.Description);
-            return Result.Failure(InternalServerError, errors); //TODO: 500?
+            return Result.Success;
         }
 
         public async Task<Result<ForgotPasswordResponseModel>> ForgotPassword(ForgotPasswordRequestModel request)
@@ -445,6 +453,8 @@
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(x => x.Description);
+
+                Log.Error(string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(ResetPassword)} when reseting password with errors:" + string.Join(Environment.NewLine, errors)));
                 return Result.Failure(InternalServerError, errors);
             }
 
@@ -461,12 +471,15 @@
 
             var tokenDecoded = HttpUtility.UrlDecode(request.Token);
             var result = await this.userManager.ConfirmEmailAsync(user, request.Token);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                return Result.Success;
+                var errors = result.Errors.Select(x => x.Description);
+
+                Log.Error(string.Format(Wrong, $"{nameof(IdentityService)}/{nameof(ResetPassword)} when reseting password with errors:" + string.Join(Environment.NewLine, errors)));
+                return Result.Failure(InternalServerError, errors);
             }
 
-            return Result.Failure(InternalServerError, result.Errors.Select(x => x.Description));
+            return Result.Success;
         }
 
         public async Task<Result<SearchUsersResponseModel>> Users(SearchUsersRequestModel request)
@@ -595,7 +608,11 @@
 
                             var message = new Message(messageData);
 
-                            await this.Save(null, message);
+                            var result = await this.Save(null, message);
+                            if (!result)
+                            {
+                                return Result.Failure(InternalServerError, UnhandledError);
+                            }
 
                             try
                             {
@@ -639,7 +656,11 @@
 
                             var message = new Message(messageData);
 
-                            await this.Save(null, message);
+                            var result = await this.Save(null, message);
+                            if (!result)
+                            {
+                                return Result.Failure(InternalServerError, UnhandledError);
+                            }
 
                             try
                             {
@@ -664,7 +685,7 @@
 
             return errors.Count() == 0
                 ? Result.Success
-                : Result.Failure(InternalServerError, errors); //TODO: 500?
+                : Result.Failure(InternalServerError, errors);
         }
 
         public async Task<Result<GetUserInfoResponseModel>> GetUserInfo(string id)
@@ -703,39 +724,5 @@
 
             return Result<List<GetUserInfoResponseModel>>.SuccessWith(users);
         }
-
-        #region Private methods
-        private async Task SaveImage(IFormFile imageFile, string name, string path, int? resizedWidth = null, int? resizedHeight = null)
-        {
-            try
-            {
-                using (var image = Image.Load(imageFile.OpenReadStream()))
-                {
-                    var width = image.Width;
-                    var height = image.Height;
-
-                    if (resizedWidth != null && resizedHeight != null)
-                    {
-                        width = (int)resizedWidth;
-                        height = (int)resizedHeight;
-                    }
-
-                    image.Mutate(x => x.Resize(new Size(width, height)));
-
-                    //Used to remove information about the picture if someone download it.
-                    image.Metadata.ExifProfile = null;
-
-                    await image.SaveAsJpegAsync($"{path}/{name}", new JpegEncoder
-                    {
-                        Quality = 75
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"{nameof(IdentityService)}.{nameof(SaveImage)}");
-            }
-        }
-        #endregion
     }
 }

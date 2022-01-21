@@ -99,7 +99,7 @@
 
             if (trainer.IsReadyToWrite == false)
             {
-                return Result<int>.Failure(Conflict, NotReady); //TODO: 409?
+                return Result<int>.Failure(Forbidden, NotReady);
             }
 
             var id = Guid.NewGuid().ToString();
@@ -107,63 +107,77 @@
             var folder = $"Article/Images/{totalImages % 1000}";
 
             var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), id, folder);
-            if (uploadImageResult.Succeeded)
+            if (!uploadImageResult.Succeeded)
             {
-                var articleId = 0;
-                var strategy = this.dbContext.Database.CreateExecutionStrategy();
-                var result = false;
-                
-                try
-                {
-                    result = await strategy.Execute(async () =>
-                    {
-                        using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
-                        {
-                            var article = new Article
-                            {
-                                Title = request.Title.Trim(),
-                                Content = request.Content,
-                                ArticleType = (ArticleType)request.ArticleType,
-                                Sources = request.Sources,
-                                CreatedOn = DateTime.Now,
-                                TrainerId = trainer.Id
-                            };
-
-                            await this.dbContext.Articles.AddAsync(article);
-                            await this.dbContext.SaveChangesAsync();
-
-                            articleId = article.Id;
-
-                            var articleImageData = new ArticleImageData
-                            {
-                                Id = uploadImageResult.Data.PublicId,
-                                Url = uploadImageResult.Data.Url,
-                                Folder = folder,
-                                ArticleId = article.Id
-                            };
-
-                            await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
-                            await this.dbContext.SaveChangesAsync();
-
-                            await transaction.CommitAsync();
-                            return true;
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"{nameof(ArticleService)}.{nameof(Create)} when trying to insert data in database.");
-                    return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(Create)));
-                }
-
-                if (result)
-                {
-                    return Result<int>.SuccessWith(articleId);
-                }
+                Log.Error($"{nameof(ArticleService)}.{nameof(Create)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
+                return Result<int>.Failure(InternalServerError, UnhandledError);
             }
 
-            Log.Error($"{nameof(ArticleService)}.{nameof(Create)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
-            return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(Create)));
+            var articleId = 0;
+            var strategy = this.dbContext.Database.CreateExecutionStrategy();
+            var result = false;
+
+            result = await strategy.Execute(async () =>
+            {
+                using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
+                {
+                    var article = new Article
+                    {
+                        Title = request.Title.Trim(),
+                        Content = request.Content,
+                        ArticleType = (ArticleType)request.ArticleType,
+                        Sources = request.Sources,
+                        CreatedOn = DateTime.Now,
+                        TrainerId = trainer.Id
+                    };
+
+                    try
+                    {
+                        await this.dbContext.Articles.AddAsync(article);
+                        await this.dbContext.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await this.cloudinaryService.DeleteImage(id, folder);
+
+                        Log.Error(ex, $"{nameof(ArticleService)}/{nameof(Create)} when adding article in database.");
+                        return false;
+                    }
+
+                    articleId = article.Id;
+
+                    var articleImageData = new ArticleImageData
+                    {
+                        Id = uploadImageResult.Data.PublicId,
+                        Url = uploadImageResult.Data.Url,
+                        Folder = folder,
+                        ArticleId = article.Id
+                    };
+
+                    try
+                    {
+                        await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
+                        await this.dbContext.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await this.cloudinaryService.DeleteImage(id, folder);
+
+                        Log.Error(ex, $"{nameof(ArticleService)}/{nameof(Create)} when adding articleImageData in database.");
+                        return false;
+                    }
+
+                    await transaction.CommitAsync();
+                    return true;
+                }
+            });
+
+            if (!result)
+            {
+                return Result<int>.Failure(InternalServerError, UnhandledError);
+            }
+
+            return Result<int>.SuccessWith(articleId);
         }
 
         public async Task<Result> Edit(EditArticleRequestModel request)
@@ -218,7 +232,7 @@
 
             if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             var imageData = await this.dbContext
@@ -236,7 +250,7 @@
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"{nameof(ArticleService)}/{nameof(Edit)} while removing image from database.");
-                    return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
+                    return Result.Failure(InternalServerError, UnhandledError);
                 }
 
                 var id = Guid.NewGuid().ToString();
@@ -266,19 +280,21 @@
                     }
                     catch (Exception ex)
                     {
+                        await this.cloudinaryService.DeleteImage(id, folder);
+
                         Log.Error(ex, $"{nameof(ArticleService)}/{nameof(Edit)} while adding image in database.");
-                        return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
+                        return Result.Failure(InternalServerError, UnhandledError);
                     }
 
                     return Result.Success;
                 }
 
-                Log.Error($"{nameof(ArticleService)}.{nameof(Edit)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
+                Log.Error($"{nameof(ArticleService)}/{nameof(Edit)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
-            Log.Error($"{nameof(ArticleService)}.{nameof(Edit)} when deleting image from cloudinary service with errors:" + string.Join(Environment.NewLine, deleteImageResult.Errors));
-            return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Edit)));
+            Log.Error($"{nameof(ArticleService)}/{nameof(Edit)} when deleting image from cloudinary service with errors:" + string.Join(Environment.NewLine, deleteImageResult.Errors));
+            return Result.Failure(InternalServerError, UnhandledError);
         }
 
         public async Task<Result> Delete(DeleteArticleRequestModel request)
@@ -304,7 +320,7 @@
 
             if (article.TrainerId != authorId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             var articleImageData = await this.dbContext
@@ -319,7 +335,7 @@
             var deleteImageResult = await this.cloudinaryService.DeleteImage(articleImageData.Id, articleImageData.Folder);
             if (!deleteImageResult.Succeeded)
             {
-                Log.Error($"{nameof(ArticleService)}.{nameof(Delete)} where deleting image from cloudinary with errors:" + string.Join(Environment.NewLine, deleteImageResult.Errors));
+                Log.Error($"{nameof(ArticleService)}/{nameof(Delete)} where deleting image from cloudinary with errors:" + string.Join(Environment.NewLine, deleteImageResult.Errors));
             }
 
             try

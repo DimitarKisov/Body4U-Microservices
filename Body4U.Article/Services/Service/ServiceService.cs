@@ -81,7 +81,7 @@
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Create)}");
-                return Result<int>.Failure(InternalServerError, string.Format(Wrong, nameof(All)));
+                return Result<int>.Failure(InternalServerError, UnhandledError);
             }
 
             return Result<int>.SuccessWith(service.Id);
@@ -107,8 +107,8 @@
         public async Task<Result<GetServiceResponseModel>> Get(int id)
         {
             var service = await this.dbContext
-                    .Services
-                    .FindAsync(new object[] { id });
+                .Services
+                .FindAsync(new object[] { id });
 
             if (service == null)
             {
@@ -197,7 +197,7 @@
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Delete)}");
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Delete)));
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;

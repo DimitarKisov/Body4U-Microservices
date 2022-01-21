@@ -117,7 +117,7 @@
 
             if (request.Id != trainer.Id && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             trainer.Bio = request.Bio.Trim();
@@ -172,7 +172,7 @@
 
                 if (request.Images.Count > ImagesCountLimit)
                 {
-                    return Result.Failure(Conflict, string.Format(MaxAllowedImages, ImagesCountLimit)); //TODO: 409?
+                    return Result.Failure(Conflict, string.Format(MaxAllowedImages, ImagesCountLimit));
                 }
 
                 var trainerId = (await this.dbContext
@@ -193,7 +193,7 @@
                 var imagesCountLeft = ImagesCountLimit - trainerImagesCount;
                 if (request.Images.Count > imagesCountLeft)
                 {
-                    return Result.Failure(Conflict, string.Format(TooManyImages, ImagesCountLimit, imagesCountLeft)); //TODO: 409?
+                    return Result.Failure(Conflict, string.Format(TooManyImages, ImagesCountLimit, imagesCountLeft));
                 }
 
                 var errosInImageUploading = new List<string>();
@@ -221,8 +221,10 @@
                         }
                         catch (Exception ex)
                         {
+                            await this.cloudinaryService.DeleteImage(id, folder);
+
                             Log.Error(ex, $"{nameof(TrainerService)}/{nameof(UploadTrainerImages)} while adding images in database.");
-                            return Result.Failure(InternalServerError, string.Format(Wrong, nameof(UploadTrainerImages)));
+                            return Result.Failure(InternalServerError, UnhandledError);
                         }
                     }
                     else
@@ -234,7 +236,7 @@
                 if (errosInImageUploading.Count() > 0)
                 {
                     Log.Error($"{nameof(TrainerService)}.{nameof(DeleteTrainerImage)} when uploading images to cloudinary service with errors:" + string.Join(Environment.NewLine, errosInImageUploading));
-                    return Result.Failure(InternalServerError, string.Format(Wrong, nameof(UploadTrainerImages)) + " when trying to upload images to clouadinary.");
+                    return Result.Failure(InternalServerError, UnhandledError);
                 }
 
                 try
@@ -244,7 +246,7 @@
                 catch (Exception ex)
                 {
                     Log.Error(ex, $"{nameof(TrainerService)}/{nameof(UploadTrainerImages)} while saving images in database.");
-                    return Result.Failure(InternalServerError, string.Format(Wrong, nameof(UploadTrainerImages)));
+                    return Result.Failure(InternalServerError, UnhandledError);
                 }
 
                 return Result.Success;
@@ -267,7 +269,7 @@
 
             if (request.TrainerId != (int)trainerId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             var image = await this.dbContext
@@ -289,15 +291,15 @@
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"{nameof(TrainerService)}.{nameof(DeleteTrainerImage)}");
-                    return Result.Failure(InternalServerError, string.Format(Wrong, nameof(DeleteTrainerImage)));
+                    Log.Error(ex, $"{nameof(TrainerService)}/{nameof(DeleteTrainerImage)}");
+                    return Result.Failure(InternalServerError, UnhandledError);
                 }
 
                 return Result.Success;
             }
 
-            Log.Error($"{nameof(TrainerService)}.{nameof(DeleteTrainerImage)} when deleting image from cloudinary service with errors:" + string.Join(Environment.NewLine, result.Errors));
-            return Result.Failure(InternalServerError, string.Format(Wrong, nameof(DeleteTrainerImage)) + " when trying to delete image from clouadinary.");
+            Log.Error($"{nameof(TrainerService)}/{nameof(DeleteTrainerImage)} when deleting image from cloudinary service with errors:" + string.Join(Environment.NewLine, result.Errors));
+            return Result.Failure(InternalServerError, UnhandledError);
         }
     }
 }

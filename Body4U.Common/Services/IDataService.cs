@@ -8,6 +8,6 @@
     {
         Task MarkMessageAsPublished(int id);
 
-        Task Save(TEntity entity = null, params Message[] messages);
+        Task<bool> Save(TEntity entity = null, params Message[] messages);
     }
 }

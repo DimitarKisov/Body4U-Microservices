@@ -57,8 +57,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(CommentService)}.{nameof(Create)}");
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Create)));
+                Log.Error(ex, $"{nameof(CommentService)}/{nameof(Create)}");
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;
@@ -77,7 +77,7 @@
 
             if (comment.ApplicationUserId != request.UserId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             comment.Content = request.Content;
@@ -100,7 +100,7 @@
 
             if (comment.ApplicationUserId != request.UserId && !this.currentUserService.IsAdministrator)
             {
-                return Result.Failure(Forbidden);
+                return Result.Failure(Forbidden, WrongRights);
             }
 
             try
@@ -110,8 +110,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(CommentService)}.{nameof(Delete)}");
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Delete)));
+                Log.Error(ex, $"{nameof(CommentService)}/{nameof(Delete)}");
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;

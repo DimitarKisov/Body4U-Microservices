@@ -50,7 +50,7 @@
 
             if (alreadyInFavourites)
             {
-                return Result.Failure(Conflict, AlreadyInFavourites); //TODO: 409???
+                return Result.Failure(Conflict, AlreadyInFavourites);
             }
 
             var favouriter = new Favourite()
@@ -68,8 +68,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}.{nameof(Add)}"));
-                return Result.Failure(InternalServerError);
+                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}/{nameof(Add)}"));
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;
@@ -103,8 +103,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}.{nameof(Remove)}"));
-                return Result.Failure(InternalServerError);
+                Log.Error(ex, string.Format(Wrong, $"{nameof(FavouritesService)}/{nameof(Remove)}"));
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;
@@ -113,11 +113,11 @@
         public async Task<Result<List<int>>> Mines()
         {
             var favourites = await this.dbContext
-                    .Favourites
-                    .Where(x => x.ApplicationUserId == this.currentUserService.UserId)
-                    .OrderByDescending(x => x.AddedIn)
-                    .Select(x => x.ArticleId)
-                    .ToListAsync();
+                .Favourites
+                .Where(x => x.ApplicationUserId == this.currentUserService.UserId)
+                .OrderByDescending(x => x.AddedIn)
+                .Select(x => x.ArticleId)
+                .ToListAsync();
 
             return Result<List<int>>.SuccessWith(favourites);
         }

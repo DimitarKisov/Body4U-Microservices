@@ -79,11 +79,14 @@
                     await userManager.AddToRoleAsync(user, AdministratorRoleName);
                     await userManager.AddToRoleAsync(user, TrainerRoleName);
 
-                    await this.Save(null, message);
+                    var saveInDbSuccess = await this.Save(null, message);
 
                     await this.publisher.Publish(messageData);
 
-                    message.MarkAsPublished();
+                    if (saveInDbSuccess)
+                    {
+                        message.MarkAsPublished();
+                    }
                     
                     await this.dbContext.SaveChangesAsync();
                 })

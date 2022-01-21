@@ -22,7 +22,7 @@ namespace Body4U.Common.Constants
             public const string Wrong = "Something went wrong in {0}.";
             public const string WrongImageFormat = "Please choose a picture with format .jpg/.jpeg or .png";
             public const string WrongWidthOrHeight = "Please upload a image with min width: {0} and min height: {1}.";
-            public const string WrongWrights = "You don't have the rights for this action!";
+            public const string WrongRights = "You don't have the rights for this action!";
             public const string UnhandledError = "Unhandled Error";
 
             public const string UpdatingDbEntities = "Updating and saving db entities in database.";
@@ -88,6 +88,7 @@ namespace Body4U.Common.Constants
             public const HttpStatusCode NoContent = HttpStatusCode.NoContent;
 
             public const HttpStatusCode BadRequest = HttpStatusCode.BadRequest;
+            public const HttpStatusCode Unauthorized = HttpStatusCode.Unauthorized;
             public const HttpStatusCode Forbidden = HttpStatusCode.Forbidden;
             public const HttpStatusCode NotFound = HttpStatusCode.NotFound;
             public const HttpStatusCode Conflict = HttpStatusCode.Conflict;

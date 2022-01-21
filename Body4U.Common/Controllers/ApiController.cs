@@ -21,6 +21,10 @@
             {
                 return this.BadRequest(result.Errors);
             }
+            else if (result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return this.Unauthorized(result.Errors);
+            }
             else if (result.StatusCode == HttpStatusCode.Forbidden)
             {
                 return this.Forbid();
@@ -48,6 +52,10 @@
             if (result.StatusCode == HttpStatusCode.BadRequest)
             {
                 return this.BadRequest(result.Errors);
+            }
+            else if (result.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return this.Unauthorized(result.Errors);
             }
             else if (result.StatusCode == HttpStatusCode.Forbidden)
             {

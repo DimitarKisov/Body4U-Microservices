@@ -54,8 +54,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Create)}");
-                return Result<CreateExerciseResponseModel>.Failure(InternalServerError, string.Format(Wrong, nameof(Search)));
+                Log.Error(ex, $"{nameof(ExerciseService)}/{nameof(Create)}");
+                return Result<CreateExerciseResponseModel>.Failure(InternalServerError, UnhandledError);
             }
 
             return Result<CreateExerciseResponseModel>.SuccessWith(new CreateExerciseResponseModel { Id = exercise.Id });
@@ -186,8 +186,8 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(ExerciseService)}.{nameof(Delete)}");
-                return Result.Failure(InternalServerError, string.Format(Wrong, nameof(Delete)));
+                Log.Error(ex, $"{nameof(ExerciseService)}/{nameof(Delete)}");
+                return Result.Failure(InternalServerError, UnhandledError);
             }
 
             return Result.Success;
