@@ -68,7 +68,7 @@ namespace Body4U.Common.Constants
 
         public class Service
         {
-            public const string NameTaken = "This name is already taken.";
+            public const string NameTaken = "This service name is already taken.";
             public const string WrongServiceType = "Wrong service type.";
             public const string WrongServiceDifficulty = "Wrong service difficulty.";
             public const string ServiceMissing = "There is no such service.";
@@ -76,9 +76,15 @@ namespace Body4U.Common.Constants
 
         public class Exercise
         {
-            public const string NameTaken = "This name is already taken.";
+            public const string NameTaken = "This exercise name is already taken.";
             public const string WrongExerciseType = "Wrong exercise type.";
             public const string ExerciseMissing = "There is no such exercise.";
+        }
+
+        public class Food
+        {
+            public const string NameTaken = "This food name is already taken.";
+            public const string WrongFoodCategory = "Wrong food category.";
         }
 
         public class StatusCodes

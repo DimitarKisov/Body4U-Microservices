@@ -2,10 +2,11 @@
 {
     using Body4U.Common;
     using Body4U.Guide.Models.Requests.Food;
+    using Body4U.Guide.Models.Responses.Food;
     using System.Threading.Tasks;
 
     public interface IFoodService
     {
-        Task<Result<int>> Create(CreateFoodRequestModel request);
+        Task<Result<CreateFoodResponseModel>> Create(CreateFoodRequestModel request);
     }
 }
