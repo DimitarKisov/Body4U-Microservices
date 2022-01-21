@@ -62,7 +62,7 @@
             return Result<MyTrainerProfileResponseModel>.SuccessWith(result);
         }
 
-        public async Task<Result<List<string>>> MyImages()
+        public async Task<Result<MyTrainerImageResponseModel>> MyImages()
         {
             var trainerId = (await this.dbContext
                     .Trainers
@@ -71,7 +71,7 @@
 
             if (trainerId == null)
             {
-                return Result<List<string>>.Failure(NotFound, TrainerNotFound);
+                return Result<MyTrainerImageResponseModel>.Failure(NotFound, TrainerNotFound);
             }
 
             var result = await this.dbContext
@@ -80,10 +80,10 @@
             .Select(x => x.Url)
             .ToListAsync();
 
-            return Result<List<string>>.SuccessWith(result);
+            return Result<MyTrainerImageResponseModel>.SuccessWith(new MyTrainerImageResponseModel() { Urls = result });
         }
 
-        public async Task<Result<List<string>>> MyVideos()
+        public async Task<Result<MyTrainerVideosReponseModel>> MyVideos()
         {
             var trainerId = (await this.dbContext
                     .Trainers
@@ -92,7 +92,7 @@
 
             if (trainerId == null)
             {
-                return Result<List<string>>.Failure(NotFound, TrainerNotFound);
+                return Result<MyTrainerVideosReponseModel>.Failure(NotFound, TrainerNotFound);
             }
 
             var result = await this.dbContext
@@ -101,7 +101,7 @@
                 .Select(x => x.VideoUrl)
                 .ToListAsync();
 
-            return Result<List<string>>.SuccessWith(result);
+            return Result<MyTrainerVideosReponseModel>.SuccessWith(new MyTrainerVideosReponseModel() { Urls = result });
         }
 
         public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)

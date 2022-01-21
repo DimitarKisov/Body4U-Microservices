@@ -32,16 +32,16 @@
             this.currentUserService = currentUserService;
         }
 
-        public async Task<Result<int>> Create(CreateServiceRequestModel request)
+        public async Task<Result<CreateServiceResponseModel>> Create(CreateServiceRequestModel request)
         {
             if (!Enum.IsDefined(typeof(ServiceType), request.ServiceType))
             {
-                return Result<int>.Failure(BadRequest, WrongServiceType);
+                return Result<CreateServiceResponseModel>.Failure(BadRequest, WrongServiceType);
             }
 
             if (!Enum.IsDefined(typeof(ServiceDifficulty), request.ServiceDifficulty))
             {
-                return Result<int>.Failure(BadRequest, WrongServiceDifficulty);
+                return Result<CreateServiceResponseModel>.Failure(BadRequest, WrongServiceDifficulty);
             }
 
             var nameExists = await this.dbContext
@@ -50,7 +50,7 @@
 
             if (nameExists)
             {
-                return Result<int>.Failure(Conflict, NameTaken);
+                return Result<CreateServiceResponseModel>.Failure(Conflict, NameTaken);
             }
 
             var trainerId = (await this.dbContext
@@ -60,7 +60,7 @@
 
             if (trainerId == null)
             {
-                return Result<int>.Failure(NotFound, TrainerNotFound);
+                return Result<CreateServiceResponseModel>.Failure(NotFound, TrainerNotFound);
             }
 
             var service = new Service
@@ -81,10 +81,10 @@
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(ServiceService)}.{nameof(Create)}");
-                return Result<int>.Failure(InternalServerError, UnhandledError);
+                return Result<CreateServiceResponseModel>.Failure(InternalServerError, UnhandledError);
             }
 
-            return Result<int>.SuccessWith(service.Id);
+            return Result<CreateServiceResponseModel>.SuccessWith(new CreateServiceResponseModel() { Id = service.Id });
         }
 
         public async Task<Result<List<AllServicesResponseModel>>> All(int trainerId)

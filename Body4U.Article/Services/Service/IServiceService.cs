@@ -9,7 +9,7 @@
 
     public interface IServiceService
     {
-        Task<Result<int>> Create(CreateServiceRequestModel request);
+        Task<Result<CreateServiceResponseModel>> Create(CreateServiceRequestModel request);
 
         Task<Result<List<AllServicesResponseModel>>> All(int trainerId);
 

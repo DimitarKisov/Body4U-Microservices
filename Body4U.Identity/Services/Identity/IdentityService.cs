@@ -167,43 +167,43 @@
             return Result<RegisterUserResponseModel>.Failure(InternalServerError, createUserResult.Errors.Select(x => x.Description));
         }
 
-        public async Task<Result<string>> Login(LoginUserRequestModel request)
+        public async Task<Result<LoginResponseModel>> Login(LoginUserRequestModel request)
         {
             var user = await this.userManager.FindByEmailAsync(request.Email);
 
             if (user == null)
             {
-                return Result<string>.Failure(NotFound, WrongUsernameOrPassword);
+                return Result<LoginResponseModel>.Failure(NotFound, WrongUsernameOrPassword);
             }
 
             var passwordValid = await this.userManager.CheckPasswordAsync(user, request.Password);
             if (!passwordValid)
             {
-                return Result<string>.Failure(BadRequest, WrongUsernameOrPassword);
+                return Result<LoginResponseModel>.Failure(BadRequest, WrongUsernameOrPassword);
             }
 
             var emailConfirmed = await this.userManager.IsEmailConfirmedAsync(user);
             if (!emailConfirmed)
             {
-                return Result<string>.Failure(Unauthorized, EmailNotConfirmed);
+                return Result<LoginResponseModel>.Failure(Unauthorized, EmailNotConfirmed);
             }
 
             var userLocked = await this.userManager.IsLockedOutAsync(user);
             if (userLocked)
             {
-                return Result<string>.Failure(Unauthorized, Locked);
+                return Result<LoginResponseModel>.Failure(Unauthorized, Locked);
             }
 
             var roles = await this.userManager.GetRolesAsync(user);
 
             var tokenResult = this.jwtTokenGeneratorService.GenerateToken(user, roles);
 
-            if (tokenResult.Succeeded)
+            if (!tokenResult.Succeeded)
             {
-                return Result<string>.SuccessWith(tokenResult.Data);
+                return Result<LoginResponseModel>.Failure(InternalServerError, LoginFailed);
             }
 
-            return Result<string>.Failure(InternalServerError, LoginFailed);
+            return Result<LoginResponseModel>.SuccessWith(new LoginResponseModel() { Token = tokenResult.Data });
         }
 
         public async Task<Result<MyProfileResponseModel>> MyProfile()

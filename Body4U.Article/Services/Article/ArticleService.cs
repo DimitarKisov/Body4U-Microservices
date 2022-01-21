@@ -26,6 +26,7 @@
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Trainer;
     using static Body4U.Common.Constants.MessageConstants.StatusCodes;
+    using Body4U.Article.Models.Responses.Article;
 
     public class ArticleService : IArticleService
     {
@@ -43,7 +44,7 @@
             this.currentUserService = currentUserService;
         }
 
-        public async Task<Result<int>> Create(CreateArticleRequestModel request)
+        public async Task<Result<CreateArticleResponseModel>> Create(CreateArticleRequestModel request)
         {
             if (request.Image.Length > 0)
             {
@@ -52,25 +53,25 @@
                     request.Image.ContentType != "image/png" &&
                     request.Image.ContentType != "image/bmp")
                 {
-                    return Result<int>.Failure(BadRequest, WrongImageFormat);
+                    return Result<CreateArticleResponseModel>.Failure(BadRequest, WrongImageFormat);
                 }
 
                 using (var imageResult = Image.Load(request.Image.OpenReadStream()))
                 {
                     if (imageResult.Width < MinImageWidth || imageResult.Height < MinImageHeight)
                     {
-                        return Result<int>.Failure(BadRequest, string.Format(WrongWidthOrHeight, MinImageWidth, MinImageHeight));
+                        return Result<CreateArticleResponseModel>.Failure(BadRequest, string.Format(WrongWidthOrHeight, MinImageWidth, MinImageHeight));
                     }
                 }
             }
             else
             {
-                return Result<int>.Failure(BadRequest, EmptyFile);
+                return Result<CreateArticleResponseModel>.Failure(BadRequest, EmptyFile);
             }
 
             if (!Enum.IsDefined(typeof(ArticleType), request.ArticleType))
             {
-                return Result<int>.Failure(BadRequest, WrongArticleType);
+                return Result<CreateArticleResponseModel>.Failure(BadRequest, WrongArticleType);
             }
 
             var isTitleTaken = await this.dbContext
@@ -79,7 +80,7 @@
 
             if (isTitleTaken)
             {
-                return Result<int>.Failure(Conflict, TitleTaken);
+                return Result<CreateArticleResponseModel>.Failure(Conflict, TitleTaken);
             }
 
             var trainer = await this.dbContext
@@ -94,12 +95,12 @@
 
             if (trainer == null)
             {
-                return Result<int>.Failure(NotFound, TrainerNotFound);
+                return Result<CreateArticleResponseModel>.Failure(NotFound, TrainerNotFound);
             }
 
             if (trainer.IsReadyToWrite == false)
             {
-                return Result<int>.Failure(Forbidden, NotReady);
+                return Result<CreateArticleResponseModel>.Failure(Forbidden, NotReady);
             }
 
             var id = Guid.NewGuid().ToString();
@@ -110,7 +111,7 @@
             if (!uploadImageResult.Succeeded)
             {
                 Log.Error($"{nameof(ArticleService)}.{nameof(Create)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
-                return Result<int>.Failure(InternalServerError, UnhandledError);
+                return Result<CreateArticleResponseModel>.Failure(InternalServerError, UnhandledError);
             }
 
             var articleId = 0;
@@ -174,10 +175,10 @@
 
             if (!result)
             {
-                return Result<int>.Failure(InternalServerError, UnhandledError);
+                return Result<CreateArticleResponseModel>.Failure(InternalServerError, UnhandledError);
             }
 
-            return Result<int>.SuccessWith(articleId);
+            return Result<CreateArticleResponseModel>.SuccessWith(new CreateArticleResponseModel() { Id = articleId });
         }
 
         public async Task<Result> Edit(EditArticleRequestModel request)

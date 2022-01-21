@@ -14,7 +14,7 @@
     {
         Task<Result<RegisterUserResponseModel>> Register(RegisterUserRequestModel request);
 
-        Task<Result<string>> Login(LoginUserRequestModel request);
+        Task<Result<LoginResponseModel>> Login(LoginUserRequestModel request);
 
         Task<Result<MyProfileResponseModel>> MyProfile();
 
