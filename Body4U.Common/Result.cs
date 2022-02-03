@@ -1,6 +1,5 @@
 ﻿namespace Body4U.Common
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
@@ -9,7 +8,10 @@
     {
         private readonly List<string> errors;
 
-        public Result(bool succeeded, List<string> errors, HttpStatusCode statusCode)
+        public Result
+            (bool succeeded,
+            List<string> errors,
+            HttpStatusCode statusCode)
         {
             this.Succeeded = succeeded;
             this.errors = errors;
@@ -36,33 +38,22 @@
 
         public static Result Failure(HttpStatusCode statusCode)
             => new Result(false, new List<string>(), statusCode);
-
-        //public static implicit operator Result(string error)
-        //    => Failure(new HttpStatusCode(), new List<string> { error });
-
-        //public static implicit operator Result(List<string> errors)
-        //    => Failure(new HttpStatusCode(), errors.ToList());
-
-        //public static implicit operator Result(bool success)
-        //    => success ? Success : Failure(new HttpStatusCode(), new[] { "Unsuccessful operation." });
-
-        //public static implicit operator bool(Result result)
-        //    => result.Succeeded;
     }
 
     public class Result<TData> : Result
     {
         private readonly TData data;
 
-        private Result(bool succeeded, TData data, List<string> errors, HttpStatusCode statusCode)
+        private Result(
+            bool succeeded,
+            TData data,
+            List<string> errors,
+            HttpStatusCode statusCode)
             : base(succeeded, errors, new HttpStatusCode())
             => this.data = data;
 
         public TData Data
-            => this.Succeeded
-                ? this.data
-                : throw new InvalidOperationException(
-                    $"{nameof(this.Data)} is not available with a failed result. Use {this.Errors} instead.");
+            => this.data;
 
         public static Result<TData> SuccessWith(TData data)
             => new Result<TData>(true, data, new List<string>(), new HttpStatusCode());
@@ -75,17 +66,5 @@
 
         public new static Result<TData> Failure(HttpStatusCode statusCode)
             => new Result<TData>(false, default!, new List<string>(), statusCode);
-
-        //public static implicit operator Result<TData>(string error)
-        //    => Failure(new HttpStatusCode(), new List<string> { error });
-
-        //public static implicit operator Result<TData>(List<string> errors)
-        //    => Failure(new HttpStatusCode(), errors);
-
-        //public static implicit operator Result<TData>(TData data)
-        //    => SuccessWith(data);
-
-        //public static implicit operator bool(Result<TData> result)
-        //    => result.Succeeded;
     }
 }

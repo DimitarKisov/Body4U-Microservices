@@ -8,5 +8,7 @@
     public interface IFoodService
     {
         Task<Result<CreateFoodResponseModel>> Create(CreateFoodRequestModel request);
+
+        Task<Result<GetFoodResponseModel>> Get(int id);
     }
 }

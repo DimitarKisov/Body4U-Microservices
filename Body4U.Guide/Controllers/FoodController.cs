@@ -6,7 +6,6 @@
     using Body4U.Guide.Services.Food;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
-    using System;
     using System.Threading.Tasks;
 
     [AuthorizeTrainer]
@@ -41,7 +40,13 @@
         [Route(Id)]
         public async Task<ActionResult> Get(int id)
         {
-            throw new NotImplementedException();
+            var result = await this.foodService.Get(id);
+            if (!result.Succeeded)
+            {
+                return this.ProcessErrors(result);
+            }
+
+            return this.Ok(result.Data);
         }
     }
 }

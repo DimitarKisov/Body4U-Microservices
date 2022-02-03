@@ -8,6 +8,7 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -105,6 +106,55 @@
             }
 
             return Result<CreateFoodResponseModel>.SuccessWith(new CreateFoodResponseModel() { Id = foodId });
+        }
+
+        public async Task<Result<GetFoodResponseModel>> Get(int id)
+        {
+            var food = await this.dbContext
+                .Foods
+                .Select(x => new GetFoodResponseModel()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Protein = x.Protein,
+                    Carbohydrates = x.Carbohydrates,
+                    Fats = x.Fats,
+                    Calories = x.Calories
+                })
+                .FirstOrDefaultAsync(x => x.Id == x.Id);
+
+            if (food == null)
+            {
+                return Result<GetFoodResponseModel>.Failure(NotFound, FoodMissing);
+            }
+
+            var otherFoodValues = await this.dbContext
+                .OtherFoodValues
+                .Where(x => x.FoodId == food.Id)
+                .Select(x => new GetOtherFoodValuesResponseModel()
+                {
+                    Water = x.Water,
+                    Fiber = x.Fiber,
+                    Calcium = x.Calcium,
+                    Magnesium = x.Magnesium,
+                    Potassium = x.Potassium,
+                    Zinc = x.Zinc,
+                    Manganese = x.Manganese,
+                    VitaminC = x.VitaminC,
+                    VitaminA = x.VitaminA,
+                    VitaminE = x.VitaminE,
+                    Sugars = x.Sugars
+                })
+                .FirstOrDefaultAsync();
+
+            if (otherFoodValues == null)
+            {
+                return Result<GetFoodResponseModel>.Failure(NotFound, OtherValuesMissing);
+            }
+
+            food.OtherValues = otherFoodValues;
+
+            return Result<GetFoodResponseModel>.SuccessWith(food);
         }
     }
 }

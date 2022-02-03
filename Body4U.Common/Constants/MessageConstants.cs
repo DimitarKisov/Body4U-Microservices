@@ -85,6 +85,8 @@ namespace Body4U.Common.Constants
         {
             public const string NameTaken = "This food name is already taken.";
             public const string WrongFoodCategory = "Wrong food category.";
+            public const string FoodMissing = "There is no such food.";
+            public const string OtherValuesMissing = "There aren't any other food values.";
         }
 
         public class StatusCodes

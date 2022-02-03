@@ -19,11 +19,11 @@
                 app
                     .UseDeveloperExceptionPage()
                     .UseSwagger();
+            }
 
-                if (userExceptionMiddleware)
-                {
-                    app.UseExceptionMiddleware();
-                }
+            if (userExceptionMiddleware)
+            {
+                app.UseExceptionMiddleware();
             }
 
             app
