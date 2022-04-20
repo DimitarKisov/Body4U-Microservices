@@ -101,8 +101,8 @@
 
             var pageIndex = request.PageIndex;
             var pageSize = request.PageSize;
-            var sortingOrder = request.OrderBy!;
-            var sortingField = request.SortBy!;
+            var sortingOrder = request.OrderBy;
+            var sortingField = request.SortBy;
 
             Expression<Func<ExerciseResponseModel, object>> sortingExpression = x => x.Id;
 
