@@ -78,6 +78,7 @@
         {
             public const int MinNameLength = 3;
             public const int MaxNameLength = 100;
+            public const string NameRegularExpression = "^([a-z ,A-Z]+|[а-я ,А-Я]+)$";
         }
     }
 }

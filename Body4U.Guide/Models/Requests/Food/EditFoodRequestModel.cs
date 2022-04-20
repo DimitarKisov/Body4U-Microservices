@@ -4,8 +4,11 @@
 
     using static Body4U.Common.Constants.DataConstants.Food;
 
-    public class CreateFoodRequestModel
+    public class EditFoodRequestModel
     {
+        [Required]
+        public int Id { get; set; }
+
         [Required]
         [MinLength(MinNameLength)]
         [MaxLength(MaxNameLength)]
@@ -31,7 +34,6 @@
         [Required]
         public int FoodCategory { get; set; }
 
-        [Required]
-        public CreateOtherFoodValuesRequestModel OtherValues { get; set; }
+        public EditOtherFoodValuesRequestModel OtherFoodValues { get; set; }
     }
 }

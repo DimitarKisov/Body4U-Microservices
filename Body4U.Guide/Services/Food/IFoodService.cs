@@ -14,7 +14,8 @@
 
         Task<Result<SearchFoodsResponseModel>> Search(SearchFoodsRequestModel request);
 
-        //Search
+        Task<Result> Edit(EditFoodRequestModel request);
+
         //Edit
         //Delete
         Task<Result<Dictionary<int, string>>> AutocompleteFoodName(string term);

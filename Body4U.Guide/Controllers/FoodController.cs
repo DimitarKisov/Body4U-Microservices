@@ -72,5 +72,24 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpPut]
+        [Route(nameof(Edit))]
+        public async Task<ActionResult> Edit(EditFoodRequestModel request)
+        {
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState);
+            }
+
+            var result = await this.foodService.Edit(request);
+            if (!result.Succeeded)
+            {
+                this.ModelState.Clear();
+                return this.ProcessErrors(result);
+            }
+
+            return this.NoContent();
+        }
     }
 }

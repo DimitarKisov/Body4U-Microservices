@@ -226,6 +226,73 @@
             return Result<SearchFoodsResponseModel>.SuccessWith(new SearchFoodsResponseModel() { Data = data, TotalRecords = totalRecords });
         }
 
+        public async Task<Result> Edit(EditFoodRequestModel request)
+        {
+            if (!Enum.IsDefined(typeof(FoodCategory), request.FoodCategory))
+            {
+                return Result.Failure(BadRequest, WrongFoodCategory);
+            }
+
+            var nameExists = await this.dbContext
+                .Foods
+                .AnyAsync(x => x.Name == request.Name);
+
+            if (nameExists)
+            {
+                return Result.Failure(Conflict, NameTaken);
+            }
+
+            var food = await this.dbContext
+                .Foods
+                .FindAsync(request.Id);
+
+            if (food == null)
+            {
+                return Result.Failure(NotFound, FoodMissing);
+            }
+
+            food.Name = request.Name.Trim();
+            food.Protein = request.Protein;
+            food.Carbohydrates = request.Carbohydrates;
+            food.Fats = request.Fats;
+            food.Calories = request.Calories;
+
+            if (request.OtherFoodValues != null)
+            {
+                var otherFoodValues = await this.dbContext
+                .OtherFoodValues
+                .FindAsync(request.OtherFoodValues.Id);
+
+                if (otherFoodValues == null)
+                {
+                    return Result.Failure(NotFound, OtherValuesMissing);
+                }
+
+                otherFoodValues.Water = request.OtherFoodValues.Water;
+                otherFoodValues.Fiber = request.OtherFoodValues.Fiber;
+                otherFoodValues.Calcium = request.OtherFoodValues.Calcium;
+                otherFoodValues.Magnesium = request.OtherFoodValues.Magnesium;
+                otherFoodValues.Potassium = request.OtherFoodValues.Potassium;
+                otherFoodValues.Zinc = request.OtherFoodValues.Zinc;
+                otherFoodValues.VitaminC = request.OtherFoodValues.VitaminC;
+                otherFoodValues.VitaminA = request.OtherFoodValues.VitaminA;
+                otherFoodValues.VitaminE = request.OtherFoodValues.VitaminE;
+                otherFoodValues.Sugars = request.OtherFoodValues.Sugars;
+            }
+
+            try
+            {
+                await this.dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while editing food or it's other values");
+                return Result.Failure(InternalServerError, UnhandledError);
+            }
+
+            return Result.Success;
+        }
+
         public async Task<Result<Dictionary<int, string>>> AutocompleteFoodName(string term)
         {
             if (!string.IsNullOrWhiteSpace(term))
