@@ -16,8 +16,8 @@
 
         Task<Result> Edit(EditFoodRequestModel request);
 
-        //Edit
-        //Delete
+        Task<Result> Delete(int id);
+
         Task<Result<Dictionary<int, string>>> AutocompleteFoodName(string term);
     }
 }

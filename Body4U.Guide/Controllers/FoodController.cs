@@ -91,5 +91,18 @@
 
             return this.NoContent();
         }
+
+        [HttpDelete]
+        [Route(Id)]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var result = await this.foodService.Delete(id);
+            if (!result.Succeeded)
+            {
+                return this.ProcessErrors(result);
+            }
+
+            return this.NoContent();
+        }
     }
 }

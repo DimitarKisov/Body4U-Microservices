@@ -244,7 +244,7 @@
 
             var food = await this.dbContext
                 .Foods
-                .FindAsync(request.Id);
+                .FindAsync(new object[] { request.Id });
 
             if (food == null)
             {
@@ -287,6 +287,41 @@
             catch (Exception ex)
             {
                 Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while editing food or it's other values");
+                return Result.Failure(InternalServerError, UnhandledError);
+            }
+
+            return Result.Success;
+        }
+
+        public async Task<Result> Delete(int id)
+        {
+            var food = await this.dbContext
+                .Foods
+                .FindAsync(new object[] { id });
+
+            if (food == null)
+            {
+                return Result.Failure(NotFound, FoodMissing);
+            }
+
+            var otherFoodValues = await this.dbContext
+                .OtherFoodValues
+                .FirstOrDefaultAsync(x => x.FoodId == food.Id);
+
+            if (otherFoodValues != null)
+            {
+                this.dbContext.OtherFoodValues.Remove(otherFoodValues);
+            }
+
+            this.dbContext.Foods.Remove(food);
+
+            try
+            {
+                await this.dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while removing food or it's other values");
                 return Result.Failure(InternalServerError, UnhandledError);
             }
 
