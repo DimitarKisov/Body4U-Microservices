@@ -1,13 +1,11 @@
-﻿namespace Body4U.Guide.Data.Models
+﻿namespace Body4U.Guide.Models.Requests.Supplement
 {
     using System.ComponentModel.DataAnnotations;
 
     using static Body4U.Common.Constants.DataConstants.Supplement;
 
-    public class Supplement
+    public class CreateSupplementRequestModel
     {
-        public int Id { get; set; }
-
         [Required]
         [MinLength(MinNameLength)]
         [MaxLength(MaxNameLength)]
@@ -20,6 +18,6 @@
         public string Description { get; set; }
 
         [Required]
-        public SupplementCategory Category { get; set; }
+        public int Category { get; set; }
     }
 }

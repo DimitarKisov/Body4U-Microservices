@@ -89,6 +89,13 @@ namespace Body4U.Common.Constants
             public const string OtherValuesMissing = "There aren't any other food values.";
         }
 
+        public class Supplement
+        {
+            public const string NameTaken = "This supplement name is already taken.";
+            public const string WrongSupplementCategory = "Wrong supplement category.";
+            public const string SupplementMissing = "There is no such supplement.";
+        }
+
         public class StatusCodes
         {
             public const HttpStatusCode Ok = HttpStatusCode.OK;
