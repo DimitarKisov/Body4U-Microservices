@@ -8,5 +8,7 @@
     public interface ISupplementService
     {
         Task<Result<CreateSupplementResponseModel>> Create(CreateSupplementRequestModel request);
+
+        Task<Result<GetSupplementResponseModel>> Get(int id);
     }
 }

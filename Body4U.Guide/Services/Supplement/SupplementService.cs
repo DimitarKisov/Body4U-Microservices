@@ -8,6 +8,7 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
@@ -56,6 +57,26 @@
             }
 
             return Result<CreateSupplementResponseModel>.SuccessWith(new CreateSupplementResponseModel() { Id = supplement.Id });
+        }
+
+        public async Task<Result<GetSupplementResponseModel>> Get(int id)
+        {
+            var supplement = await this.dbContext
+                .Supplements
+                .Where(x => x.Id == id)
+                .Select(x => new GetSupplementResponseModel()
+                {
+                    Name = x.Name,
+                    Description = x.Description
+                })
+                .FirstOrDefaultAsync();
+
+            if (supplement == null)
+            {
+                return Result<GetSupplementResponseModel>.Failure(NotFound, SupplementMissing);
+            }
+
+            return Result<GetSupplementResponseModel>.SuccessWith(supplement);
         }
     }
 }
