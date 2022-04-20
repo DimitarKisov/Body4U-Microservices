@@ -2,6 +2,7 @@
 {
     using Body4U.Article.Data;
     using Body4U.Article.Data.Models;
+    using Body4U.Article.Models.Responses.Article;
     using Body4U.Article.Models.Requests.Article;
     using Body4U.Common;
     using Body4U.Common.Models.Article.Requests;
@@ -17,6 +18,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.DataConstants.Article;
@@ -26,8 +28,6 @@
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Trainer;
     using static Body4U.Common.Constants.MessageConstants.StatusCodes;
-    using Body4U.Article.Models.Responses.Article;
-
     public class ArticleService : IArticleService
     {
         private readonly ArticleDbContext dbContext;
@@ -410,45 +410,50 @@
                     Id = x.Id,
                     Title = x.Title,
                     Content = x.Content,
-                    ImageUrl = this.dbContext.ArticleImageDatas.First(y => y.ArticleId == x.Id).Url,
-                    TrainerName = this.dbContext.Trainers.First(y => y.Id == x.Id).FullName,
+                    ImageUrl = x.ArticleImageData.Url,
+                    TrainerFirstName = x.Trainer.FirstName,
+                    TrainerLastName = x.Trainer.LastName,
                     CreatedOn = x.CreatedOn,
                     ArticleType = (int)x.ArticleType
                 })
                 .AsQueryable();
 
+            if (!string.IsNullOrWhiteSpace(request.TrainerName))
+            {
+                var firstName = request.TrainerName.Split().First();
+                var lastName = request.TrainerName.Split().Last();
+
+                articles = articles.Where(x => x.TrainerFirstName == firstName && x.TrainerLastName == lastName);
+            }
+
             var totalRecords = await articles.CountAsync();
 
             var pageIndex = request.PageIndex;
             var pageSize = request.PageSize;
-            var sortingOrder = request.OrderBy!;
-            var sortingField = request.SortBy!;
+            var sortingOrder = request.OrderBy;
+            var sortingField = request.SortBy;
 
-            var orderBy = "Id";
+            Expression<Func<ArticleResponseModel, object>> sortingExpression = x => x.CreatedOn;
 
             if (!string.IsNullOrWhiteSpace(sortingField))
             {
-                if (sortingField.ToLower() == "title")
+                if (sortingField.ToLower() == "date")
                 {
-                    orderBy = nameof(request.Title);
+                    sortingExpression = x => x.CreatedOn;
                 }
-                else if (sortingField.ToLower() == "trainername")
+                else if (sortingField.ToLower() == "title")
                 {
-                    orderBy = nameof(request.TrainerName);
-                }
-                else if (sortingField.ToLower() == "articletype")
-                {
-                    orderBy = nameof(request.ArticleType);
+                    sortingExpression = x => x.Title;
                 }
             }
 
             if (sortingOrder != null && sortingOrder.ToLower() == Desc)
             {
-                articles = articles.OrderByDescending(x => orderBy);
+                articles = articles.OrderByDescending(sortingExpression);
             }
             else
             {
-                articles = articles.OrderBy(x => orderBy);
+                articles = articles.OrderBy(sortingExpression);
             }
 
             var data = await articles
@@ -464,8 +469,8 @@
             if (!string.IsNullOrWhiteSpace(term))
             {
                 var articlesTitles = await this.dbContext.Articles
-                .Select(x => x.Title.ToLower())
-                .Where(x => x.Contains(term.ToLower()))
+                .Select(x => x.Title)
+                .Where(x => x.ToLower().Contains(term.ToLower()))
                 .ToListAsync();
 
                 return Result<List<string>>.SuccessWith(articlesTitles);

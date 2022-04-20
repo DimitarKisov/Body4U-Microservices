@@ -48,5 +48,29 @@
 
             return this.Ok(result.Data);
         }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(Search))]
+        public async Task<ActionResult> Search([FromQuery] SearchFoodsRequestModel request)
+        {
+            var result = await this.foodService.Search(request);
+            if (!result.Succeeded)
+            {
+                this.ProcessErrors(result);
+            }
+
+            return this.Ok(result.Data);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(AutocompleteFoodName) + PathSeparator + Term)]
+        public async Task<ActionResult> AutocompleteFoodName(string term)
+        {
+            var result = await this.foodService.AutocompleteFoodName(term);
+
+            return this.Ok(result.Data);
+        }
     }
 }

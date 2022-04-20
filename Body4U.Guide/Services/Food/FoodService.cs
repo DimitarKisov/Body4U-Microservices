@@ -8,8 +8,12 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
+
+    using static Body4U.Common.Constants.DataConstants.Common;
 
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Food;
@@ -155,6 +159,90 @@
             food.OtherValues = otherFoodValues;
 
             return Result<GetFoodResponseModel>.SuccessWith(food);
+        }
+
+        public async Task<Result<SearchFoodsResponseModel>> Search(SearchFoodsRequestModel request)
+        {
+            var foods = this.dbContext
+                    .Foods
+                    .Select(x => new FoodResponseModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Protein = x.Protein,
+                        Carbohydrates = x.Carbohydrates,
+                        Fats = x.Fats,
+                        Calories = x.Calories
+                    })
+                    .AsQueryable();
+
+            var totalRecords = await foods.CountAsync();
+
+            var pageIndex = request.PageIndex;
+            var pageSize = request.PageSize;
+            var sortingOrder = request.OrderBy!;
+            var sortingField = request.SortBy!;
+
+            Expression<Func<FoodResponseModel, object>> sortingExpression = x => x.Id;
+
+            if (!string.IsNullOrWhiteSpace(sortingField))
+            {
+                if (sortingField.ToLower() == "name")
+                {
+                    sortingExpression = x => x.Name;
+                }
+                else if (sortingField.ToLower() == "protein")
+                {
+                    sortingExpression = x => x.Protein;
+                }
+                else if (sortingField.ToLower() == "carbohydrates")
+                {
+                    sortingExpression = x => x.Carbohydrates;
+                }
+                else if (sortingField.ToLower() == "fats")
+                {
+                    sortingExpression = x => x.Fats;
+                }
+                else if (sortingField.ToLower() == "calories")
+                {
+                    sortingExpression = x => x.Calories;
+                }
+            }
+
+            if (sortingOrder != null && sortingOrder.ToLower() == Desc)
+            {
+                foods = foods.OrderByDescending(sortingExpression);
+            }
+            else
+            {
+                foods = foods.OrderBy(sortingExpression);
+            }
+
+            var data = await foods
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Result<SearchFoodsResponseModel>.SuccessWith(new SearchFoodsResponseModel() { Data = data, TotalRecords = totalRecords });
+        }
+
+        public async Task<Result<Dictionary<int, string>>> AutocompleteFoodName(string term)
+        {
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var foodsNames = await this.dbContext.Foods
+                .Select(x => new
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .Where(x => x.Name.ToLower().Contains(term.ToLower()))
+                .ToDictionaryAsync(x => x.Id, x => x.Name);
+
+                return Result<Dictionary<int, string>>.SuccessWith(foodsNames);
+            }
+
+            return Result<Dictionary<int, string>>.SuccessWith(new Dictionary<int, string>());
         }
     }
 }

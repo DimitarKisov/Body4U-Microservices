@@ -12,7 +12,9 @@
 
         public string ImageUrl { get; set; }
 
-        public string TrainerName { get; set; }
+        public string TrainerFirstName { get; set; }
+
+        public string TrainerLastName { get; set; }
 
         public DateTime CreatedOn { get; set; }
 
