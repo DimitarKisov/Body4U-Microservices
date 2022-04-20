@@ -464,19 +464,23 @@
             return Result<SearchArticlesResponseModel>.SuccessWith(new SearchArticlesResponseModel { Data = data, TotalRecords = totalRecords });
         }
 
-        public async Task<Result<List<string>>> AutocompleteArticleTitle(string term)
+        public async Task<Result<Dictionary<int, string>>> AutocompleteArticleTitle(string term)
         {
             if (!string.IsNullOrWhiteSpace(term))
             {
                 var articlesTitles = await this.dbContext.Articles
-                .Select(x => x.Title)
-                .Where(x => x.ToLower().Contains(term.ToLower()))
-                .ToListAsync();
+                .Select(x => new
+                {
+                    Id = x.Id,
+                    Title = x.Title
+                })
+                .Where(x => x.Title.ToLower().Contains(term.ToLower()))
+                .ToDictionaryAsync(x => x.Id, x => x.Title);
 
-                return Result<List<string>>.SuccessWith(articlesTitles);
+                return Result<Dictionary<int, string>>.SuccessWith(articlesTitles);
             }
 
-            return Result<List<string>>.SuccessWith(new List<string>());
+            return Result<Dictionary<int, string>>.SuccessWith(new Dictionary<int, string>());
         }
 
         public async Task<Result<bool>> ArticleExists(int id)

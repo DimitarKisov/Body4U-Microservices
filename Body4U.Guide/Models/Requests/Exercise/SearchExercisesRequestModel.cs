@@ -4,8 +4,5 @@
 
     public class SearchExercisesRequestModel : SearchModel
     {
-        public string Name { get; set; }
-
-        public int ExerciseDifficulty { get; set; }
     }
 }

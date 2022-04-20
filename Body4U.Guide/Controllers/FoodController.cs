@@ -63,16 +63,6 @@
             return this.Ok(result.Data);
         }
 
-        [HttpPost]
-        [AllowAnonymous]
-        [Route(nameof(AutocompleteFoodName) + PathSeparator + Term)]
-        public async Task<ActionResult> AutocompleteFoodName(string term)
-        {
-            var result = await this.foodService.AutocompleteFoodName(term);
-
-            return this.Ok(result.Data);
-        }
-
         [HttpPut]
         [Route(nameof(Edit))]
         public async Task<ActionResult> Edit(EditFoodRequestModel request)
@@ -93,8 +83,8 @@
         }
 
         [HttpDelete]
-        [Route(Id)]
-        public async Task<ActionResult> Delete(int id)
+        [Route(nameof(Delete))]
+        public async Task<ActionResult> Delete([FromBody] int id)
         {
             var result = await this.foodService.Delete(id);
             if (!result.Succeeded)
@@ -103,6 +93,16 @@
             }
 
             return this.NoContent();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(AutocompleteFoodName) + PathSeparator + Term)]
+        public async Task<ActionResult> AutocompleteFoodName(string term)
+        {
+            var result = await this.foodService.AutocompleteFoodName(term);
+
+            return this.Ok(result.Data);
         }
     }
 }

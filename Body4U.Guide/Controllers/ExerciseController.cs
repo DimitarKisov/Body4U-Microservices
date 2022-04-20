@@ -101,5 +101,15 @@
 
             return this.NoContent();
         }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route(nameof(AutocompleteExerciseName) + PathSeparator + Term)]
+        public async Task<ActionResult> AutocompleteExerciseName(string term)
+        {
+            var result = await this.exerciseService.AutocompleteExerciseName(term);
+
+            return this.Ok(result);
+        }
     }
 }

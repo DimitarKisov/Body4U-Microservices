@@ -8,7 +8,9 @@
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     using static Body4U.Common.Constants.DataConstants.Common;
@@ -102,27 +104,27 @@
             var sortingOrder = request.OrderBy!;
             var sortingField = request.SortBy!;
 
-            var orderBy = "Id";
+            Expression<Func<ExerciseResponseModel, object>> sortingExpression = x => x.Id;
 
             if (!string.IsNullOrWhiteSpace(sortingField))
             {
                 if (sortingField.ToLower() == "name")
                 {
-                    orderBy = nameof(request.Name);
+                    sortingExpression = x => x.Name;
                 }
                 else if (sortingField.ToLower() == "exercisedifficulty")
                 {
-                    orderBy = nameof(request.ExerciseDifficulty);
+                    sortingExpression = x => x.ExerciseDifficulty;
                 }
             }
 
             if (sortingOrder != null && sortingOrder.ToLower() == Desc)
             {
-                exercises = exercises.OrderByDescending(x => orderBy);
+                exercises = exercises.OrderByDescending(sortingExpression);
             }
             else
             {
-                exercises = exercises.OrderBy(x => orderBy);
+                exercises = exercises.OrderBy(sortingExpression);
             }
 
             var data = await exercises
@@ -191,6 +193,25 @@
             }
 
             return Result.Success;
+        }
+
+        public async Task<Result<Dictionary<int, string>>> AutocompleteExerciseName(string term)
+        {
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var articlesTitles = await this.dbContext.Exercises
+                .Select(x => new
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .Where(x => x.Name.ToLower().Contains(term.ToLower()))
+                .ToDictionaryAsync(x => x.Id, x => x.Name);
+
+                return Result<Dictionary<int, string>>.SuccessWith(articlesTitles);
+            }
+
+            return Result<Dictionary<int, string>>.SuccessWith(new Dictionary<int, string>());
         }
     }
 }

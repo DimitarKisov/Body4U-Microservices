@@ -3,6 +3,7 @@
     using Body4U.Common;
     using Body4U.Guide.Models.Requests.Exercise;
     using Body4U.Guide.Models.Responses.Exercise;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public interface IExerciseService
@@ -16,5 +17,7 @@
         Task<Result> Edit(EditExerciseRequestModel request);
 
         Task<Result> Delete(int id);
+
+        Task<Result<Dictionary<int, string>>> AutocompleteExerciseName(string term);
     }
 }

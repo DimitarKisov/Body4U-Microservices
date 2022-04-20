@@ -22,7 +22,7 @@
 
         Task<Result<SearchArticlesResponseModel>> Search(SearchArticlesRequestModel request);
 
-        Task<Result<List<string>>> AutocompleteArticleTitle(string term);
+        Task<Result<Dictionary<int, string>>> AutocompleteArticleTitle(string term);
 
         Task<Result<bool>> ArticleExists(int id);
 
