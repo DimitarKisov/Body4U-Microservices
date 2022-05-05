@@ -108,22 +108,23 @@
         {
             var service = await this.dbContext
                 .Services
-                .FindAsync(new object[] { id });
+                .Where(x => x.Id == id)
+                .Select(x => new GetServiceResponseModel()
+                {
+                    Name = x.Name,
+                    Description = x.Description,
+                    Price = x.Price,
+                    ServiceDifficulty = (int)x.ServiceDifficulty,
+                    ServiceType = (int)x.ServiceType
+                })
+                .FirstOrDefaultAsync();
 
             if (service == null)
             {
                 return Result<GetServiceResponseModel>.Failure(NotFound, ServiceMissing);
             }
 
-            return Result<GetServiceResponseModel>.SuccessWith(new GetServiceResponseModel
-            {
-                Id = service.Id,
-                Name = service.Name,
-                Description = service.Description,
-                Price = service.Price,
-                ServiceType = (int)service.ServiceType,
-                ServiceDifficulty = (int)service.ServiceDifficulty
-            });
+            return Result<GetServiceResponseModel>.SuccessWith(service);
         }
 
         public async Task<Result> Edit(EditServiceRequestModel request)
@@ -172,7 +173,12 @@
         {
             var service = await this.dbContext
                     .Services
-                    .FindAsync(new object[] { id });
+                    .Where(x => x.Id == id)
+                    .Select(x => new Service()
+                    {
+                        TrainerId = x.TrainerId
+                    })
+                    .FirstOrDefaultAsync();
 
             if (service == null)
             {
