@@ -302,7 +302,12 @@
         {
             var article = await this.dbContext
                     .Articles
-                    .FindAsync(new object[] { request.Id });
+                    .Select(x => new Article()
+                    {
+                        Id = x.Id,
+                        TrainerId = x.TrainerId,
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == request.Id);
 
             if (article == null)
             {
@@ -326,6 +331,11 @@
 
             var articleImageData = await this.dbContext
                 .ArticleImageDatas
+                .Select(x => new ArticleImageData()
+                {
+                    Id = x.Id,
+                    Folder = x.Folder
+                })
                 .FirstOrDefaultAsync(x => x.ArticleId == article.Id);
 
             if (articleImageData == null)
