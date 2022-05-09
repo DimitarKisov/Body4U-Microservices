@@ -367,7 +367,16 @@
         {
             var article = await this.dbContext
                 .Articles
-                .FindAsync(new object[] { id });
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Content,
+                    x.CreatedOn,
+                    x.ArticleType,
+                    x.TrainerId
+                })
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (article == null)
             {

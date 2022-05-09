@@ -42,24 +42,24 @@
         {
             var trainer = await this.dbContext
                 .Trainers
-                .FirstOrDefaultAsync(x => x.ApplicationUserId == this.currentUserService.UserId);
+                .Where(x => x.ApplicationUserId == this.currentUserService.UserId)
+                .Select(x => new MyTrainerProfileResponseModel
+                {
+                    Id = x.Id,
+                    Bio = x.Bio,
+                    ShortBio = x.ShortBio,
+                    FacebookUrl = x.FacebookUrl,
+                    InstagramUrl = x.InstagramUrl,
+                    YoutubeChannelUrl = x.YoutubeChannelUrl
+                })
+                .FirstOrDefaultAsync();
 
             if (trainer == null)
             {
                 return Result<MyTrainerProfileResponseModel>.Failure(NotFound, TrainerNotFound);
             }
 
-            var result = new MyTrainerProfileResponseModel
-            {
-                Id = trainer.Id,
-                Bio = trainer.Bio,
-                ShortBio = trainer.ShortBio,
-                FacebookUrl = trainer.FacebookUrl,
-                InstagramUrl = trainer.InstagramUrl,
-                YoutubeChannelUrl = trainer.YoutubeChannelUrl
-            };
-
-            return Result<MyTrainerProfileResponseModel>.SuccessWith(result);
+            return Result<MyTrainerProfileResponseModel>.SuccessWith(trainer);
         }
 
         public async Task<Result<MyTrainerImageResponseModel>> MyImages()
@@ -104,6 +104,7 @@
             return Result<MyTrainerVideosReponseModel>.SuccessWith(new MyTrainerVideosReponseModel() { Urls = result });
         }
 
+        //TODO: Select only the specific columns that are going to be edited?
         public async Task<Result> Edit(EditMyTrainerProfileRequestModel request)
         {
             var trainer = await this.dbContext
