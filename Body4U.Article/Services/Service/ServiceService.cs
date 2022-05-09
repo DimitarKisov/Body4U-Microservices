@@ -173,12 +173,12 @@
         {
             var service = await this.dbContext
                     .Services
-                    .Where(x => x.Id == id)
                     .Select(x => new Service()
                     {
+                        Id = x.Id,
                         TrainerId = x.TrainerId
                     })
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(x => x.Id == id);
 
             if (service == null)
             {

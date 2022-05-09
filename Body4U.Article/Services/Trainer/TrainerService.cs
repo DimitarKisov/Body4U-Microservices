@@ -274,7 +274,13 @@
 
             var image = await this.dbContext
                 .TrainerImagesDatas
-                .FirstOrDefaultAsync(x => x.TrainerId == request.TrainerId);
+                .Where(x => x.TrainerId == request.TrainerId)
+                .Select(x => new TrainerImageData()
+                {
+                    Id = x.Id,
+                    Folder = x.Folder
+                })
+                .FirstOrDefaultAsync();
 
             if (image == null)
             {

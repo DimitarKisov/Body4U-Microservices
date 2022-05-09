@@ -7,7 +7,7 @@
         [Required]
         public int TrainerId { get; set; }
 
-        [Required]
-        public string ImageId { get; set; }
+        //[Required]
+        //public string ImageId { get; set; }
     }
 }

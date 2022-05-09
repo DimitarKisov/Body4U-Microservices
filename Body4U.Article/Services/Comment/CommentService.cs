@@ -91,14 +91,19 @@
         {
             var comment = await this.dbContext
                     .Comments
-                    .FindAsync(new object[] { request.Id });
+                    .Select(x => new Comment()
+                    {
+                        Id = x.Id,
+                        ApplicationUserId = x.ApplicationUserId
+                    })
+                    .FirstOrDefaultAsync(x => x.Id == request.Id);
 
             if (comment == null)
             {
                 return Result.Failure(NotFound, CommentMissing);
             }
 
-            if (comment.ApplicationUserId != request.UserId && !this.currentUserService.IsAdministrator)
+            if (comment.ApplicationUserId != this.currentUserService.UserId && !this.currentUserService.IsAdministrator)
             {
                 return Result.Failure(Forbidden, WrongRights);
             }
