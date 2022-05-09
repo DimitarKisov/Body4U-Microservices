@@ -172,18 +172,18 @@
 
         public async Task<Result> Delete(int id)
         {
-            var supplement = await this.dbContext
+            var supplementExists = await this.dbContext
                 .Supplements
-                .FindAsync(new object[] { id });
+                .AnyAsync(x => x.Id == id);
 
-            if (supplement == null)
+            if (!supplementExists)
             {
                 return Result.Failure(NotFound, SupplementMissing);
             }
 
             try
             {
-                this.dbContext.Supplements.Remove(supplement);
+                this.dbContext.Supplements.Remove(new Supplement() { Id = id });
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

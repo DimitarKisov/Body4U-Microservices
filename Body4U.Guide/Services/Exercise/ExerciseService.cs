@@ -67,15 +67,15 @@
         {
             var exercise = await this.dbContext
                     .Exercises
+                    .Where(x => x.Id == id)
                     .Select(x => new GetExerciceResponseModel()
                     {
-                        Id = x.Id,
                         Name = x.Name,
                         Description = x.Description,
                         ExerciseType = (int)x.ExerciseType,
                         ExerciseDifficulty = (int)x.ExerciseDifficulty
                     })
-                    .FirstOrDefaultAsync(x => x.Id == id);
+                    .FirstOrDefaultAsync();
 
             if (exercise == null)
             {
@@ -135,6 +135,7 @@
             return Result<SearchExercisesResponseModel>.SuccessWith(new SearchExercisesResponseModel() { Data = data, TotalRecords = totalRecords });
         }
 
+        //TODO: Select only the specific properties that are going to be edited?
         public async Task<Result> Edit(EditExerciseRequestModel request)
         {
             if (!Enum.IsDefined(typeof(ExerciseType), request.ExerciseType))
@@ -172,18 +173,18 @@
 
         public async Task<Result> Delete(int id)
         {
-            var exercise = await this.dbContext
+            var exerciseExists = await this.dbContext
                     .Exercises
-                    .FindAsync(new object[] { id });
+                    .AnyAsync(x => x.Id == id);
 
-            if (exercise == null)
+            if (!exerciseExists)
             {
                 return Result.Failure(NotFound, ExerciseMissing);
             }
 
             try
             {
-                this.dbContext.Exercises.Remove(exercise);
+                this.dbContext.Exercises.Remove(new Exercise() { Id = id });
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

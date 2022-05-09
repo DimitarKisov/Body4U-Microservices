@@ -297,7 +297,11 @@
         {
             var food = await this.dbContext
                 .Foods
-                .FindAsync(new object[] { id });
+                .Select(x => new Food()
+                {
+                    Id = x.Id
+                })
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (food == null)
             {
@@ -306,22 +310,34 @@
 
             var otherFoodValues = await this.dbContext
                 .OtherFoodValues
-                .FirstOrDefaultAsync(x => x.FoodId == food.Id);
+                .Where(x => x.FoodId == food.Id)
+                .Select(x => new OtherFoodValues()
+                {
+                    Id = x.Id
+                })
+                .FirstOrDefaultAsync();
 
             if (otherFoodValues != null)
             {
-                this.dbContext.OtherFoodValues.Remove(otherFoodValues);
+                try
+                {
+                    this.dbContext.OtherFoodValues.Remove(otherFoodValues);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while removing food's values");
+                    return Result.Failure(InternalServerError, UnhandledError);
+                }
             }
-
-            this.dbContext.Foods.Remove(food);
 
             try
             {
+                this.dbContext.Foods.Remove(food);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while removing food or it's other values");
+                Log.Error(ex, $"{nameof(FoodService)}/{nameof(Edit)} while removing food or saving changes");
                 return Result.Failure(InternalServerError, UnhandledError);
             }
 
