@@ -18,13 +18,13 @@
             this.cloudinary = cloudinary;
         }
         
-        public async Task<Result<UploadImageResponseModel>> UploadImage(Stream image, string publicId, string folder)
+        public async Task<Result<UploadImageResponseModel>> UploadImage(Stream image, string imageType, string publicId, string folder)
         {
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription($"{publicId}", image),
                 PublicId = publicId,
-                Format = "jpeg",
+                Format = imageType,
                 Folder = folder
                 
             };
