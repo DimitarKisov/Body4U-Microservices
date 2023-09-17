@@ -24,7 +24,7 @@
             {
                 File = new FileDescription($"{publicId}", image),
                 PublicId = publicId,
-                Format = imageType,
+                Format = imageType.Split("/")[1],
                 Folder = folder
                 
             };
