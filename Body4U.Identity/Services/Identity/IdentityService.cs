@@ -124,7 +124,7 @@
                     var totalImages = await this.dbContext.UserImageDatas.CountAsync();
                     var folder = $"Identity/Profile/{totalImages % 1000}";
 
-                    var uploadImageResult = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
+                    var uploadImageResult = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), request.ProfilePicture.ContentType, id, folder);
                     if (uploadImageResult.Succeeded)
                     {
                         var userImageData = new UserImageData
@@ -337,7 +337,7 @@
                 var totalImages = await this.dbContext.UserImageDatas.CountAsync();
                 var folder = $"Identity/Profile/{totalImages % 1000}";
 
-                var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), id, folder);
+                var result = await this.cloudinaryService.UploadImage(request.ProfilePicture.OpenReadStream(), request.ProfilePicture.ContentType, id, folder);
                 if (!result.Succeeded)
                 {
                     return Result.Failure(InternalServerError, result.Errors);

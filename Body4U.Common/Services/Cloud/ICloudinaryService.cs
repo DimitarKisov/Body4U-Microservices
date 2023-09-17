@@ -6,7 +6,7 @@
 
     public interface ICloudinaryService
     {
-        Task<Result<UploadImageResponseModel>> UploadImage(Stream image, string publicId, string folder);
+        Task<Result<UploadImageResponseModel>> UploadImage(Stream image, string imageType, string publicId, string folder);
 
         Task<Result> DeleteImage(string publicId, string folder);
     }

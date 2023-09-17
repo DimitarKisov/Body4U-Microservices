@@ -107,7 +107,7 @@
             var totalImages = await this.dbContext.ArticleImageDatas.CountAsync();
             var folder = $"Article/Images/{totalImages % 1000}";
 
-            var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), id, folder);
+            var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), request.Image.ContentType, id, folder);
             if (!uploadImageResult.Succeeded)
             {
                 Log.Error($"{nameof(ArticleService)}.{nameof(Create)} when uploading image to cloudinary service with errors:" + string.Join(Environment.NewLine, uploadImageResult.Errors));
@@ -258,7 +258,7 @@
                 var totalImages = await this.dbContext.ArticleImageDatas.CountAsync();
                 var folder = $"Article/Images/{totalImages % 1000}";
 
-                var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), id, folder);
+                var uploadImageResult = await this.cloudinaryService.UploadImage(request.Image.OpenReadStream(), request.Image.ContentType, id, folder);
                 if (uploadImageResult.Succeeded)
                 {
                     article.Title = request.Title.Trim();

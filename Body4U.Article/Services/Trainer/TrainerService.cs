@@ -205,7 +205,7 @@
                     var totalImages = await this.dbContext.TrainerImagesDatas.CountAsync();
                     var folder = $"Trainer/Images/{totalImages % 1000}";
 
-                    var result = await this.cloudinaryService.UploadImage(image.OpenReadStream(), id, folder);
+                    var result = await this.cloudinaryService.UploadImage(image.OpenReadStream(), image.ContentType, id, folder);
                     if (result.Succeeded)
                     {
                         var trainerImageData = new TrainerImageData
