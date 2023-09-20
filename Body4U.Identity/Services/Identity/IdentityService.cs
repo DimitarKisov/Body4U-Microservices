@@ -416,7 +416,7 @@
 
             var result = await this.userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
 
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(e => e.Description);
 
