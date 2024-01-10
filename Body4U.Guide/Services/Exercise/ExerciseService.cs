@@ -51,7 +51,7 @@
 
             try
             {
-                await this.dbContext.AddAsync(exercise);
+                this.dbContext.Add(exercise);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

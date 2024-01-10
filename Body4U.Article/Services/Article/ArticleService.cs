@@ -11,7 +11,7 @@
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using Body4U.Identity.Models.Favourites.Responses;
-    using Ganss.XSS;
+    using Ganss.Xss;
     using Microsoft.EntityFrameworkCore;
     using Serilog;
     using SixLabors.ImageSharp;
@@ -28,6 +28,7 @@
     using static Body4U.Common.Constants.MessageConstants.Common;
     using static Body4U.Common.Constants.MessageConstants.Trainer;
     using static Body4U.Common.Constants.MessageConstants.StatusCodes;
+    
     public class ArticleService : IArticleService
     {
         private readonly ArticleDbContext dbContext;
@@ -134,7 +135,7 @@
 
                     try
                     {
-                        await this.dbContext.Articles.AddAsync(article);
+                        this.dbContext.Articles.Add(article);
                         await this.dbContext.SaveChangesAsync();
                     }
                     catch (Exception ex)
@@ -157,8 +158,8 @@
 
                     try
                     {
-                        await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
-                        await this.dbContext.SaveChangesAsync();
+                        this.dbContext.ArticleImageDatas.Add(articleImageData);
+                        await this.dbContext.SaveChangesAsync();    
                     }
                     catch (Exception ex)
                     {
@@ -276,7 +277,7 @@
 
                     try
                     {
-                        await this.dbContext.ArticleImageDatas.AddAsync(articleImageData);
+                        this.dbContext.ArticleImageDatas.Add(articleImageData);
                         await this.dbContext.SaveChangesAsync();
                     }
                     catch (Exception ex)

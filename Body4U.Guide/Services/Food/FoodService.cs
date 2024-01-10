@@ -61,7 +61,7 @@
 
                     try
                     {
-                        await this.dbContext.Foods.AddAsync(food);
+                        this.dbContext.Foods.Add(food);
                         await this.dbContext.SaveChangesAsync();
                     }
                     catch (Exception ex)
@@ -90,7 +90,7 @@
 
                     try
                     {
-                        await this.dbContext.OtherFoodValues.AddAsync(otherFoodValues);
+                        this.dbContext.OtherFoodValues.Add(otherFoodValues);
                         await this.dbContext.SaveChangesAsync();
                     }
                     catch (Exception ex)

@@ -51,7 +51,7 @@
 
             try
             {
-                await this.dbContext.Supplements.AddAsync(supplement);
+                this.dbContext.Supplements.Add(supplement);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

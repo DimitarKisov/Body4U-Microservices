@@ -218,7 +218,7 @@
 
                         try
                         {
-                            await this.dbContext.TrainerImagesDatas.AddAsync(trainerImageData);
+                            this.dbContext.TrainerImagesDatas.Add(trainerImageData);
                         }
                         catch (Exception ex)
                         {

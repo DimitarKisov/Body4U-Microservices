@@ -137,7 +137,7 @@
 
                         try
                         {
-                            await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                            this.dbContext.UserImageDatas.Add(userImageData);
                             await this.dbContext.SaveChangesAsync();
                         }
                         catch (Exception ex)
@@ -353,7 +353,7 @@
 
                 try
                 {
-                    await this.dbContext.UserImageDatas.AddAsync(userImageData);
+                    this.dbContext.UserImageDatas.Add(userImageData);
                     await this.dbContext.SaveChangesAsync();
                 }
                 catch (Exception ex)

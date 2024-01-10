@@ -63,7 +63,7 @@
             user.Favourites.Add(favouriter);
             try
             {
-                await this.dbContext.Favourites.AddAsync(favouriter);
+                this.dbContext.Favourites.Add(favouriter);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

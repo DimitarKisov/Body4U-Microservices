@@ -75,7 +75,7 @@
 
             try
             {
-                await this.dbContext.Services.AddAsync(service);
+                this.dbContext.Services.Add(service);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

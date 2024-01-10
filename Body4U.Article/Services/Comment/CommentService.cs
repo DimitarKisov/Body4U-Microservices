@@ -52,7 +52,7 @@
 
             try
             {
-                await this.dbContext.Comments.AddAsync(comment);
+                this.dbContext.Comments.Add(comment);
                 await this.dbContext.SaveChangesAsync();
             }
             catch (Exception ex)
