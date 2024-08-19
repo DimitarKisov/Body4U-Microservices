@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="appsettings.Development.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
 		<PackageReference Include="Refit.HttpClientFactory" Version="5.2.4" />
 		<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
@@ -41,7 +45,7 @@
 	</ItemGroup>
 
 	<Target Name="CustomTarget" AfterTargets="_PublishNoBuildAlternative" Condition="'$(Configuration)'=='Debug'">
-		<Delete Files="$(PublishDir)\appsettings.json"/>
+		<Delete Files="$(PublishDir)\appsettings.json" />
 	</Target>
 
 	<Target Name="RenameAppsettings" Condition="'$(Configuration)'=='Debug'" AfterTargets="Publish">

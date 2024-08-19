@@ -31,6 +31,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="appsettings.Development.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="MassTransit.AspNetCore" Version="7.2.4" />
 		<PackageReference Include="MassTransit.RabbitMQ" Version="7.2.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.21" />
@@ -75,7 +79,7 @@
 	</ItemGroup>
 
 	<Target Name="CustomTarget" AfterTargets="_PublishNoBuildAlternative" Condition="'$(Configuration)'=='Debug'">
-		<Delete Files="$(PublishDir)\appsettings.json"/>
+		<Delete Files="$(PublishDir)\appsettings.json" />
 	</Target>
 
 	<Target Name="RenameAppsettings" Condition="'$(Configuration)'=='Debug'" AfterTargets="Publish">

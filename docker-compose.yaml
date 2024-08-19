@@ -107,6 +107,22 @@ services:
             - body4u-network
         depends_on:
             - data
+            
+    guide:
+        container_name: guide
+        build:
+            context: ./
+            dockerfile: ./Body4U.Guide/Dockerfile
+        ports:
+            - "5013:80"
+        env_file: ./Body4U.Guide/guide.env
+        restart: on-failure
+        volumes:
+            - data-protection:/root/.aspnet/DataProtection-Keys
+        networks:
+            - body4u-network
+        depends_on:
+            - data
 
     watchdog:
         container_name: watchdog
@@ -125,6 +141,7 @@ services:
             - article
             - articlegateway
             - admin
+            - guide
 networks:
     body4u-network:
     
