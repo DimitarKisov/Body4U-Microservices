@@ -31,7 +31,7 @@
 
         private void HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            if (exception is BadHttpRequestException badRequestException && badRequestException.Message == "Request body too large.")
+            if (exception is Microsoft.AspNetCore.Http.BadHttpRequestException badRequestException && badRequestException.Message == "Request body too large.")
             {
                 context.Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
             }

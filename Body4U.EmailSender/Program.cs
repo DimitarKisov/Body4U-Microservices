@@ -1,45 +1,60 @@
-namespace Body4U.EmailSender
+using Body4U.Common.Infrastructure;
+using Body4U.EmailSender.Data;
+using Body4U.EmailSender.Messages;
+using Body4U.EmailSender.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
+using System;
+
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services
+    .AddDatabase<EmailSenderDbContext>(configuration)
+    .AddHealth(configuration)
+    .AddTransient<IEmailService, EmailService>()
+    .AddMessaging(configuration,
+                  false,
+                  typeof(SendEmailConsumer));
+
+var app = builder.Build();
+var env = app.Environment;
+
+if (env.IsDevelopment())
 {
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Hosting;
-    using Serilog;
-    using System;
+    app.UseDeveloperExceptionPage();
+}
 
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var environment = envVariable != null ? $".{envVariable}" : null;
+app
+    .UseRouting()
+    .UseEndpoints(endpoints => endpoints
+        .MapHealthChecks())
+    .Initialize();
 
-            var configuration = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings{environment}.json")
-               .Build();
+var envName = env.EnvironmentName;
+var environment = envName != null ? $".{envName}" : null;
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
+configuration.AddJsonFile($"appsettings{environment}.json");
 
-            try
-            {
-                Log.Information("Starting Body4U.EmailSender...");
-                CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Body4U.EmailSender failed to start!");
-                throw;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                    webBuilder.UseStartup<Startup>());
-    }
+try
+{
+    Log.Information("Starting Body4U.EmailSender...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Body4U.EmailSender failed to start!");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
 }

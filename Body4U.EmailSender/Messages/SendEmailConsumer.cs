@@ -6,6 +6,7 @@
     using Body4U.EmailSender.Services;
     using MassTransit;
     using Microsoft.EntityFrameworkCore;
+    using System;
     using System.Threading.Tasks;
 
     public class SendEmailConsumer : IConsumer<SendEmailMessage>
@@ -33,7 +34,7 @@
             //Check if there is any message from this type and identifier...
             var isDublicated = await this.dbContext
                 .Messages
-                .FromSqlRaw($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
+                .FromSql($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
                 .AnyAsync();
 
             if (isDublicated)

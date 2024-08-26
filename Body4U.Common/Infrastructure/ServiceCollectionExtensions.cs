@@ -4,17 +4,16 @@
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using CloudinaryDotNet;
-    using GreenPipes;
     using Hangfire;
     using MassTransit;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.Data.SqlClient;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.OpenApi.Models;
     using System;
-    using System.Data.SqlClient;
     using System.IO;
     using System.Reflection;
     using System.Text;
@@ -47,12 +46,12 @@
                 .AddScoped<DbContext, TDbContext>()
                 .AddDbContext<TDbContext>(options => options
                     .UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection"),
-                    sqlOptions => sqlOptions
-                        .EnableRetryOnFailure(
-                            maxRetryCount: 10,
-                            maxRetryDelay: TimeSpan.FromSeconds(30),
-                            errorNumbersToAdd: null)));
+                    configuration.GetConnectionString("DefaultConnection")));
+                    //sqlOptions => sqlOptions
+                    //    .EnableRetryOnFailure(
+                    //        maxRetryCount: 10,
+                    //        maxRetryDelay: TimeSpan.FromSeconds(30),
+                    //        errorNumbersToAdd: null)));
 
             return services;
         }
@@ -96,28 +95,29 @@
             bool useHangFire = true,
             params Type[] consumers)
         {
-            services
-                .AddMassTransit(mt =>
+
+
+            services.AddMassTransit(mt =>
+            {
+                consumers.ForEach(consumer => mt.AddConsumer(consumer));
+
+                mt.UsingRabbitMq((bus, rmq) =>
                 {
-                    consumers.ForEach(consumer => mt.AddConsumer(consumer));
-
-                    mt.AddBus(bus => Bus.Factory.CreateUsingRabbitMq(rmq =>
+                    rmq.ConfigureEndpoints(bus);
+                    rmq.Host(configuration.GetSection("RabbitMQ")["Host"], host =>
                     {
-                        rmq.Host(configuration.GetSection("RabbitMQ")["Host"], host =>
-                        {
-                            host.Username(configuration.GetSection("RabbitMQ")["Username"]);
-                            host.Password(configuration.GetSection("RabbitMQ")["Password"]);
-                        });
+                        host.Username(configuration.GetSection("RabbitMQ")["Username"]);
+                        host.Password(configuration.GetSection("RabbitMQ")["Password"]);
+                    });
 
-                        consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
-                        {
-                            endpoint.PrefetchCount = 6;
-                            endpoint.UseMessageRetry(retry => retry.Interval(10, 1000)); // try 10 times every 1 second to send the messages
-                            endpoint.ConfigureConsumer(bus, consumer);
-                        }));
+                    consumers.ForEach(consumer => rmq.ReceiveEndpoint(consumer.FullName, endpoint =>
+                    {
+                        endpoint.PrefetchCount = 6;
+                        endpoint.UseMessageRetry(retry => retry.Interval(10, 1000)); // try 10 times every 1 second to send the messages
+                        endpoint.ConfigureConsumer(bus, consumer);
                     }));
-                })
-                .AddMassTransitHostedService();
+                });
+            });
 
             if (useHangFire)
             {

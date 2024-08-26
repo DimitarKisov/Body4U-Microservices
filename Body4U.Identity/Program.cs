@@ -1,45 +1,59 @@
-namespace Body4U.Identity
+using Body4U.Common.Infrastructure;
+using Body4U.Common.Services;
+using Body4U.Identity.Data;
+using Body4U.Identity.Data.Seeders;
+using Body4U.Identity.Infrastructure;
+using Body4U.Identity.Services;
+using Body4U.Identity.Services.Favourites;
+using Body4U.Identity.Services.Identity;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using System;
+
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services
+    .AddUserStorage()
+    .AddWebService<IdentityDbContext>(configuration)
+    .AddMessaging(configuration)
+    .AddTransient<ExceptionMiddleware>()
+    .AddCloudinary(configuration)
+    .AddTransient<IDataSeeder, IdentityDataSeeder>()
+    .AddTransient<IIdentityService, IdentityService>()
+    .AddTransient<IFavouritesService, FavouritesService>()
+    .AddTransient<IJwtTokenGeneratorService, JwtTokenGeneratorService>();
+
+var app = builder.Build();
+var env = app.Environment;
+
+app
+    .UseWebService(env)
+    .Initialize();
+
+var envName = env.EnvironmentName;
+var environment = envName != null ? $".{envName}" : null;
+
+configuration.AddJsonFile($"appsettings{environment}.json");
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
+
+try
 {
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Hosting;
-    using Serilog;
-    using System;
-
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var environment = envVariable != null ? $".{envVariable}" : null;
-
-            var configuration = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings{environment}.json")
-               .Build();
-
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
-
-            try
-            {
-                Log.Information("Starting Body4U.Identity...");
-                CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Body4U.Identity failed to start!");
-                throw;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                    webBuilder.UseStartup<Startup>());
-    }
+    Log.Information("Starting Body4U.Identity...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Body4U.Identity failed to start!");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
 }

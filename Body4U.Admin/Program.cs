@@ -1,47 +1,72 @@
-namespace Body4U.Admin
+using Body4U.Admin.Services.Identity;
+using Body4U.Common.Infrastructure;
+using Body4U.Common.Services.Identity;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Refit;
+using Serilog;
+using System;
+
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services
+    .AddTokenAuthentication(configuration)
+    .AddHealth(configuration,
+               addDbHealthCheck: false,
+               addMessegingHealthCheck: false)
+    .AddScoped<ICurrentTokenService, CurrentTokenService>()
+    .AddTransient<JwtHeaderAuthenticationMiddleware>()
+    .AddTransient<ExceptionMiddleware>()
+    .AddSwagger()
+    .AddControllers();
+
+services
+    .AddRefitClient<IIdentityService>()
+    .WithConfiguration(configuration.GetSection("ServiceEndpoints")["Identity"]);
+
+var app = builder.Build();
+var env = app.Environment;
+
+if (env.IsDevelopment())
 {
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Hosting;
-    using Serilog;
-    using System;
+    app
+       .UseDeveloperExceptionPage()
+       .UseSwagger();
+}
 
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var envVariable = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var environment = envVariable != null ? $".{envVariable}" : null;
+app
+    .UseHttpsRedirection()
+    .UseRouting()
+    .UseJwtHeaderAuthentication()
+    .UseAuthorization()
+    .UseEndpoints(endpoints => endpoints
+        .MapHealthChecks()
+        .MapControllers());
 
-            var configuration = new ConfigurationBuilder()
-               .AddJsonFile($"appsettings{environment}.json")
-               .Build();
+var envName = env.EnvironmentName;
+var environment = envName != null ? $".{envName}" : null;
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
+configuration.AddJsonFile($"appsettings{environment}.json");
 
-            try
-            {
-                Log.Information("Starting Body4U.Admin...");
-                CreateHostBuilder(args).Build().Run();
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Body4U.Admin failed to start!");
-                throw;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+try
+{
+    Log.Information("Starting Body4U.Admin...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Body4U.Admin failed to start!");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
 }

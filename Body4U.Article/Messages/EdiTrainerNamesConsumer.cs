@@ -30,7 +30,7 @@
 
                 var isDublicated = await this.dbContext
                     .Messages
-                    .FromSqlRaw($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
+                    .FromSql($"SELECT * FROM Messages WHERE Type = '{messageType.AssemblyQualifiedName}' AND JSON_VALUE(Data, '$.{propertyFilter}') = '{identifier}'")
                     .AnyAsync();
 
                 if (isDublicated)
