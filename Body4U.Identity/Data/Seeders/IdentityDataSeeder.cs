@@ -49,7 +49,9 @@
                 Task.Run(async () =>
                 {
                     var adminRole = new IdentityRole(AdministratorRoleName);
+                    adminRole.ConcurrencyStamp = Guid.NewGuid().ToString();
                     var trainerRole = new IdentityRole(TrainerRoleName);
+                    trainerRole.ConcurrencyStamp = Guid.NewGuid().ToString();
 
                     await this.roleManager.CreateAsync(adminRole);
                     await this.roleManager.CreateAsync(trainerRole);

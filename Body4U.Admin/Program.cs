@@ -50,7 +50,9 @@ app
 var envName = env.EnvironmentName;
 var environment = envName != null ? $".{envName}" : null;
 
-configuration.AddJsonFile($"appsettings{environment}.json");
+configuration
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddJsonFile($"appsettings{environment}.json", optional: true);
 
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(configuration)

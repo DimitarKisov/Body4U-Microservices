@@ -4,10 +4,8 @@
     using Body4U.Common.Services.Cloud;
     using Body4U.Common.Services.Identity;
     using CloudinaryDotNet;
-    using Hangfire;
     using MassTransit;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
-    using Microsoft.Data.SqlClient;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -46,12 +44,12 @@
                 .AddScoped<DbContext, TDbContext>()
                 .AddDbContext<TDbContext>(options => options
                     .UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection")));
-                    //sqlOptions => sqlOptions
-                    //    .EnableRetryOnFailure(
-                    //        maxRetryCount: 10,
-                    //        maxRetryDelay: TimeSpan.FromSeconds(30),
-                    //        errorNumbersToAdd: null)));
+                        configuration.GetConnectionString("DefaultConnection"),
+                        sqlOptions => sqlOptions
+                        .EnableRetryOnFailure(
+                            maxRetryCount: 10,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null)));
 
             return services;
         }
@@ -92,11 +90,9 @@
         public static IServiceCollection AddMessaging(
             this IServiceCollection services,
             IConfiguration configuration,
-            bool useHangFire = true,
+            bool useBackgroundWorker = true,
             params Type[] consumers)
         {
-
-
             services.AddMassTransit(mt =>
             {
                 consumers.ForEach(consumer => mt.AddConsumer(consumer));
@@ -119,19 +115,8 @@
                 });
             });
 
-            if (useHangFire)
+            if (useBackgroundWorker)
             {
-                CreateHangfireDatabase(configuration);
-
-                services
-                    .AddHangfire(config => config
-                        .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-                        .UseSimpleAssemblyNameTypeSerializer()
-                        .UseRecommendedSerializerSettings()
-                        .UseSqlServerStorage(configuration.GetSection("ConnectionStrings")["CronJobsConnection"]));
-
-                services.AddHangfireServer();
-
                 services.AddHostedService<MessagesHostedService>();
             }
 
@@ -234,28 +219,6 @@
             }
             
             return services;
-        }
-
-        private static void CreateHangfireDatabase(IConfiguration configuration)
-        {
-            var connectionString = configuration.GetSection("ConnectionStrings")["CronJobsConnection"];
-
-            var dbName = connectionString
-                .Split(";")[1]
-                .Split("=")[1];
-
-            var masterConnString = connectionString.Replace(dbName, "master");
-            using (var connection = new SqlConnection(masterConnString))
-            {
-                connection.Open();
-
-                var query = $"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'{dbName}') create database [{dbName}];";
-
-                using (var command = new SqlCommand(query, connection))
-                {
-                    command.ExecuteNonQuery();
-                };
-            }
         }
     }
 }
