@@ -42,7 +42,7 @@
 
                 message.MarkAsPublished();
 
-                await this.dbContext.Messages.AddAsync(message);
+                this.dbContext.Messages.Add(message);
 
                 var trainer = await this.dbContext
                 .Trainers

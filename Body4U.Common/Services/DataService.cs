@@ -35,7 +35,7 @@
 
                 foreach (var message in messages)
                 {
-                    await this.DbContext.AddAsync(message);
+                    this.DbContext.Add(message);
                 }
 
                 await this.DbContext.SaveChangesAsync();

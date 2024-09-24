@@ -49,7 +49,7 @@
             message.MarkAsPublished();
 
             //and add it to database and save the changes
-            await this.dbContext.Messages.AddAsync(message);
+            this.dbContext.Messages.Add(message);
             await this.dbContext.SaveChangesAsync();
 
             await Task.Run(() => this.emailService.SendEmailAsync(context.Message.To, context.Message.Subject, context.Message.HtmlContent));

@@ -42,7 +42,7 @@
 
                 message.MarkAsPublished();
 
-                await this.dbContext.Messages.AddAsync(message);
+                this.dbContext.Messages.Add(message);
 
                 var trainer = new Trainer()
                 {
@@ -52,7 +52,7 @@
                     LastName = context.Message.Lastname
                 };
 
-                await this.dbContext.Trainers.AddAsync(trainer);
+                this.dbContext.Trainers.Add(trainer);
 
                 await this.dbContext.SaveChangesAsync();
             }
