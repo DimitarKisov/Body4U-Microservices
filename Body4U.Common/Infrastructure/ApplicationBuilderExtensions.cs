@@ -1,7 +1,9 @@
 ﻿namespace Body4U.Common.Infrastructure
 {
     using Body4U.Common.Services;
+    using HealthChecks.UI.Client;
     using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
@@ -31,9 +33,15 @@
                 .UseRouting()
                 .UseAuthentication()
                 .UseAuthorization()
-                .UseEndpoints(endpoints => endpoints
-                    .MapHealthChecks()
-                    .MapControllers());
+                .UseEndpoints(endpoints =>
+                {
+                    endpoints.MapHealthChecks("/health", new HealthCheckOptions
+                    {
+                        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                    });
+
+                    endpoints.MapControllers();
+                });
 
             return app;
         }
