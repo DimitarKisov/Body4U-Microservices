@@ -30,5 +30,16 @@ pipeline {
 			}
 		}
 	 }
+	 stage('Push Images') {
+		steps {
+			script {
+				docker.withRegistry('https://index.docker.io/v1/', 'DockerHub'){
+					def image = docker.image("dkisov/body4u-identity-service")
+					image.push("${env.BUILD_ID}")
+					image.push('latest')
+				}
+			}
+		}
+	 }
   }
 }
