@@ -34,6 +34,7 @@ pipeline {
 		steps {
 			script {
 				docker.withRegistry('https://index.docker.io/v1/', 'DockerHub'){
+					when { branch 'master' }
 					def identityImage = docker.image("dkisov/body4u-identity-service")
 					identityImage.push("${env.BUILD_ID}")
 					identityImage.push('latest')
