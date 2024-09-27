@@ -12,5 +12,21 @@ pipeline {
 			powershell(script: 'docker images -a')
 		}
 	 }
+	 stage('Run Test Application') {
+		steps {
+			powershell(script: 'docker-compose up -d')
+		}
+	 }
+	 stage('Stop Test Application') {
+		steps {
+			powershell(script: 'docker-compose down')
+		}
+		post {
+			echo "Build successfull!"
+		}
+		failure {
+			echo "Build failed"
+		}
+	 }
   }
 }
